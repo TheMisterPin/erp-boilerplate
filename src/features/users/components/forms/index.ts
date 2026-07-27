@@ -1,4 +1,5 @@
 export { UserForm } from "./user-form"
+export { AssignLocationForm } from "./assign-location-form"
 export {
   buildCreateUserFormFields,
   buildEditUserFormFields,

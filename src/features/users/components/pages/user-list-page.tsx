@@ -1,6 +1,6 @@
 "use client"
 
-import { Pencil, Plus, Trash2 } from "lucide-react"
+import { MapPin, Pencil, Plus, Trash2 } from "lucide-react"
 
 import { DynamicTable } from "@/components/shared/table/dynamic-table"
 import { Button } from "@/components/ui/button"
@@ -15,20 +15,120 @@ export type UserListPageProps = {
   users: User[]
   rows: ReturnType<typeof toUserTableRow>[]
   canWrite: boolean
+  canAssignLocation: boolean
   onCreate: () => void
   onEdit: (user: User) => void
   onDelete: (user: User) => void
+  onAssignLocation: (user: User) => void
 }
 
-/** Stateless members list view — state comes from `useUserListPage`. */
+type UserSectionProps = {
+  title: string
+  emptyMessage: string
+  users: User[]
+  canWrite: boolean
+  canAssignLocation: boolean
+  toolbarActions?: React.ReactNode
+  onEdit: (user: User) => void
+  onDelete: (user: User) => void
+  onAssignLocation: (user: User) => void
+}
+
+function UserSection({
+  title,
+  emptyMessage,
+  users,
+  canWrite,
+  canAssignLocation,
+  toolbarActions,
+  onEdit,
+  onDelete,
+  onAssignLocation,
+}: UserSectionProps) {
+  const showActions = canWrite || canAssignLocation
+
+  return (
+    <section className="flex min-h-0 flex-col gap-2">
+      <div className="flex items-center justify-between gap-2 px-1">
+        <h2 className="text-sm font-semibold tracking-tight">{title}</h2>
+        <span className="text-xs text-muted-foreground">{users.length}</span>
+      </div>
+      {users.length === 0 ? (
+        <div className="rounded-lg border border-dashed p-6">
+          <p className="text-sm text-muted-foreground">{emptyMessage}</p>
+        </div>
+      ) : (
+        <div className="min-h-[240px] overflow-hidden rounded-lg border">
+          <DynamicTable
+            data={users.map(toUserTableRow)}
+            columns={userTableColumns}
+            pageSize={8}
+            searchable
+            sortable
+            filterable
+            toolbarActions={toolbarActions}
+            rowActions={
+              showActions
+                ? ({ row }) => {
+                    const user = users.find((item) => item.id === row.id)
+                    if (!user) return null
+                    return (
+                      <>
+                        {canAssignLocation ? (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            aria-label={`Assign location for ${user.fullName}`}
+                            onClick={() => onAssignLocation(user)}
+                          >
+                            <MapPin className="h-4 w-4" />
+                          </Button>
+                        ) : null}
+                        {canWrite ? (
+                          <>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              aria-label={`Edit ${user.fullName}`}
+                              onClick={() => onEdit(user)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              aria-label={`Delete ${user.fullName}`}
+                              onClick={() => void onDelete(user)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </>
+                        ) : null}
+                      </>
+                    )
+                  }
+                : undefined
+            }
+          />
+        </div>
+      )}
+    </section>
+  )
+}
+
+/** Stateless members list — with-location and without-location sections. */
 export function UserListPage({
   loaded,
   users,
-  rows,
   canWrite,
+  canAssignLocation,
   onCreate,
   onEdit,
   onDelete,
+  onAssignLocation,
 }: UserListPageProps) {
   const createButton = canWrite ? (
     <Button size="sm" onClick={onCreate}>
@@ -47,60 +147,49 @@ export function UserListPage({
     )
   }
 
-  if (users.length === 0) {
-    return (
-      <div className="table-shell">
-        <header className="table-toolbar">
-          <div />
-          <div className="flex flex-wrap items-center gap-2">{createButton}</div>
-        </header>
-        <div className="table-body-region">
-          <p className="text-sm text-muted-foreground">No users found.</p>
-        </div>
-      </div>
-    )
-  }
+  const withLocation = users.filter((user) => !!user.locationId)
+  const withoutLocation = users.filter((user) => !user.locationId)
 
   return (
-    <DynamicTable
-      data={rows}
-      columns={userTableColumns}
-      pageSize={10}
-      searchable
-      sortable
-      filterable
-      groupable
-      toolbarActions={createButton}
-      rowActions={
-        canWrite
-          ? ({ row }) => {
-              const user = users.find((item) => item.id === row.id)
-              if (!user) return null
-              return (
-                <>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    aria-label={`Edit ${user.fullName}`}
-                    onClick={() => onEdit(user)}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    aria-label={`Delete ${user.fullName}`}
-                    onClick={() => void onDelete(user)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </>
-              )
-            }
-          : undefined
-      }
-    />
+    <div className="flex h-full min-h-0 flex-col gap-6 overflow-y-auto p-4">
+      <header className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h1 className="text-lg font-semibold tracking-tight">Members</h1>
+          <p className="text-sm text-muted-foreground">
+            Staff by location assignment.
+          </p>
+        </div>
+        {createButton}
+      </header>
+
+      {users.length === 0 ? (
+        <div className="rounded-lg border border-dashed p-8">
+          <p className="text-sm text-muted-foreground">No users found.</p>
+        </div>
+      ) : (
+        <>
+          <UserSection
+            title="Assigned to a location"
+            emptyMessage="No members are assigned to a location yet."
+            users={withLocation}
+            canWrite={canWrite}
+            canAssignLocation={canAssignLocation}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            onAssignLocation={onAssignLocation}
+          />
+          <UserSection
+            title="Without a location"
+            emptyMessage="Every member has a location."
+            users={withoutLocation}
+            canWrite={canWrite}
+            canAssignLocation={canAssignLocation}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            onAssignLocation={onAssignLocation}
+          />
+        </>
+      )}
+    </div>
   )
 }

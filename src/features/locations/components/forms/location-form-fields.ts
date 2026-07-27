@@ -4,6 +4,7 @@ import {
   locationDescriptionSchema,
   locationIsActiveSchema,
   locationManagerIdSchema,
+  locationMinimumStaffSchema,
   locationNameSchema,
 } from "@/lib/schemas/location"
 
@@ -23,19 +24,30 @@ export function buildLocationFormFields(
       validation: locationNameSchema,
     },
     {
+      name: "managerId",
+      type: "select",
+      label: "Location manager",
+      placeholder: "Assign a manager",
+      description:
+        "Admins assign a user who can manage staff and shifts at this location.",
+      validation: locationManagerIdSchema,
+      options: [noneOption, ...managerOptions],
+    },
+    {
+      name: "minimumStaff",
+      type: "number",
+      label: "Minimum staff",
+      placeholder: "0",
+      description: "Target headcount for this location.",
+      validation: locationMinimumStaffSchema,
+      defaultValue: 0,
+    },
+    {
       name: "description",
       type: "textarea",
       label: "Description",
       placeholder: "Optional description",
       validation: locationDescriptionSchema,
-    },
-    {
-      name: "managerId",
-      type: "select",
-      label: "Manager",
-      placeholder: "Select a manager",
-      validation: locationManagerIdSchema,
-      options: [noneOption, ...managerOptions],
     },
     {
       name: "isActive",

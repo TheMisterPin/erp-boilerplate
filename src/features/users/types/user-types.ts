@@ -33,3 +33,8 @@ export type UserFormValues = {
   pictureUrl?: string
   isActive?: boolean
 }
+
+/** Manager / admin assign-location form. */
+export type AssignLocationFormValues = {
+  locationId: string
+}

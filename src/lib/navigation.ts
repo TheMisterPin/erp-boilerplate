@@ -26,6 +26,8 @@ export const navigationItems: NavigationItem[] = [
     items: [
       { title: "Members", url: "/team/members" },
       { title: "Activity", url: "/team/activity" },
+      { title: "Shift templates", url: "/team/shift-templates" },
+      { title: "My shifts", url: "/team/my-shifts" },
     ],
   },
   {

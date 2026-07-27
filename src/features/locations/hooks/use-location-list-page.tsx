@@ -28,6 +28,7 @@ function toLocationFormValues(location: Location): Partial<LocationFormValues> {
     name: location.name,
     description: location.description ?? "",
     managerId: location.managerId ?? "",
+    minimumStaff: location.minimumStaff,
     isActive: location.isActive,
   }
 }
@@ -68,7 +69,7 @@ export function useLocationListPage(): LocationListPageProps {
     let formId = ""
     formId = openModal({
       type: "form",
-      title: "New location",
+      title: "New location — assign a manager",
       size: "lg",
       component: (
         <LocationForm

@@ -81,6 +81,8 @@ if (data) toast.success("Saved")
 | `/login` | Auth gate entry + `SESSION_EXPIRED` acknowledge target |
 | `/team/members` | List-page CRUD (forms + modals + `run()`) |
 | `/team/activity` | Audit trail list (`logActivity` + ADMIN `logging:read`) |
+| `/team/shift-templates` | Shift templates CRUD + generate instances (Admin / location manager) |
+| `/team/my-shifts` | Schedule calendar — own shifts (users) / managed locations (managers) |
 | `/organization/departments` | Org vertical + list CRUD |
 | `/organization/locations` | Org vertical + manager select + list CRUD |
 

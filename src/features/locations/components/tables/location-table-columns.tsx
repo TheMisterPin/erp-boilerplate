@@ -13,14 +13,32 @@ export const locationTableColumns: ColumnConfig[] = [
     sortable: true,
   },
   {
-    key: "description",
-    label: "Description",
+    key: "managerName",
+    label: "Manager",
     type: "string",
+    sortable: true,
+    format: (value) =>
+      value ? (
+        String(value)
+      ) : (
+        <span className="text-muted-foreground">Unassigned</span>
+      ),
+  },
+  {
+    key: "staffCount",
+    label: "Staff",
+    type: "number",
     sortable: true,
   },
   {
-    key: "managerName",
-    label: "Manager",
+    key: "minimumStaff",
+    label: "Min staff",
+    type: "number",
+    sortable: true,
+  },
+  {
+    key: "description",
+    label: "Description",
     type: "string",
     sortable: true,
   },
@@ -35,12 +53,6 @@ export const locationTableColumns: ColumnConfig[] = [
       </Badge>
     ),
   },
-  {
-    key: "createdAt",
-    label: "Created",
-    type: "date",
-    sortable: true,
-  },
 ]
 
 /** Flatten Location into a plain row DynamicTable can index. */
@@ -53,6 +65,8 @@ export function toLocationTableRow(
     description: location.description ?? null,
     managerId: location.managerId ?? null,
     managerName: location.managerName ?? null,
+    minimumStaff: location.minimumStaff,
+    staffCount: location.staffCount,
     isActive: location.isActive,
     createdAt: location.createdAt ?? null,
     updatedAt: location.updatedAt ?? null,

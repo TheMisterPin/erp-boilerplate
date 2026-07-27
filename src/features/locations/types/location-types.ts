@@ -5,6 +5,8 @@ export type Location = {
   description?: string | null
   managerId?: string | null
   managerName?: string | null
+  minimumStaff: number
+  staffCount: number
   isActive: boolean
   createdAt?: Date
   updatedAt?: Date
@@ -15,5 +17,6 @@ export type LocationFormValues = {
   name: string
   description?: string
   managerId?: string
+  minimumStaff?: number
   isActive?: boolean
 }

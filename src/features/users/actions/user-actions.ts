@@ -1,7 +1,7 @@
 "use server"
 
 import { Actions } from "@/features/auth/permissions"
-import { authorize } from "@/features/auth/session"
+import { authorize, requireSession } from "@/features/auth/session"
 import { hashPassword } from "@/features/auth/password"
 import type { ActionResult } from "@/features/errors/dto"
 import { AppError, withErrorBoundary } from "@/features/errors/server"
@@ -10,6 +10,7 @@ import type { User } from "@/features/users/types/user-types"
 import { Prisma } from "@/generated/prisma/client"
 import { prisma } from "@/lib/db"
 import {
+  assignUserLocationSchema,
   createUserSchema,
   updateUserSchema,
 } from "@/lib/schemas/user"
@@ -245,5 +246,82 @@ export async function deleteUser(id: string): Promise<ActionResult<true>> {
     })
 
     return true as const
+  })
+}
+
+/**
+ * Assign a user to a location. Admins may assign any location;
+ * location managers may only assign users to locations they manage.
+ */
+export async function assignUserToLocation(
+  input: unknown,
+): Promise<ActionResult<User>> {
+  return withErrorBoundary(async () => {
+    const session = await requireSession()
+    const parsed = assignUserLocationSchema.parse(input)
+    const locationId = parsed.locationId || null
+
+    const existing = await prisma.user.findFirst({
+      where: { id: parsed.userId, deletedAt: null },
+    })
+    if (!existing) {
+      throw new AppError({
+        kind: "not_found",
+        code: "USER_NOT_FOUND",
+        message: "That user could not be found.",
+      })
+    }
+
+    if (locationId) {
+      const location = await prisma.location.findFirst({
+        where: { id: locationId, deletedAt: null },
+        select: { id: true, managerId: true },
+      })
+      if (!location) {
+        throw new AppError({
+          kind: "not_found",
+          code: "LOCATION_NOT_FOUND",
+          message: "That location could not be found.",
+        })
+      }
+
+      const isAdmin = session.role === "ADMIN"
+      const managesLocation = location.managerId === session.userId
+      if (!isAdmin && !managesLocation) {
+        throw new AppError({
+          kind: "permission",
+          code: "FORBIDDEN",
+          message: "You can only assign users to locations you manage.",
+        })
+      }
+    } else if (session.role !== "ADMIN") {
+      // Managers may clear assignment only if the user is currently at their location
+      if (!existing.locationId) {
+        throw new AppError({
+          kind: "permission",
+          code: "FORBIDDEN",
+          message: "You do not have permission to clear that assignment.",
+        })
+      }
+      const currentLocation = await prisma.location.findFirst({
+        where: { id: existing.locationId, deletedAt: null },
+        select: { managerId: true },
+      })
+      if (currentLocation?.managerId !== session.userId) {
+        throw new AppError({
+          kind: "permission",
+          code: "FORBIDDEN",
+          message: "You can only manage staff at your locations.",
+        })
+      }
+    }
+
+    const row = await prisma.user.update({
+      where: { id: parsed.userId },
+      data: { locationId },
+      include: userInclude,
+    })
+
+    return toPublicUser(row)
   })
 }

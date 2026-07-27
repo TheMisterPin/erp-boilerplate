@@ -16,10 +16,12 @@ type LocationRow = {
   name: string
   description: string | null
   managerId: string | null
+  minimumStaff: number
   isActive: boolean
   createdAt: Date
   updatedAt: Date
   manager?: { fullName: string } | null
+  _count?: { users: number }
 }
 
 function toPublicLocation(row: LocationRow): Location {
@@ -29,6 +31,8 @@ function toPublicLocation(row: LocationRow): Location {
     description: row.description,
     managerId: row.managerId,
     managerName: row.manager?.fullName ?? null,
+    minimumStaff: row.minimumStaff,
+    staffCount: row._count?.users ?? 0,
     isActive: row.isActive,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
@@ -50,12 +54,51 @@ async function assertManagerExists(managerId: string | null): Promise<void> {
   }
 }
 
+const locationInclude = {
+  manager: { select: { fullName: true } },
+  _count: {
+    select: {
+      users: { where: { deletedAt: null } },
+    },
+  },
+} as const
+
+export type ManagedLocationOption = {
+  id: string
+  name: string
+}
+
+/** Locations the current user manages (all locations for ADMIN). */
+export async function listManagedLocations(): Promise<
+  ActionResult<ManagedLocationOption[]>
+> {
+  return withErrorBoundary(async () => {
+    const session = await authorize(Actions.locations.read)
+
+    if (session.role === "ADMIN") {
+      const rows = await prisma.location.findMany({
+        where: { deletedAt: null },
+        select: { id: true, name: true },
+        orderBy: { name: "asc" },
+      })
+      return rows
+    }
+
+    const rows = await prisma.location.findMany({
+      where: { deletedAt: null, managerId: session.userId },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    })
+    return rows
+  })
+}
+
 export async function listLocations(): Promise<ActionResult<Location[]>> {
   return withErrorBoundary(async () => {
     await authorize(Actions.locations.read)
     const rows = await prisma.location.findMany({
       where: { deletedAt: null },
-      include: { manager: { select: { fullName: true } } },
+      include: locationInclude,
       orderBy: { name: "asc" },
     })
     return rows.map(toPublicLocation)
@@ -76,9 +119,10 @@ export async function createLocation(
         name: parsed.name,
         description: parsed.description || null,
         managerId,
+        minimumStaff: parsed.minimumStaff ?? 0,
         isActive: parsed.isActive ?? true,
       },
-      include: { manager: { select: { fullName: true } } },
+      include: locationInclude,
     })
 
     return toPublicLocation(row)
@@ -112,9 +156,10 @@ export async function updateLocation(
         name: parsed.name,
         description: parsed.description || null,
         managerId,
+        minimumStaff: parsed.minimumStaff ?? existing.minimumStaff,
         isActive: parsed.isActive ?? existing.isActive,
       },
-      include: { manager: { select: { fullName: true } } },
+      include: locationInclude,
     })
 
     return toPublicLocation(row)

@@ -8,6 +8,11 @@ export const locationDescriptionSchema = z.string().optional()
 
 export const locationIsActiveSchema = z.boolean().optional()
 
+export const locationMinimumStaffSchema = z.coerce
+  .number({ invalid_type_error: "Enter a number" })
+  .int("Must be a whole number")
+  .min(0, "Must be 0 or more")
+
 /** Empty string or valid UUID. Coerce empty → null in actions. */
 export const locationManagerIdSchema = z
   .string()
@@ -22,6 +27,7 @@ export const createLocationSchema = z.object({
   name: locationNameSchema,
   description: locationDescriptionSchema,
   managerId: locationManagerIdSchema,
+  minimumStaff: locationMinimumStaffSchema.optional(),
   isActive: locationIsActiveSchema,
 })
 
@@ -31,6 +37,7 @@ export const updateLocationSchema = z.object({
   name: locationNameSchema,
   description: locationDescriptionSchema,
   managerId: locationManagerIdSchema,
+  minimumStaff: locationMinimumStaffSchema.optional(),
   isActive: locationIsActiveSchema,
 })
 

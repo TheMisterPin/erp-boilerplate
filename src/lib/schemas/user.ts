@@ -89,6 +89,15 @@ export const updateUserSchema = z.object({
 /** @deprecated Use createUserSchema / updateUserSchema */
 export const userSchema = createUserSchema
 
-export type CreateUserInput = z.infer<typeof createUserSchema>
-export type UpdateUserInput = z.infer<typeof updateUserSchema>
-export type UserInput = CreateUserInput
+/** Assign (or clear) a user's location — used by managers and admins. */
+export const assignUserLocationSchema = z.object({
+  userId: z.string().uuid("Invalid user id"),
+  locationId: z
+    .string()
+    .refine(
+      (value) => value === "" || z.string().uuid().safeParse(value).success,
+      "Invalid location id",
+    ),
+})
+
+export type AssignUserLocationInput = z.infer<typeof assignUserLocationSchema>

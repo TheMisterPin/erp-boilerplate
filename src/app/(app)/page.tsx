@@ -12,6 +12,17 @@ const demos = [
     description: "Audit trail — logActivity helper + read-only ADMIN list",
   },
   {
+    href: "/team/shift-templates",
+    title: "Shift templates",
+    description:
+      "Reusable templates + generate dated instances (Admin / location manager)",
+  },
+  {
+    href: "/team/my-shifts",
+    title: "My shifts",
+    description: "Calendar schedule — own shifts or managed-location coverage",
+  },
+  {
     href: "/organization/departments",
     title: "Departments",
     description: "Organization vertical with the same list CRUD pattern",

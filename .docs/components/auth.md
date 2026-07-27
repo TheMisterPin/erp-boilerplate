@@ -80,8 +80,10 @@ Defined in `ROLE_PERMISSIONS`:
 
 | Role | Permissions |
 |------|-------------|
-| `ADMIN` | `*:read` + `*:write` for users, departments, locations; plus `logging:read` |
-| `USER` | `*:read` for users, departments, locations (no logging) |
+| `ADMIN` | `*:read` + `*:write` for users, departments, locations, shifts; plus `logging:read` |
+| `USER` | `*:read` for users, departments, locations, shifts (no logging / no `shifts:write`) |
+
+Location managers (users with `Location.managerId`) get shift **write** via resource checks in shift actions — not a separate Role.
 
 `Actions` catalog entries point at those strings (e.g. `Actions.users.write.permission === "users:write"`).
 

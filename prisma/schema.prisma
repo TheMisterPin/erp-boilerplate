@@ -34,6 +34,8 @@ model User {
   location     Location?      @relation("UserLocation", fields: [locationId], references: [id])
   locationId   String?
   managedLocations Location[] @relation("LocationManager")
+  shiftTemplates  ShiftTemplate[]  @relation("ShiftTemplateAssignee")
+  shiftInstances  ShiftInstance[]  @relation("ShiftInstanceAssignee")
 }
 
 model UserActivity {
@@ -60,16 +62,76 @@ model Department {
 }
 
 model Location {
-  id          String    @id @default(uuid())
-  name        String
-  description String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  deletedAt   DateTime?
-  isActive    Boolean   @default(true)
-  manager     User?     @relation("LocationManager", fields: [managerId], references: [id])
-  managerId   String?
-  users       User[]    @relation("UserLocation")
+  id            String    @id @default(uuid())
+  name          String
+  description   String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+  isActive      Boolean   @default(true)
+  minimumStaff  Int       @default(0)
+  manager       User?     @relation("LocationManager", fields: [managerId], references: [id])
+  managerId     String?
+  users         User[]    @relation("UserLocation")
+  shiftTemplates ShiftTemplate[]
+  shiftInstances ShiftInstance[]
+}
+
+enum ShiftType {
+  MORNING
+  AFTERNOON
+  NIGHT
+  FULL_DAY
+}
+
+enum ShiftStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
+model ShiftTemplate {
+  id         String          @id @default(uuid())
+  locationId String
+  location   Location        @relation(fields: [locationId], references: [id])
+  userId     String
+  user       User            @relation("ShiftTemplateAssignee", fields: [userId], references: [id])
+  type       ShiftType
+  startTime  String
+  endTime    String
+  weekdays   Int[]
+  notes      String?
+  isActive   Boolean         @default(true)
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+  deletedAt  DateTime?
+  instances  ShiftInstance[]
+
+  @@index([locationId])
+  @@index([userId])
+}
+
+model ShiftInstance {
+  id         String         @id @default(uuid())
+  templateId String?
+  template   ShiftTemplate? @relation(fields: [templateId], references: [id])
+  locationId String
+  location   Location       @relation(fields: [locationId], references: [id])
+  userId     String
+  user       User           @relation("ShiftInstanceAssignee", fields: [userId], references: [id])
+  date       DateTime
+  type       ShiftType
+  startTime  String
+  endTime    String
+  status     ShiftStatus    @default(SCHEDULED)
+  notes      String?
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+  deletedAt  DateTime?
+
+  @@index([locationId, date])
+  @@index([userId, date])
+  @@index([templateId])
 }
 
 enum Activity {
@@ -78,4 +140,11 @@ enum Activity {
   REGISTER
   VERIFY
   UNVERIFY
+  SHIFT_TEMPLATE_CREATE
+  SHIFT_TEMPLATE_UPDATE
+  SHIFT_TEMPLATE_DELETE
+  SHIFT_TEMPLATE_GENERATE
+  SHIFT_INSTANCE_CREATE
+  SHIFT_INSTANCE_UPDATE
+  SHIFT_INSTANCE_DELETE
 }
