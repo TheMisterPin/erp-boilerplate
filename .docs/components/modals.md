@@ -131,9 +131,7 @@ formId = openModal({
     <UserForm
       onDirtyChange={(isDirty) => setDirty(formId, isDirty)}
       onSubmit={async (values, form) => {
-        const data = await run(createUser(values), {
-          onFieldErrors: (fe) => applyServerErrors(form, fe),
-        })
+        const data = await run(createUser(values), { form })
         if (data) {
           toast.success("Member created")
           closeModal(formId)

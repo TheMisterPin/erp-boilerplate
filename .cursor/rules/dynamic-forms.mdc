@@ -26,7 +26,7 @@ Use the shared schema-driven form system. Do not build one-off RHF forms when `D
 3. Export a `FieldDef<T>[]` schema under `components/forms/*-form-fields.ts`.
 4. Wrap `DynamicForm` in a thin named `*Form` client component.
 5. Pass `isEdit`, `initialValues`, `onSubmit`, `layout`, `submitLabel` from the wrapper.
-6. Wire submit with `useError().run()` + `applyServerErrors` — see `.docs/components/error-handling.md`.
+6. Wire submit with `useError().run(action, { form })` — see `.docs/components/error-handling.md`.
 
 ```tsx
 // ✅ feature wrapper
@@ -41,9 +41,7 @@ Use the shared schema-driven form system. Do not build one-off RHF forms when `D
 
 ```tsx
 // ✅ submit via error pipeline
-const data = await run(updateUser(values), {
-  onFieldErrors: (fe) => applyServerErrors(form, fe),
-})
+const data = await run(updateUser(values), { form })
 if (data) toast.success("Saved")
 ```
 

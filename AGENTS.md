@@ -34,7 +34,7 @@ ERP UI boilerplate. Prefer existing shared systems over one-off patterns. Human 
 ## Hard conventions
 
 - **Server actions** always return `ActionResult<T>` via `withErrorBoundary`. Never throw across the wire. Known failures: `throw new AppError({ kind, code, message })`.
-- **Client actions** use only `useError().run()` — no try/catch UI in feature components. Map Zod field errors with `applyServerErrors(form, fe)`.
+- **Client actions** use only `useError().run()` — no try/catch UI in feature components. Form submits: `run(action, { form })` (maps Zod field errors via `applyServerErrors`).
 - **RBAC**: server `await authorize(Actions.<feature>.read|write)`; client `can(me.role, Actions.<feature>.write)`. Matrix + catalog in `permissions.ts`. Never import `session.ts` from client.
 - **Auth**: jose cookie sessions + `loginAction` / `logoutAction` / `getMeAction` only. Do not add REST `/api/auth/*` or axios session clients.
 - **Forms**: FieldDef arrays + thin `*Form` wrappers around `DynamicForm`. `onSubmit(values, form)`. Shared validators from `src/lib/schemas/`.
@@ -69,9 +69,7 @@ export async function updateX(input: unknown): Promise<ActionResult<T>> {
 
 ```ts
 // Client
-const data = await run(updateX(values), {
-  onFieldErrors: (fe) => applyServerErrors(form, fe),
-})
+const data = await run(updateX(values), { form })
 if (data) toast.success("Saved")
 ```
 

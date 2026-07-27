@@ -13,8 +13,8 @@ Live demo: use list-page create/edit modals (e.g. `/team/members`). Session expi
 | Server action return type | `ActionResult<T>` — never throw across the wire |
 | Known business / auth failure inside an action | `throw new AppError({ … })` |
 | Wrap an action body | `withErrorBoundary(async () => { … })` |
-| Call a server action from the client | `useError().run(actionPromise, opts?)` |
-| Map server Zod field errors onto a form | `applyServerErrors(form, fieldErrors)` |
+| Call a server action from the client | `useError().run(actionPromise, opts?)` — prefer `{ form }` on form submits |
+| Map server Zod field errors onto a form | `run(…, { form })` (or `applyServerErrors` via `onFieldErrors`) |
 | Transient success / soft failure feedback | Sonner `toast` (via `run` channel table or explicit success toast) |
 | Blocking auth / permission message | `run` → modal channel (`notify`) — do not hand-roll |
 | Crash outside React’s catch (rejected promise) | `run` → `reportFatal` → content `ErrorBoundary` |
@@ -142,7 +142,6 @@ User-facing strings belong on the DTO / `AppError` construction site — not in 
 ```tsx
 "use client"
 
-import { applyServerErrors } from "@/components/shared/forms/lib/apply-server-errors"
 import { useError } from "@/features/errors"
 import { updateUser } from "@/features/users/actions/user-actions"
 import { toast } from "sonner"
@@ -154,9 +153,7 @@ function EditForm() {
     <UserForm
       isEdit
       onSubmit={async (values, form) => {
-        const data = await run(updateUser(values), {
-          onFieldErrors: (fe) => applyServerErrors(form, fe),
-        })
+        const data = await run(updateUser(values), { form })
         if (data) {
           toast.success("Saved")
         }
@@ -166,11 +163,13 @@ function EditForm() {
 }
 ```
 
+Preferred form-submit shape: `run(action, { form })` — validation `fieldErrors` are applied via `applyServerErrors` automatically. Use explicit `onFieldErrors` when you need a custom mapper (it wins if both are set). Do **not** use axios (or REST `/api/auth/*`) for this pipeline — server actions + `run()` only.
+
 ### `run()` behavior
 
 1. Await the promise.
 2. **Reject** → `reportFatal(error)` → content Error Boundary; return `null`. No toast.
-3. `{ ok: false, error }` with `kind === "validation"` and `onFieldErrors` → call it; return `null`.
+3. `{ ok: false, error }` with `kind === "validation"` and `fieldErrors` → `onFieldErrors` if set, else `applyServerErrors(form, …)` when `form` is set; return `null`.
 4. Other `{ ok: false }` → `handle(error, overrides)`; return `null`.
 5. `{ ok: true }` → return `data`.
 
@@ -225,7 +224,7 @@ Keep throwing `AppError` with the same kinds/codes so the client channel table s
 
 | Control | Expected |
 |---------|----------|
-| Create/edit form field errors | Inline via `applyServerErrors` |
+| Create/edit form field errors | Inline via `run(…, { form })` → `applyServerErrors` |
 | Permission denied on write | Blocking `notify` |
 | Session expired | Modal; OK → `/login` |
 | Conflict / not found / internal | Error toast; internal also `console.error` on server |

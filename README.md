@@ -75,9 +75,7 @@ Seeded by `pnpm db:seed`:
 Canonical client submit:
 
 ```ts
-const data = await run(updateUser(values), {
-  onFieldErrors: (fe) => applyServerErrors(form, fe),
-})
+const data = await run(updateUser(values), { form })
 if (data) toast.success("Saved")
 ```
 

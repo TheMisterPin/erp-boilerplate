@@ -152,7 +152,7 @@ export function UserForm({
 }
 ```
 
-`onSubmit` receives the RHF `form` instance so callers can map server field errors with `applyServerErrors` (see [Error Handling](./error-handling.md)).
+`onSubmit` receives the RHF `form` instance so callers can pass it to `run(…, { form })` (see [Error Handling](./error-handling.md)).
 
 ### 4. Submit via `useError().run()`
 
@@ -161,9 +161,7 @@ const { run } = useError()
 
 <UserForm
   onSubmit={async (values, form) => {
-    const data = await run(updateUser(values), {
-      onFieldErrors: (fe) => applyServerErrors(form, fe),
-    })
+    const data = await run(updateUser(values), { form })
     if (data) toast.success("Saved")
   }}
 />

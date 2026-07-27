@@ -47,10 +47,8 @@ export async function updateX(input: unknown): Promise<ActionResult<T>> {
 // ✅ known failure
 throw new AppError({ kind: "conflict", code: "DUPLICATE_SKU", message: "…" })
 
-// ✅ client
-const data = await run(updateX(values), {
-  onFieldErrors: (fe) => applyServerErrors(form, fe),
-})
+// ✅ client — form submit
+const data = await run(updateX(values), { form })
 if (data) toast.success("Saved")
 ```
 
@@ -58,11 +56,13 @@ if (data) toast.success("Saved")
 
 - Server actions **always** return `ActionResult<T>` — never throw across the wire.
 - Client feature code: **no** try/catch around actions — only `useError().run()`.
+- Form submits: prefer `run(action, { form })`; use `onFieldErrors` only for custom mapping (wins over `form`).
 - Import hygiene: client → `@/features/errors` + `dto`; server → `@/features/errors/server` (+ `dto`).
 - User-facing strings live on `AppError` / DTO construction, not in UI switches.
 - Do not customize the Error Boundary fallback per page.
 - Do not import `server.ts` from client components or from the client barrel.
 - Shared FieldDef validators come from `src/lib/schemas/` so client and server stay aligned.
 - Do not use `skipClientValidation` in feature forms.
+- Do not use axios / REST `/api/auth/*` for this pipeline.
 
 See `.docs/components/error-handling.md` for the full human guide.

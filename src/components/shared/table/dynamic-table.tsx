@@ -103,7 +103,7 @@ export function DynamicTable({
   toolbarActions,
   rowActions,
 }: DynamicTableProps) {
-  // Estado para la tabla
+
   const [currentPage, setCurrentPage] = useState(1)
   const [searchQuery, setSearchQuery] = useState("")
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: "asc" | "desc" } | null>(null)
@@ -121,7 +121,7 @@ export function DynamicTable({
   const [pageSizeOptions] = useState([5, 10, 20, 50, 100])
   const [currentPageSize, setCurrentPageSize] = useState(pageSize)
 
-  // Detectar automáticamente las columnas si no se proporcionan
+  
   const autoDetectedColumns = useMemo((): ColumnConfig[] => {
     if (columns) {
       return columns.filter((column) => column.key !== "__actions")
@@ -129,7 +129,7 @@ export function DynamicTable({
 
     if (data.length === 0) return []
 
-    // Extraer todas las claves únicas de los datos
+    
     const keys = Array.from(
       new Set(
         data
@@ -139,7 +139,7 @@ export function DynamicTable({
     )
 
     return keys.map((key): ColumnConfig => {
-      // Detectar el tipo de datos para esta columna
+      
       const type = detectDataType(data.find((item) => item[key] !== undefined)?.[key])
 
       return {
@@ -154,7 +154,7 @@ export function DynamicTable({
   const columnCount =
     autoDetectedColumns.length + (rowActions ? 1 : 0)
 
-  // Función para detectar el tipo de datos
+  
   function detectDataType(value: unknown): DataType {
     if (value === null || value === undefined) return "unknown"
 
@@ -163,7 +163,7 @@ export function DynamicTable({
     if (value instanceof Date) return "date"
 
     if (typeof value === "string") {
-      // Intentar detectar si es una fecha
+      
       const datePattern = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}(\.\d{3})?Z?)?$/
       if (datePattern.test(value) && !isNaN(Date.parse(value))) {
         return "date"
@@ -178,16 +178,16 @@ export function DynamicTable({
     return "unknown"
   }
 
-  // Función para aplicar filtros
+  
   const applyFilter = () => {
     setActiveFilters(filterState)
 
-    // Extraer tags para mostrar los filtros aplicados
+    
     const tags = filterState.rules.map((rule) => `${rule.field} ${rule.operator} ${rule.value}`)
     setAppliedTags(tags)
   }
 
-  // Función para eliminar un filtro específico
+  
   const removeFilter = (index: number) => {
     const newRules = [...filterState.rules]
     newRules.splice(index, 1)
@@ -200,7 +200,7 @@ export function DynamicTable({
     setAppliedTags(newTags)
   }
 
-  // Función para añadir una nueva regla de filtro
+  
   const addFilterRule = () => {
     if (autoDetectedColumns.length === 0) return
 
@@ -217,14 +217,14 @@ export function DynamicTable({
     }))
   }
 
-  // Función para actualizar una regla de filtro
+  
   const updateFilterRule = (index: number, field: string, value: any) => {
     const newRules = [...filterState.rules]
     newRules[index] = { ...newRules[index], [field]: value }
     setFilterState({ ...filterState, rules: newRules })
   }
 
-  // Función para obtener operadores según el tipo de dato
+  
   const getOperatorsForType = (type: DataType) => {
     switch (type) {
       case "number":
@@ -258,7 +258,7 @@ export function DynamicTable({
     }
   }
 
-  // Función para evaluar si un valor cumple con una regla de filtro
+  
   const evaluateFilterRule = (value: any, rule: FilterRule, type: DataType) => {
     if (value === null || value === undefined) return false
 
@@ -295,7 +295,7 @@ export function DynamicTable({
     }
   }
 
-  // Formatear el valor según su tipo
+  
   function formatValue(value: unknown, type: DataType): string {
     if (value === null || value === undefined) return ""
 
@@ -313,11 +313,11 @@ export function DynamicTable({
     }
   }
 
-  // Filtrar datos según la búsqueda y filtros avanzados
+  
   const filteredData = useMemo(() => {
     let result = data
 
-    // Apply global search
+    
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase()
       const firstColumnKey = autoDetectedColumns[0]?.key
@@ -332,7 +332,7 @@ export function DynamicTable({
       }
     }
 
-    // Apply advanced filters
+    
     if (activeFilters.rules.length > 0) {
       result = result.filter((row) => {
         const results = activeFilters.rules.map((rule) => {
@@ -352,21 +352,21 @@ export function DynamicTable({
     return result
   }, [data, searchQuery, activeFilters, autoDetectedColumns])
 
-  // Ordenar datos y aplicar agrupación
+  
   const sortedAndGroupedData = useMemo((): TableRowData[] => {
     let result: TableRowData[] = [...filteredData]
 
-    // Apply sorting
+    
     if (sortConfig) {
       result = [...filteredData].sort((a, b) => {
         const aValue = a[sortConfig.key]
         const bValue = b[sortConfig.key]
 
-        // Manejar valores nulos o indefinidos
+        
         if (aValue === undefined || aValue === null) return sortConfig.direction === "asc" ? -1 : 1
         if (bValue === undefined || bValue === null) return sortConfig.direction === "asc" ? 1 : -1
 
-        // Ordenar según el tipo de datos
+        
         const columnType = autoDetectedColumns.find((col) => col.key === sortConfig.key)?.type || "string"
 
         if (columnType === "date") {
@@ -379,7 +379,7 @@ export function DynamicTable({
           return sortConfig.direction === "asc" ? Number(aValue) - Number(bValue) : Number(bValue) - Number(aValue)
         }
 
-        // Ordenamiento por defecto (string)
+        
         const strA = String(aValue).toLowerCase()
         const strB = String(bValue).toLowerCase()
 
@@ -391,7 +391,7 @@ export function DynamicTable({
       })
     }
 
-    // Apply grouping when active
+    
     if (groupByField) {
       const groups: Record<string, Record<string, unknown>[]> = {}
       result.forEach((item) => {
@@ -415,19 +415,19 @@ export function DynamicTable({
     return result
   }, [filteredData, sortConfig, groupByField, autoDetectedColumns])
 
-  // Paginación
+  
   const totalPages = Math.ceil(sortedAndGroupedData.length / currentPageSize)
   const paginatedData = useMemo(() => {
     const startIndex = (currentPage - 1) * currentPageSize
     return sortedAndGroupedData.slice(startIndex, startIndex + currentPageSize)
   }, [sortedAndGroupedData, currentPage, currentPageSize])
 
-  // Manejar el cambio de página
+  
   const handlePageChange = (page: number) => {
     setCurrentPage(Math.max(1, Math.min(page, totalPages)))
   }
 
-  // Manejar el ordenamiento
+  
   const handleSort = (key: string) => {
     if (!sortable) return
 
@@ -442,7 +442,7 @@ export function DynamicTable({
     })
   }
 
-  // Renderizar el valor de la celda según su tipo
+  
   const renderCellValue = (
     row: Record<string, unknown>,
     columnKey: string,
@@ -483,10 +483,11 @@ export function DynamicTable({
     }
   }
 
-  // Actualizar la página actual si cambia el total de páginas
+  
   useEffect(() => {
     const newTotalPages = Math.ceil(sortedAndGroupedData.length / currentPageSize)
     if (currentPage > newTotalPages) {
+      
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setCurrentPage(Math.max(1, newTotalPages))
     }

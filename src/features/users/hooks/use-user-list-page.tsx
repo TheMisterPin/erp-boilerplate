@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 import type { UseFormReturn } from "react-hook-form"
 
-import { applyServerErrors } from "@/components/shared/forms/lib/apply-server-errors"
 import { useModal } from "@/components/shared/modals"
 import { Actions, can } from "@/features/auth/permissions"
 import { useAuth } from "@/features/auth/hooks/use-auth"
@@ -78,9 +77,7 @@ export function useUserListPage(): UserListPageProps {
             values: UserFormValues,
             form: UseFormReturn<UserFormValues>,
           ) => {
-            const data = await run(createUser(values), {
-              onFieldErrors: (fe) => applyServerErrors(form, fe),
-            })
+            const data = await run(createUser(values), { form })
             if (data) {
               toast.success("Member created")
               closeModal(formId)
@@ -110,9 +107,7 @@ export function useUserListPage(): UserListPageProps {
             ) => {
               const data = await run(
                 updateUser({ ...values, id: user.id }),
-                {
-                  onFieldErrors: (fe) => applyServerErrors(form, fe),
-                },
+                { form },
               )
               if (data) {
                 toast.success("Member saved")

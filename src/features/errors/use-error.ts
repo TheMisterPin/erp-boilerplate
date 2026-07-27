@@ -2,8 +2,10 @@
 
 import { useCallback } from "react"
 import { useRouter } from "next/navigation"
+import type { FieldValues, UseFormReturn } from "react-hook-form"
 import { toast } from "sonner"
 
+import { applyServerErrors } from "@/components/shared/forms/lib/apply-server-errors"
 import { useModal } from "@/components/shared/modals"
 import type { ActionResult, ErrorDTO, ErrorKind } from "@/features/errors/dto"
 import { useErrorContext } from "@/features/errors/error-provider"
@@ -23,8 +25,11 @@ export const DEFAULT_ERROR_CHANNELS: Record<ErrorKind, ErrorChannel> = {
 
 export type HandleOverrides = Partial<Record<ErrorKind, ErrorChannel>>
 
-export type RunOptions = {
+export type RunOptions<TForm extends FieldValues = FieldValues> = {
+  /** Prefer this over `form` when both are set. */
   onFieldErrors?: (fieldErrors: Record<string, string[]>) => void
+  /** Auto-maps validation fieldErrors via applyServerErrors. */
+  form?: UseFormReturn<TForm>
   overrides?: HandleOverrides
 }
 
@@ -83,9 +88,9 @@ export function useError() {
   )
 
   const run = useCallback(
-    async <T,>(
+    async <T, TForm extends FieldValues = FieldValues>(
       action: Promise<ActionResult<T>>,
-      opts?: RunOptions,
+      opts?: RunOptions<TForm>,
     ): Promise<T | null> => {
       let result: ActionResult<T>
 
@@ -103,13 +108,15 @@ export function useError() {
 
       const { error } = result
 
-      if (
-        error.kind === "validation" &&
-        error.fieldErrors &&
-        opts?.onFieldErrors
-      ) {
-        opts.onFieldErrors(error.fieldErrors)
-        return null
+      if (error.kind === "validation" && error.fieldErrors) {
+        if (opts?.onFieldErrors) {
+          opts.onFieldErrors(error.fieldErrors)
+          return null
+        }
+        if (opts?.form) {
+          applyServerErrors(opts.form, error.fieldErrors)
+          return null
+        }
       }
 
       handle(error, opts?.overrides)
