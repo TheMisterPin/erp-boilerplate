@@ -1,7 +1,8 @@
 {
-  "name": "components-playground",
-  "version": "0.1.0",
-  "private": true,
+  "name": "erp-boilerplate",
+  "description": "A Boilerplate for ERP applications",
+  "version": "0.0.1",
+  "private": false,
   "scripts": {
     "build": "next build",
     "dev": "next dev",
