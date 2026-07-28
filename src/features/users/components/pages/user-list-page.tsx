@@ -5,6 +5,8 @@ import { MapPin, Pencil, Plus, Trash2 } from "lucide-react"
 import {
   DataTableFrame,
   DynamicTable,
+  RowActionItem,
+  RowActionsMenu,
 } from "@/components/shared/table"
 import { Button } from "@/components/ui/button"
 import {
@@ -63,7 +65,6 @@ function UserSection({
           <DynamicTable
             data={users.map(toUserTableRow)}
             columns={userTableColumns}
-            pageSize={8}
             searchable
             sortable
             filterable
@@ -73,41 +74,30 @@ function UserSection({
                     const user = users.find((item) => item.id === row.id)
                     if (!user) return null
                     return (
-                      <>
+                      <RowActionsMenu label={`Actions for ${user.fullName}`}>
                         {canAssignLocation ? (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            aria-label={`Assign location for ${user.fullName}`}
+                          <RowActionItem
+                            label="Assign location"
+                            icon={<MapPin className="h-4 w-4" />}
                             onClick={() => onAssignLocation(user)}
-                          >
-                            <MapPin className="h-4 w-4" />
-                          </Button>
+                          />
                         ) : null}
                         {canWrite ? (
-                          <>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              aria-label={`Edit ${user.fullName}`}
-                              onClick={() => onEdit(user)}
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              aria-label={`Delete ${user.fullName}`}
-                              onClick={() => void onDelete(user)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </>
+                          <RowActionItem
+                            label="Edit"
+                            icon={<Pencil className="h-4 w-4" />}
+                            onClick={() => onEdit(user)}
+                          />
                         ) : null}
-                      </>
+                        {canWrite ? (
+                          <RowActionItem
+                            label="Delete"
+                            icon={<Trash2 className="h-4 w-4" />}
+                            destructive
+                            onClick={() => void onDelete(user)}
+                          />
+                        ) : null}
+                      </RowActionsMenu>
                     )
                   }
                 : undefined

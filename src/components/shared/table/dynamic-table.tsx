@@ -24,6 +24,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogT
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { DataTableFrame } from "@/components/shared/table/data-table-frame"
+import {
+  PAGE_SIZE,
+  PAGE_SIZE_OPTIONS,
+} from "@/components/shared/table/table-constant"
 
 /** Cell value types DynamicTable can detect / filter on. */
 export type DataType =
@@ -96,7 +100,7 @@ interface FilterState {
 export function DynamicTable({
   data = [],
   columns,
-  pageSize = 10,
+  pageSize = PAGE_SIZE,
   searchable = true,
   sortable = true,
   filterable = true,
@@ -119,7 +123,6 @@ export function DynamicTable({
   const [groupByField, setGroupByField] = useState<string | null>(null)
   const [appliedTags, setAppliedTags] = useState<string[]>([])
   const [expandedGroups, setExpandedGroups] = useState<string[]>([])
-  const [pageSizeOptions] = useState([5, 10, 20, 50, 100])
   const [currentPageSize, setCurrentPageSize] = useState(pageSize)
 
   
@@ -495,7 +498,7 @@ export function DynamicTable({
   }, [sortedAndGroupedData, currentPageSize, currentPage])
 
   const paginationFooter =
-    totalPages > 1 ? (
+    sortedAndGroupedData.length > 0 ? (
       <div className="table-footer-bar">
         <div className="flex items-center space-x-2">
           <span>Show</span>
@@ -511,7 +514,7 @@ export function DynamicTable({
               <SelectValue placeholder={currentPageSize} />
             </SelectTrigger>
             <SelectContent>
-              {pageSizeOptions.map((size) => (
+              {PAGE_SIZE_OPTIONS.map((size) => (
                 <SelectItem key={size} value={size.toString()}>
                   {size}
                 </SelectItem>
@@ -556,7 +559,7 @@ export function DynamicTable({
               <SelectValue placeholder={currentPage} />
             </SelectTrigger>
             <SelectContent>
-              {Array.from({ length: totalPages }, (_, i) => (
+              {Array.from({ length: Math.max(totalPages, 1) }, (_, i) => (
                 <SelectItem key={i + 1} value={(i + 1).toString()}>
                   {i + 1}
                 </SelectItem>
@@ -564,13 +567,13 @@ export function DynamicTable({
             </SelectContent>
           </Select>
 
-          <span>of {totalPages}</span>
+          <span>of {Math.max(totalPages, 1)}</span>
 
           <Button
             variant="outline"
             size="icon"
             onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
+            disabled={currentPage >= totalPages}
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
@@ -578,7 +581,7 @@ export function DynamicTable({
             variant="outline"
             size="icon"
             onClick={() => handlePageChange(totalPages)}
-            disabled={currentPage === totalPages}
+            disabled={currentPage >= totalPages}
           >
             <ChevronsRight className="h-4 w-4" />
           </Button>
@@ -868,9 +871,9 @@ export function DynamicTable({
       footer={paginationFooter}
     >
       <div className="table-surface">
-            <Table>
-              <TableHeader>
-                <TableRow className="table-head-row border-b hover:bg-transparent">
+        <Table className="w-full border-separate border-spacing-0">
+          <TableHeader>
+            <TableRow className="table-head-row hover:bg-transparent">
                   {autoDetectedColumns.map((column) => (
                     <TableHead
                       key={column.key}

@@ -223,7 +223,6 @@ export function ClockPage({
             <DynamicTable
               data={rows}
               columns={attendanceTableColumns}
-              pageSize={10}
               searchable
               sortable
               filterable

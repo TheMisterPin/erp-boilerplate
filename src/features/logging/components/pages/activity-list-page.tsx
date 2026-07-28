@@ -54,7 +54,6 @@ export function ActivityListPage({
     <DynamicTable
       data={rows}
       columns={activityTableColumns}
-      pageSize={20}
       searchable
       sortable
       filterable

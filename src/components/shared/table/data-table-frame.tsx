@@ -17,6 +17,7 @@ export type DataTableFrameProps = {
 /**
  * Enforces sticky toolbar + scrollable body for all data tables.
  * Parent must provide a bounded height (`h-full` / flex `min-h-0` chain).
+ * Column headers stick inside `.table-surface` (the row scrollport).
  */
 export function DataTableFrame({
   toolbar,

@@ -335,9 +335,9 @@
     min-height: 2.5rem;
   }
 
-  /* Only this region scrolls — toolbar/footer stay put */
+  /* Body region fills space; the table surface is the scrollport */
   .table-body-region {
-    @apply min-h-0 flex-1 overflow-auto p-4;
+    @apply flex min-h-0 flex-1 flex-col overflow-hidden p-4;
   }
 
   .table-footer-region {
@@ -348,7 +348,7 @@
   }
 
   .table-surface {
-    @apply w-full overflow-hidden rounded-xl border;
+    @apply min-h-0 w-full flex-1 overflow-auto rounded-xl border;
     background-color: var(--table-surface);
     border-color: var(--table-border);
   }
@@ -359,10 +359,12 @@
   }
 
   .table-head-cell {
-    @apply h-11 px-3 text-left text-xs font-semibold tracking-wide uppercase;
+    @apply sticky top-0 z-20 h-11 px-3 text-left text-xs font-semibold tracking-wide uppercase;
     color: var(--table-header-foreground);
     border-color: var(--table-header-border);
     background-color: var(--table-header);
+    /* Keep header opaque while body scrolls underneath */
+    box-shadow: 0 1px 0 0 var(--table-header-border);
   }
 
   .table-body-row {

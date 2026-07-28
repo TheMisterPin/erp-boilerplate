@@ -18,15 +18,17 @@ Use the shared `DynamicTable` for feature lists. Do not invent a parallel DataTa
 | Feature columns | `src/features/<feature>/components/tables/*-table-columns.tsx` |
 | List pages | `src/features/<feature>/components/pages/*` |
 
-## Sticky toolbar contract (required)
+## Sticky toolbar (required)
 
 Toolbar / search stay fixed; **only** the body scrolls. Pagination stays in the footer.
+Column headers are sticky inside the body so sort controls stay reachable while scrolling rows.
 
 1. Route: wrap with `<TablePageViewport>` (bounded height, `overflow-hidden`)
 2. Table: use `<DynamicTable>` (uses `DataTableFrame` internally) or empty/loading via `<DataTableFrame>`
 3. Parent of `DynamicTable` must be in a `h-full` / `min-h-0` / `flex-1` / `overflow-hidden` chain
 4. **Never** put `DynamicTable` inside a page-level `overflow-y-auto` that scrolls the toolbar away
 5. Multi-section pages: each section is `flex-1 min-h-0 overflow-hidden` with the table filling that section
+6. Paginate with `PAGE_SIZE` from `@/components/shared/table` (default; override `pageSize` only when needed)
 
 ```tsx
 // ✅ route
@@ -67,9 +69,31 @@ type DynamicTableProps = {
 
 - `data` is flattened rows (`toXTableRow`), not rich domain objects
 - Map `row.id` back to the domain entity for Edit/Delete handlers
-- `toolbarActions` → Create (and similar); `rowActions` → Edit/Delete
+- `toolbarActions` → Create (and similar); `rowActions` → use `RowActionsMenu` + `RowActionItem` (single ⋯ trigger, actions in a popover with tooltips). Do not stack bare icon buttons in the actions column.
 - Actions column is automatic when `rowActions` is set; skip group header rows
 - Never use key `__ed` in column configs / search fields
+
+```tsx
+rowActions={({ row }) => {
+  const item = items.find((x) => x.id === row.id)
+  if (!item) return null
+  return (
+    <RowActionsMenu label={`Actions for ${item.name}`}>
+      <RowActionItem
+        label="Edit"
+        icon={<Pencil className="h-4 w-4" />}
+        onClick={() => onEdit(item)}
+      />
+      <RowActionItem
+        label="Delete"
+        icon={<Trash2 className="h-4 w-4" />}
+        destructive
+        onClick={() => void onDelete(item)}
+      />
+    </RowActionsMenu>
+  )
+}}
+```
 
 ## Feature columns file
 

@@ -13,3 +13,10 @@ export type {
   DataTableFrameProps,
   TablePageViewportProps,
 } from "./data-table-frame"
+export { PAGE_SIZE, PAGE_SIZE_OPTIONS } from "./table-constant"
+export { RowActionsMenu, RowActionItem } from "./row-actions-menu"
+export type {
+  RowActionsMenuProps,
+  RowActionItemProps,
+} from "./row-actions-menu"
+

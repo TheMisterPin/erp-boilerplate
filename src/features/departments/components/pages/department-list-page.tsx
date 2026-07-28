@@ -5,6 +5,8 @@ import { Pencil, Plus, Trash2 } from "lucide-react"
 import {
   DataTableFrame,
   DynamicTable,
+  RowActionItem,
+  RowActionsMenu,
 } from "@/components/shared/table"
 import { Button } from "@/components/ui/button"
 import {
@@ -66,7 +68,6 @@ export function DepartmentListPage({
     <DynamicTable
       data={rows}
       columns={departmentTableColumns}
-      pageSize={10}
       searchable
       sortable
       filterable
@@ -78,26 +79,19 @@ export function DepartmentListPage({
               const department = departments.find((item) => item.id === row.id)
               if (!department) return null
               return (
-                <>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    aria-label={`Edit ${department.name}`}
+                <RowActionsMenu label={`Actions for ${department.name}`}>
+                  <RowActionItem
+                    label="Edit"
+                    icon={<Pencil className="h-4 w-4" />}
                     onClick={() => onEdit(department)}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    aria-label={`Delete ${department.name}`}
+                  />
+                  <RowActionItem
+                    label="Delete"
+                    icon={<Trash2 className="h-4 w-4" />}
+                    destructive
                     onClick={() => void onDelete(department)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </>
+                  />
+                </RowActionsMenu>
               )
             }
           : undefined

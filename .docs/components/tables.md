@@ -21,8 +21,10 @@ The search / filter toolbar must stay fixed while rows scroll. Pagination stays 
 
 Do **not** wrap `DynamicTable` in an outer `overflow-y-auto` that scrolls the toolbar. Keep a `h-full` → `min-h-0` → `overflow-hidden` flex chain from the viewport to the table.
 
+Default pagination uses `PAGE_SIZE` (`10`) from `@/components/shared/table` / `table-constant.ts`. Column headers stick within the scroll region so sort stays available.
+
 ```tsx
-import { TablePageViewport } from "@/components/shared/table"
+import { TablePageViewport, PAGE_SIZE } from "@/components/shared/table"
 
 export default function Page() {
   const page = useUserListPage()
@@ -87,7 +89,21 @@ const rows = useMemo(() => users.map(toUserTableRow), [users])
   rowActions={({ row }) => {
     const user = users.find((u) => u.id === row.id)
     if (!user) return null
-    return (/* icon buttons */)
+    return (
+      <RowActionsMenu label={`Actions for ${user.fullName}`}>
+        <RowActionItem
+          label="Edit"
+          icon={<Pencil className="h-4 w-4" />}
+          onClick={() => onEdit(user)}
+        />
+        <RowActionItem
+          label="Delete"
+          icon={<Trash2 className="h-4 w-4" />}
+          destructive
+          onClick={() => void onDelete(user)}
+        />
+      </RowActionsMenu>
+    )
   }}
 />
 ```

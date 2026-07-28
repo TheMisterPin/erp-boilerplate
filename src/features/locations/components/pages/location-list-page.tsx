@@ -5,6 +5,8 @@ import { Pencil, Plus, Trash2 } from "lucide-react"
 import {
   DataTableFrame,
   DynamicTable,
+  RowActionItem,
+  RowActionsMenu,
 } from "@/components/shared/table"
 import { Button } from "@/components/ui/button"
 import {
@@ -59,7 +61,6 @@ function LocationSection({
           <DynamicTable
             data={rows}
             columns={locationTableColumns}
-            pageSize={8}
             searchable
             sortable
             filterable
@@ -69,26 +70,19 @@ function LocationSection({
                     const location = locations.find((item) => item.id === row.id)
                     if (!location) return null
                     return (
-                      <>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          aria-label={`Edit ${location.name}`}
+                      <RowActionsMenu label={`Actions for ${location.name}`}>
+                        <RowActionItem
+                          label="Edit"
+                          icon={<Pencil className="h-4 w-4" />}
                           onClick={() => onEdit(location)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          aria-label={`Delete ${location.name}`}
+                        />
+                        <RowActionItem
+                          label="Delete"
+                          icon={<Trash2 className="h-4 w-4" />}
+                          destructive
                           onClick={() => void onDelete(location)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </>
+                        />
+                      </RowActionsMenu>
                     )
                   }
                 : undefined

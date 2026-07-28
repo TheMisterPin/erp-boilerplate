@@ -5,6 +5,8 @@ import { CalendarPlus, Pencil, Plus, Trash2 } from "lucide-react"
 import {
   DataTableFrame,
   DynamicTable,
+  RowActionItem,
+  RowActionsMenu,
 } from "@/components/shared/table"
 import { Button } from "@/components/ui/button"
 import {
@@ -70,7 +72,6 @@ export function ShiftTemplateListPage({
     <DynamicTable
       data={rows}
       columns={shiftTemplateTableColumns}
-      pageSize={10}
       searchable
       sortable
       filterable
@@ -81,35 +82,26 @@ export function ShiftTemplateListPage({
               const template = templates.find((item) => item.id === row.id)
               if (!template) return null
               return (
-                <>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    aria-label={`Generate shifts from ${template.userName ?? "template"}`}
+                <RowActionsMenu
+                  label={`Actions for ${template.userName ?? "template"}`}
+                >
+                  <RowActionItem
+                    label="Generate shifts"
+                    icon={<CalendarPlus className="h-4 w-4" />}
                     onClick={() => onGenerate(template)}
-                  >
-                    <CalendarPlus className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    aria-label={`Edit template for ${template.userName ?? "user"}`}
+                  />
+                  <RowActionItem
+                    label="Edit"
+                    icon={<Pencil className="h-4 w-4" />}
                     onClick={() => onEdit(template)}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    aria-label={`Delete template for ${template.userName ?? "user"}`}
+                  />
+                  <RowActionItem
+                    label="Delete"
+                    icon={<Trash2 className="h-4 w-4" />}
+                    destructive
                     onClick={() => void onDelete(template)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </>
+                  />
+                </RowActionsMenu>
               )
             }
           : undefined
