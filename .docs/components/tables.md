@@ -19,9 +19,9 @@ The search / filter toolbar must stay fixed while rows scroll. Pagination stays 
 | `DataTableFrame` | Shell: sticky toolbar + scrollable body + optional footer |
 | `DynamicTable` | Uses `DataTableFrame` internally |
 
-Do **not** wrap `DynamicTable` in an outer `overflow-y-auto` that scrolls the toolbar. Keep a `h-full` → `min-h-0` → `overflow-hidden` flex chain from the viewport to the table.
+Do **not** wrap `DynamicTable` in an outer `overflow-y-auto` that scrolls the toolbar. `AppShell` locks the main content slot (`overflow-hidden`). Keep a `h-full` → `min-h-0` → `overflow-hidden` flex chain from `TablePageViewport` to the table so only `.table-surface` scrolls.
 
-Default pagination uses `PAGE_SIZE` (`10`) from `@/components/shared/table` / `table-constant.ts`. Column headers stick within the scroll region so sort stays available.
+Default pagination uses `PAGE_SIZE` (`10`) from `@/components/shared/table` / `table-constant.ts`. The footer stays pinned under the scroll region: results summary on the left, page controls on the right (hidden when there is only one page). Column headers stick within the scroll region so sort stays available.
 
 ```tsx
 import { TablePageViewport, PAGE_SIZE } from "@/components/shared/table"
@@ -46,7 +46,7 @@ Empty / loading states should also use `DataTableFrame` so height and chrome sta
 |------|---------|
 | `data` | `Record<string, unknown>[]` (flattened rows) |
 | `columns` | Optional `ColumnConfig[]` (else auto-detect keys) |
-| `pageSize` | Default page size |
+| `pageSize` | Fixed page size (default `PAGE_SIZE`) |
 | `searchable` / `sortable` / `filterable` / `groupable` | Toolbar features |
 | `toolbarActions` | Right-side toolbar slot (e.g. Create button) |
 | `rowActions` | Per data-row Actions column renderer |

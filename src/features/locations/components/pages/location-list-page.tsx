@@ -9,6 +9,7 @@ import {
   RowActionsMenu,
 } from "@/components/shared/table"
 import { Button } from "@/components/ui/button"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   locationTableColumns,
   toLocationTableRow,
@@ -25,76 +26,66 @@ export type LocationListPageProps = {
   onDelete: (location: Location) => void
 }
 
-type LocationSectionProps = {
-  title: string
+type LocationTabPanelProps = {
   emptyMessage: string
   locations: Location[]
-  rows: ReturnType<typeof toLocationTableRow>[]
   canWrite: boolean
   onEdit: (location: Location) => void
   onDelete: (location: Location) => void
 }
 
-function LocationSection({
-  title,
+function LocationTabPanel({
   emptyMessage,
   locations,
-  rows,
   canWrite,
   onEdit,
   onDelete,
-}: LocationSectionProps) {
-  return (
-    <section className="flex min-h-0 flex-1 basis-0 flex-col overflow-hidden">
-      <div className="flex shrink-0 items-center justify-between gap-2 px-1 pb-2">
-        <h2 className="text-sm font-semibold tracking-tight">{title}</h2>
-        <span className="text-xs text-muted-foreground">
-          {locations.length}
-        </span>
+}: LocationTabPanelProps) {
+  if (locations.length === 0) {
+    return (
+      <div className="flex min-h-0 flex-1 items-center justify-center rounded-lg border border-dashed p-6">
+        <p className="text-sm text-muted-foreground">{emptyMessage}</p>
       </div>
-      {locations.length === 0 ? (
-        <div className="flex min-h-0 flex-1 items-center justify-center rounded-lg border border-dashed p-6">
-          <p className="text-sm text-muted-foreground">{emptyMessage}</p>
-        </div>
-      ) : (
-        <div className="min-h-0 flex-1 overflow-hidden rounded-lg border">
-          <DynamicTable
-            data={rows}
-            columns={locationTableColumns}
-            searchable
-            sortable
-            filterable
-            rowActions={
-              canWrite
-                ? ({ row }) => {
-                    const location = locations.find((item) => item.id === row.id)
-                    if (!location) return null
-                    return (
-                      <RowActionsMenu label={`Actions for ${location.name}`}>
-                        <RowActionItem
-                          label="Edit"
-                          icon={<Pencil className="h-4 w-4" />}
-                          onClick={() => onEdit(location)}
-                        />
-                        <RowActionItem
-                          label="Delete"
-                          icon={<Trash2 className="h-4 w-4" />}
-                          destructive
-                          onClick={() => void onDelete(location)}
-                        />
-                      </RowActionsMenu>
-                    )
-                  }
-                : undefined
-            }
-          />
-        </div>
-      )}
-    </section>
+    )
+  }
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      <DynamicTable
+        data={locations.map(toLocationTableRow)}
+        columns={locationTableColumns}
+        searchable
+        sortable
+        filterable
+        rowActions={
+          canWrite
+            ? ({ row }) => {
+                const location = locations.find((item) => item.id === row.id)
+                if (!location) return null
+                return (
+                  <RowActionsMenu label={`Actions for ${location.name}`}>
+                    <RowActionItem
+                      label="Edit"
+                      icon={<Pencil className="h-4 w-4" />}
+                      onClick={() => onEdit(location)}
+                    />
+                    <RowActionItem
+                      label="Delete"
+                      icon={<Trash2 className="h-4 w-4" />}
+                      destructive
+                      onClick={() => void onDelete(location)}
+                    />
+                  </RowActionsMenu>
+                )
+              }
+            : undefined
+        }
+      />
+    </div>
   )
 }
 
-/** Stateless locations list — with-manager and without-manager sections. */
+/** Stateless locations list — manager / no-manager tabs. */
 export function LocationListPage({
   loaded,
   locations,
@@ -138,26 +129,45 @@ export function LocationListPage({
           <p className="text-sm text-muted-foreground">No locations found.</p>
         </div>
       ) : (
-        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden p-4">
-          <LocationSection
-            title="With a manager"
-            emptyMessage="No locations have a manager assigned yet."
-            locations={withManager}
-            rows={withManager.map(toLocationTableRow)}
-            canWrite={canWrite}
-            onEdit={onEdit}
-            onDelete={onDelete}
-          />
-          <LocationSection
-            title="Without a manager"
-            emptyMessage="Every location has a manager."
-            locations={withoutManager}
-            rows={withoutManager.map(toLocationTableRow)}
-            canWrite={canWrite}
-            onEdit={onEdit}
-            onDelete={onDelete}
-          />
-        </div>
+        <Tabs
+          defaultValue="with-manager"
+          className="flex min-h-0 flex-1 flex-col overflow-hidden px-4 pt-3 pb-4"
+        >
+          <TabsList className="mb-3 w-fit shrink-0 self-start">
+            <TabsTrigger value="with-manager">
+              With a manager ({withManager.length})
+            </TabsTrigger>
+            <TabsTrigger value="without-manager">
+              Without a manager ({withoutManager.length})
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent
+            value="with-manager"
+            className="mt-0 flex min-h-0 flex-1 flex-col overflow-hidden data-[state=inactive]:hidden"
+          >
+            <LocationTabPanel
+              emptyMessage="No locations have a manager assigned yet."
+              locations={withManager}
+              canWrite={canWrite}
+              onEdit={onEdit}
+              onDelete={onDelete}
+            />
+          </TabsContent>
+
+          <TabsContent
+            value="without-manager"
+            className="mt-0 flex min-h-0 flex-1 flex-col overflow-hidden data-[state=inactive]:hidden"
+          >
+            <LocationTabPanel
+              emptyMessage="Every location has a manager."
+              locations={withoutManager}
+              canWrite={canWrite}
+              onEdit={onEdit}
+              onDelete={onDelete}
+            />
+          </TabsContent>
+        </Tabs>
       )}
     </div>
   )

@@ -1,15 +1,11 @@
 "use client"
 
-import { LogIn, LogOut, Timer } from "lucide-react"
+import Link from "next/link"
+import { ArrowLeft, LogIn, LogOut, Timer } from "lucide-react"
 
-import {
-  DataTableFrame,
-  DynamicTable,
-} from "@/components/shared/table"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { attendanceTableColumns } from "@/features/attendance/components/tables/attendance-table-columns"
 import type { ClockStatus } from "@/features/attendance/types/attendance-types"
 
 export type ClockPageProps = {
@@ -21,7 +17,6 @@ export type ClockPageProps = {
   loggingIn: boolean
   punching: boolean
   clock: ClockStatus | null
-  rows: Record<string, unknown>[]
   setEmail: (value: string) => void
   setPassword: (value: string) => void
   onLogin: () => void | Promise<void>
@@ -38,6 +33,17 @@ function formatDuration(minutes: number | null | undefined): string {
   return `${hours}h ${mins}m`
 }
 
+function HomeLink() {
+  return (
+    <Button asChild variant="ghost" size="sm" className="self-start">
+      <Link href="/">
+        <ArrowLeft className="mr-2 h-4 w-4" />
+        Back to home
+      </Link>
+    </Button>
+  )
+}
+
 /** Stateless kiosk clock view — state from `useClockPage`. */
 export function ClockPage({
   authLoading,
@@ -48,7 +54,6 @@ export function ClockPage({
   loggingIn,
   punching,
   clock,
-  rows,
   setEmail,
   setPassword,
   onLogin,
@@ -58,7 +63,8 @@ export function ClockPage({
 }: ClockPageProps) {
   if (authLoading) {
     return (
-      <div className="mx-auto flex w-full max-w-lg px-4 py-16 text-sm text-muted-foreground">
+      <div className="mx-auto flex w-full max-w-lg flex-col gap-4 px-4 py-16 text-sm text-muted-foreground">
+        <HomeLink />
         Loading…
       </div>
     )
@@ -67,6 +73,7 @@ export function ClockPage({
   if (!isAuthenticated) {
     return (
       <div className="mx-auto flex w-full max-w-md flex-col gap-8 px-4 py-16">
+        <HomeLink />
         <div className="space-y-2 text-center">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
             <Timer className="h-6 w-6" />
@@ -116,8 +123,10 @@ export function ClockPage({
   const isCheckedIn = !!clock?.openAttendance
 
   return (
-    <div className="mx-auto flex h-svh min-h-0 w-full max-w-5xl flex-col gap-6 overflow-hidden px-4 py-10">
-      <header className="flex shrink-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <div className="mx-auto flex min-h-svh w-full max-w-lg flex-col gap-6 px-4 py-10">
+      <HomeLink />
+
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-1">
           <h1 className="text-3xl font-semibold tracking-tight">Time clock</h1>
           <p className="text-sm text-muted-foreground">
@@ -135,8 +144,8 @@ export function ClockPage({
                 : ""}
             </p>
           ) : (
-            <p className="text-sm text-muted-foreground">
-              No scheduled shift for today — you can still check in.
+            <p className="text-sm text-amber-600 dark:text-amber-400">
+              No scheduled shift for today — check-in is unavailable.
             </p>
           )}
         </div>
@@ -145,7 +154,7 @@ export function ClockPage({
         </Button>
       </header>
 
-      <section className="shrink-0 rounded-xl border bg-card p-6">
+      <section className="rounded-xl border bg-card p-6">
         <div className="flex flex-col items-center gap-6 text-center">
           <div
             className={`flex h-20 w-20 items-center justify-center rounded-full ${
@@ -191,44 +200,13 @@ export function ClockPage({
               type="button"
               size="lg"
               className="min-w-48"
-              disabled={punching || !loaded}
+              disabled={punching || !loaded || !clock?.todayShift}
               onClick={() => void onCheckIn()}
             >
               {punching ? "Checking in…" : "Check in"}
             </Button>
           )}
         </div>
-      </section>
-
-      <section className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
-        <div className="shrink-0">
-          <h2 className="text-lg font-semibold tracking-tight">
-            Attendance log
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            Arrival, departure, and time on the job. Linked to activity log
-            events.
-          </p>
-        </div>
-        {!loaded ? (
-          <DataTableFrame>
-            <p className="text-sm text-muted-foreground">Loading attendance…</p>
-          </DataTableFrame>
-        ) : rows.length === 0 ? (
-          <DataTableFrame>
-            <p className="text-sm text-muted-foreground">No check-ins yet.</p>
-          </DataTableFrame>
-        ) : (
-          <div className="min-h-0 flex-1 overflow-hidden rounded-lg border">
-            <DynamicTable
-              data={rows}
-              columns={attendanceTableColumns}
-              searchable
-              sortable
-              filterable
-            />
-          </div>
-        )}
       </section>
     </div>
   )

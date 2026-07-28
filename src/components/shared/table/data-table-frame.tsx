@@ -42,8 +42,8 @@ export type TablePageViewportProps = {
 }
 
 /**
- * Full-bleed viewport under the app header for list routes.
- * Always pairs with `DataTableFrame` / `DynamicTable` as the child.
+ * Full-bleed locked viewport under the app header for list routes.
+ * Fills the AppShell content slot; only `.table-surface` should scroll.
  */
 export function TablePageViewport({
   children,
@@ -52,7 +52,7 @@ export function TablePageViewport({
   return (
     <div
       className={cn(
-        "-m-4 flex h-[calc(100svh-4rem)] min-h-0 w-[calc(100%+2rem)] flex-col overflow-hidden",
+        "flex h-full min-h-0 flex-1 flex-col overflow-hidden",
         className,
       )}
     >

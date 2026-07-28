@@ -61,7 +61,7 @@ function UserSection({
           <p className="text-sm text-muted-foreground">{emptyMessage}</p>
         </div>
       ) : (
-        <div className="min-h-0 flex-1 overflow-hidden rounded-lg border">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <DynamicTable
             data={users.map(toUserTableRow)}
             columns={userTableColumns}

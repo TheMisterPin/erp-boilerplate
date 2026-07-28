@@ -1,8 +1,9 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
 
+import { useModal } from "@/components/shared/modals"
 import { useAuth } from "@/features/auth/hooks/use-auth"
 import { loginAction, logoutAction } from "@/features/auth/actions/auth-actions"
 import { useError } from "@/features/errors"
@@ -10,25 +11,24 @@ import {
   checkIn,
   checkOut,
   getClockStatus,
-  listAttendances,
 } from "@/features/attendance/actions/attendance-actions"
-import { toAttendanceTableRow } from "@/features/attendance/components/tables/attendance-table-columns"
 import type { ClockPageProps } from "@/features/attendance/components/pages/clock-page"
-import type {
-  ClockStatus,
-  ShiftAttendance,
-} from "@/features/attendance/types/attendance-types"
+import {
+  formatMinutesOff,
+  getCheckInTiming,
+} from "@/features/attendance/lib/check-in-timing"
+import type { ClockStatus } from "@/features/attendance/types/attendance-types"
 
-/** Kiosk clock page logic — login, punch, attendance table. */
+/** Kiosk clock page logic — login, punch, shift timing warnings. */
 export function useClockPage(): ClockPageProps {
   const { run } = useError()
+  const { confirm, notify } = useModal()
   const { me, status, refreshMe } = useAuth()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loggingIn, setLoggingIn] = useState(false)
   const [punching, setPunching] = useState(false)
   const [clock, setClock] = useState<ClockStatus | null>(null)
-  const [attendances, setAttendances] = useState<ShiftAttendance[]>([])
   const [loaded, setLoaded] = useState(false)
 
   const isAuthenticated = status === "authenticated" && !!me
@@ -36,17 +36,12 @@ export function useClockPage(): ClockPageProps {
   const load = useCallback(async () => {
     if (!isAuthenticated) {
       setClock(null)
-      setAttendances([])
       setLoaded(true)
       return
     }
 
-    const [statusData, list] = await Promise.all([
-      run(getClockStatus()),
-      run(listAttendances()),
-    ])
+    const statusData = await run(getClockStatus())
     setClock(statusData ?? null)
-    setAttendances(list ?? [])
     setLoaded(true)
   }, [isAuthenticated, run])
 
@@ -57,18 +52,13 @@ export function useClockPage(): ClockPageProps {
       if (status !== "authenticated") {
         if (!cancelled) {
           setClock(null)
-          setAttendances([])
           setLoaded(true)
         }
         return
       }
-      const [statusData, list] = await Promise.all([
-        run(getClockStatus()),
-        run(listAttendances()),
-      ])
+      const statusData = await run(getClockStatus())
       if (cancelled) return
       setClock(statusData ?? null)
-      setAttendances(list ?? [])
       setLoaded(true)
     })()
     return () => {
@@ -80,21 +70,6 @@ export function useClockPage(): ClockPageProps {
   useEffect(() => {
     if (!clock?.openAttendance) return
     const id = window.setInterval(() => {
-      setAttendances((prev) =>
-        prev.map((row) =>
-          row.isOpen
-            ? {
-                ...row,
-                elapsedMinutes: Math.max(
-                  0,
-                  Math.floor(
-                    (Date.now() - new Date(row.checkInAt).getTime()) / 60_000,
-                  ),
-                ),
-              }
-            : row,
-        ),
-      )
       setClock((prev) => {
         if (!prev?.openAttendance) return prev
         const open = prev.openAttendance
@@ -115,11 +90,6 @@ export function useClockPage(): ClockPageProps {
     return () => window.clearInterval(id)
   }, [clock?.openAttendance])
 
-  const rows = useMemo(
-    () => attendances.map(toAttendanceTableRow),
-    [attendances],
-  )
-
   const onLogin = useCallback(async () => {
     setLoggingIn(true)
     try {
@@ -129,12 +99,8 @@ export function useClockPage(): ClockPageProps {
         toast.success(`Welcome, ${user.fullName}`)
         setPassword("")
         setLoaded(false)
-        const [statusData, list] = await Promise.all([
-          run(getClockStatus()),
-          run(listAttendances()),
-        ])
+        const statusData = await run(getClockStatus())
         setClock(statusData ?? null)
-        setAttendances(list ?? [])
         setLoaded(true)
       }
     } finally {
@@ -147,7 +113,6 @@ export function useClockPage(): ClockPageProps {
     if (ok) {
       await refreshMe()
       setClock(null)
-      setAttendances([])
       setEmail("")
       setPassword("")
       toast.success("Signed out — ready for the next employee")
@@ -155,9 +120,39 @@ export function useClockPage(): ClockPageProps {
   }, [refreshMe, run])
 
   const onCheckIn = useCallback(async () => {
+    const shift = clock?.todayShift
+    if (!shift) {
+      notify({
+        variant: "warning",
+        title: "No shift assigned",
+        message:
+          "You have no shift scheduled for today. Ask a manager to assign one before checking in.",
+      })
+      return
+    }
+
+    const timing = getCheckInTiming(shift.startTime)
+    if (timing.status === "early") {
+      const ok = await confirm({
+        title: "Checking in early",
+        message: `Your shift starts at ${timing.startTime} (in ${formatMinutesOff(timing.minutesOff)}). Check in early anyway?`,
+        confirmLabel: "Check in early",
+      })
+      if (!ok) return
+    } else if (timing.status === "late") {
+      const ok = await confirm({
+        title: "Checking in late",
+        message: `Your shift started at ${timing.startTime} (${formatMinutesOff(timing.minutesOff)} ago). Check in late anyway?`,
+        confirmLabel: "Check in late",
+      })
+      if (!ok) return
+    }
+
     setPunching(true)
     try {
-      const data = await run(checkIn())
+      const data = await run(checkIn(), {
+        overrides: { conflict: "modal" },
+      })
       if (data) {
         toast.success("Checked in")
         await load()
@@ -165,12 +160,14 @@ export function useClockPage(): ClockPageProps {
     } finally {
       setPunching(false)
     }
-  }, [load, run])
+  }, [clock?.todayShift, confirm, load, notify, run])
 
   const onCheckOut = useCallback(async () => {
     setPunching(true)
     try {
-      const data = await run(checkOut())
+      const data = await run(checkOut(), {
+        overrides: { conflict: "modal" },
+      })
       if (data) {
         toast.success(
           data.durationMinutes != null
@@ -193,7 +190,6 @@ export function useClockPage(): ClockPageProps {
     loggingIn,
     punching,
     clock,
-    rows,
     setEmail,
     setPassword,
     onLogin,

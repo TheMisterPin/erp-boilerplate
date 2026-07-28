@@ -317,7 +317,7 @@
 
   /* ---- data table surfaces ---- */
   .table-shell {
-    @apply flex h-full min-h-0 w-full flex-col overflow-hidden;
+    @apply flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden;
     color: var(--table-cell-foreground);
   }
 
@@ -341,7 +341,7 @@
   }
 
   .table-footer-region {
-    @apply shrink-0 border-t px-4 py-3;
+    @apply mt-auto shrink-0 border-t px-4 py-3;
     border-color: var(--table-toolbar-border);
     background-color: var(--table-toolbar);
     color: var(--table-toolbar-foreground);
@@ -393,7 +393,7 @@
   }
 
   .table-footer-bar {
-    @apply flex flex-wrap items-center justify-between gap-3 text-sm;
+    @apply flex min-h-10 items-center justify-between gap-3 text-sm;
     color: var(--muted-foreground);
   }
 }

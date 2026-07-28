@@ -7,8 +7,10 @@ export default function MyShiftsPage() {
   const page = useShiftSchedulePage()
 
   return (
-    <div className="mx-auto w-full max-w-7xl">
-      <ShiftSchedulePage {...page} />
+    <div className="h-full min-h-0 overflow-y-auto p-8">
+      <div className="mx-auto w-full max-w-7xl">
+        <ShiftSchedulePage {...page} />
+      </div>
     </div>
   )
 }

@@ -5,7 +5,7 @@ const demos = [
     href: "/clock",
     title: "Time clock",
     description:
-      "Kiosk check-in/out — login on the page, attendance table + activity log",
+      "Kiosk check-in/out — requires today’s shift; warns when early or late",
   },
   {
     href: "/team/members",
@@ -42,32 +42,34 @@ const demos = [
 
 export default function Home() {
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-8">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-[28px] font-semibold leading-9 tracking-tight">
-          Components Playground
-        </h1>
-        <p className="text-muted-foreground text-sm leading-relaxed">
-          ERP UI boilerplate. Use the demos below as the reference pattern when
-          adding a new feature vertical with the agent.
-        </p>
-      </div>
+    <div className="h-full min-h-0 overflow-y-auto p-8">
+      <div className="mx-auto flex max-w-2xl flex-col gap-8">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-[28px] font-semibold leading-9 tracking-tight">
+            Components Playground
+          </h1>
+          <p className="text-muted-foreground text-sm leading-relaxed">
+            ERP UI boilerplate. Use the demos below as the reference pattern when
+            adding a new feature vertical with the agent.
+          </p>
+        </div>
 
-      <ul className="flex flex-col gap-3">
-        {demos.map((demo) => (
-          <li key={demo.href}>
-            <Link
-              href={demo.href}
-              className="hover:bg-muted/50 block rounded-lg border p-4 transition-colors"
-            >
-              <span className="font-medium">{demo.title}</span>
-              <p className="text-muted-foreground mt-1 text-sm">
-                {demo.description}
-              </p>
-            </Link>
-          </li>
-        ))}
-      </ul>
+        <ul className="flex flex-col gap-3">
+          {demos.map((demo) => (
+            <li key={demo.href}>
+              <Link
+                href={demo.href}
+                className="hover:bg-muted/50 block rounded-lg border p-4 transition-colors"
+              >
+                <span className="font-medium">{demo.title}</span>
+                <p className="text-muted-foreground mt-1 text-sm">
+                  {demo.description}
+                </p>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   )
 }

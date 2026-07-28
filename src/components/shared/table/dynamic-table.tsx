@@ -24,10 +24,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogT
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { DataTableFrame } from "@/components/shared/table/data-table-frame"
-import {
-  PAGE_SIZE,
-  PAGE_SIZE_OPTIONS,
-} from "@/components/shared/table/table-constant"
+import { PAGE_SIZE } from "@/components/shared/table/table-constant"
 
 /** Cell value types DynamicTable can detect / filter on. */
 export type DataType =
@@ -123,7 +120,6 @@ export function DynamicTable({
   const [groupByField, setGroupByField] = useState<string | null>(null)
   const [appliedTags, setAppliedTags] = useState<string[]>([])
   const [expandedGroups, setExpandedGroups] = useState<string[]>([])
-  const [currentPageSize, setCurrentPageSize] = useState(pageSize)
 
   
   const autoDetectedColumns = useMemo((): ColumnConfig[] => {
@@ -420,11 +416,12 @@ export function DynamicTable({
   }, [filteredData, sortConfig, groupByField, autoDetectedColumns])
 
   
-  const totalPages = Math.ceil(sortedAndGroupedData.length / currentPageSize)
+  const resultCount = sortedAndGroupedData.length
+  const totalPages = Math.max(1, Math.ceil(resultCount / pageSize))
   const paginatedData = useMemo(() => {
-    const startIndex = (currentPage - 1) * currentPageSize
-    return sortedAndGroupedData.slice(startIndex, startIndex + currentPageSize)
-  }, [sortedAndGroupedData, currentPage, currentPageSize])
+    const startIndex = (currentPage - 1) * pageSize
+    return sortedAndGroupedData.slice(startIndex, startIndex + pageSize)
+  }, [sortedAndGroupedData, currentPage, pageSize])
 
   
   const handlePageChange = (page: number) => {
@@ -489,49 +486,26 @@ export function DynamicTable({
 
   
   useEffect(() => {
-    const newTotalPages = Math.ceil(sortedAndGroupedData.length / currentPageSize)
-    if (currentPage > newTotalPages) {
-      
+    if (currentPage > totalPages) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setCurrentPage(Math.max(1, newTotalPages))
+      setCurrentPage(totalPages)
     }
-  }, [sortedAndGroupedData, currentPageSize, currentPage])
+  }, [totalPages, currentPage])
 
-  const paginationFooter =
-    sortedAndGroupedData.length > 0 ? (
-      <div className="table-footer-bar">
-        <div className="flex items-center space-x-2">
-          <span>Show</span>
-          <Select
-            value={currentPageSize.toString()}
-            onValueChange={(value) => {
-              const newPageSize = Number.parseInt(value)
-              setCurrentPageSize(newPageSize)
-              setCurrentPage(1)
-            }}
-          >
-            <SelectTrigger className="w-17.5">
-              <SelectValue placeholder={currentPageSize} />
-            </SelectTrigger>
-            <SelectContent>
-              {PAGE_SIZE_OPTIONS.map((size) => (
-                <SelectItem key={size} value={size.toString()}>
-                  {size}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <span>per page</span>
-        </div>
-        <div>
-          Showing {(currentPage - 1) * currentPageSize + 1} to{" "}
-          {Math.min(
-            currentPage * currentPageSize,
-            sortedAndGroupedData.length,
-          )}{" "}
-          of {sortedAndGroupedData.length} results
-        </div>
-        <div className="flex items-center space-x-2">
+  const rangeStart =
+    resultCount === 0 ? 0 : (currentPage - 1) * pageSize + 1
+  const rangeEnd = Math.min(currentPage * pageSize, resultCount)
+  const showPagination = totalPages > 1
+
+  const paginationFooter = (
+    <div className="table-footer-bar">
+      <p>
+        {resultCount === 0
+          ? "No results"
+          : `Showing ${rangeStart} to ${rangeEnd} of ${resultCount} results`}
+      </p>
+      {showPagination ? (
+        <div className="flex items-center gap-1">
           <Button
             variant="outline"
             size="icon"
@@ -555,11 +529,11 @@ export function DynamicTable({
               handlePageChange(Number.parseInt(value))
             }
           >
-            <SelectTrigger className="w-16">
+            <SelectTrigger className="h-9 w-16">
               <SelectValue placeholder={currentPage} />
             </SelectTrigger>
             <SelectContent>
-              {Array.from({ length: Math.max(totalPages, 1) }, (_, i) => (
+              {Array.from({ length: totalPages }, (_, i) => (
                 <SelectItem key={i + 1} value={(i + 1).toString()}>
                   {i + 1}
                 </SelectItem>
@@ -567,7 +541,7 @@ export function DynamicTable({
             </SelectContent>
           </Select>
 
-          <span>of {Math.max(totalPages, 1)}</span>
+          <span className="px-1">of {totalPages}</span>
 
           <Button
             variant="outline"
@@ -586,8 +560,9 @@ export function DynamicTable({
             <ChevronsRight className="h-4 w-4" />
           </Button>
         </div>
-      </div>
-    ) : undefined
+      ) : null}
+    </div>
+  )
 
   return (
     <DataTableFrame

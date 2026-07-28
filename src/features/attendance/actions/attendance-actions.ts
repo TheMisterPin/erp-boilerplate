@@ -174,7 +174,7 @@ export async function checkIn(): Promise<ActionResult<ShiftAttendance>> {
 
     const user = await prisma.user.findFirst({
       where: { id: session.userId, deletedAt: null, isActive: true },
-      select: { id: true, locationId: true },
+      select: { id: true },
     })
     if (!user) {
       throw new AppError({
@@ -195,14 +195,21 @@ export async function checkIn(): Promise<ActionResult<ShiftAttendance>> {
       orderBy: { startTime: "asc" },
     })
 
-    const locationId = todayShift?.locationId ?? user.locationId ?? null
-    const checkInAt = new Date()
+    if (!todayShift) {
+      throw new AppError({
+        kind: "conflict",
+        code: "NO_SHIFT_ASSIGNED",
+        message:
+          "You have no shift assigned for today. Ask a manager to schedule you before checking in.",
+      })
+    }
 
+    const checkInAt = new Date()
     const attendance = await prisma.shiftAttendance.create({
       data: {
         userId: user.id,
-        shiftInstanceId: todayShift?.id ?? null,
-        locationId,
+        shiftInstanceId: todayShift.id,
+        locationId: todayShift.locationId,
         checkInAt,
       },
       include: attendanceInclude,
@@ -216,6 +223,7 @@ export async function checkIn(): Promise<ActionResult<ShiftAttendance>> {
         shiftInstanceId: attendance.shiftInstanceId,
         locationId: attendance.locationId,
         checkInAt: checkInAt.toISOString(),
+        shiftStartTime: todayShift.startTime,
       },
     })
 
