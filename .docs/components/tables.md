@@ -3,7 +3,38 @@
 Shared searchable / sortable / filterable / groupable table for ERP list pages.
 
 Implementation: `src/components/shared/table/dynamic-table.tsx`  
+Frame: `src/components/shared/table/data-table-frame.tsx` (`DataTableFrame`, `TablePageViewport`)  
+Barrel: `@/components/shared/table`  
 List wiring: [List pages](./list-pages.md)
+
+---
+
+## Sticky toolbar (required)
+
+The search / filter toolbar must stay fixed while rows scroll. Pagination stays in a fixed footer.
+
+| Piece | Role |
+|-------|------|
+| `TablePageViewport` | Route wrapper — bounded height under the app header |
+| `DataTableFrame` | Shell: sticky toolbar + scrollable body + optional footer |
+| `DynamicTable` | Uses `DataTableFrame` internally |
+
+Do **not** wrap `DynamicTable` in an outer `overflow-y-auto` that scrolls the toolbar. Keep a `h-full` → `min-h-0` → `overflow-hidden` flex chain from the viewport to the table.
+
+```tsx
+import { TablePageViewport } from "@/components/shared/table"
+
+export default function Page() {
+  const page = useUserListPage()
+  return (
+    <TablePageViewport>
+      <UserListPage {...page} />
+    </TablePageViewport>
+  )
+}
+```
+
+Empty / loading states should also use `DataTableFrame` so height and chrome stay consistent.
 
 ---
 
@@ -69,6 +100,7 @@ const rows = useMemo(() => users.map(toUserTableRow), [users])
 - Keep domain entities in React state; table rows are a projection
 - Soft-deleted rows should not appear (`listX` filters `deletedAt: null`)
 - Named exports; no `any` on public column helpers
+- Always preserve sticky toolbar / scrollable body (see above)
 
 ---
 
@@ -78,4 +110,3 @@ const rows = useMemo(() => users.map(toUserTableRow), [users])
 |------|------|
 | `.cursor/rules/dynamic-table.mdc` | Agent rule |
 | `.docs/components/list-pages.md` | Full list CRUD |
-| `src/features/users/components/tables/user-table-columns.tsx` | Reference columns |

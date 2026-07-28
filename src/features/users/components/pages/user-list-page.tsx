@@ -2,7 +2,10 @@
 
 import { MapPin, Pencil, Plus, Trash2 } from "lucide-react"
 
-import { DynamicTable } from "@/components/shared/table/dynamic-table"
+import {
+  DataTableFrame,
+  DynamicTable,
+} from "@/components/shared/table"
 import { Button } from "@/components/ui/button"
 import {
   toUserTableRow,
@@ -28,7 +31,6 @@ type UserSectionProps = {
   users: User[]
   canWrite: boolean
   canAssignLocation: boolean
-  toolbarActions?: React.ReactNode
   onEdit: (user: User) => void
   onDelete: (user: User) => void
   onAssignLocation: (user: User) => void
@@ -40,7 +42,6 @@ function UserSection({
   users,
   canWrite,
   canAssignLocation,
-  toolbarActions,
   onEdit,
   onDelete,
   onAssignLocation,
@@ -48,17 +49,17 @@ function UserSection({
   const showActions = canWrite || canAssignLocation
 
   return (
-    <section className="flex min-h-0 flex-col gap-2">
-      <div className="flex items-center justify-between gap-2 px-1">
+    <section className="flex min-h-0 flex-1 basis-0 flex-col overflow-hidden">
+      <div className="flex shrink-0 items-center justify-between gap-2 px-1 pb-2">
         <h2 className="text-sm font-semibold tracking-tight">{title}</h2>
         <span className="text-xs text-muted-foreground">{users.length}</span>
       </div>
       {users.length === 0 ? (
-        <div className="rounded-lg border border-dashed p-6">
+        <div className="flex min-h-0 flex-1 items-center justify-center rounded-lg border border-dashed p-6">
           <p className="text-sm text-muted-foreground">{emptyMessage}</p>
         </div>
       ) : (
-        <div className="min-h-[240px] overflow-hidden rounded-lg border">
+        <div className="min-h-0 flex-1 overflow-hidden rounded-lg border">
           <DynamicTable
             data={users.map(toUserTableRow)}
             columns={userTableColumns}
@@ -66,7 +67,6 @@ function UserSection({
             searchable
             sortable
             filterable
-            toolbarActions={toolbarActions}
             rowActions={
               showActions
                 ? ({ row }) => {
@@ -139,11 +139,9 @@ export function UserListPage({
 
   if (!loaded) {
     return (
-      <div className="table-shell">
-        <div className="table-body-region">
-          <p className="text-sm text-muted-foreground">Loading members…</p>
-        </div>
-      </div>
+      <DataTableFrame>
+        <p className="text-sm text-muted-foreground">Loading members…</p>
+      </DataTableFrame>
     )
   }
 
@@ -151,8 +149,8 @@ export function UserListPage({
   const withoutLocation = users.filter((user) => !user.locationId)
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-6 overflow-y-auto p-4">
-      <header className="flex flex-wrap items-center justify-between gap-2">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden">
+      <header className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b px-4 py-3">
         <div>
           <h1 className="text-lg font-semibold tracking-tight">Members</h1>
           <p className="text-sm text-muted-foreground">
@@ -163,11 +161,11 @@ export function UserListPage({
       </header>
 
       {users.length === 0 ? (
-        <div className="rounded-lg border border-dashed p-8">
+        <div className="flex min-h-0 flex-1 items-center justify-center p-8">
           <p className="text-sm text-muted-foreground">No users found.</p>
         </div>
       ) : (
-        <>
+        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden p-4">
           <UserSection
             title="Assigned to a location"
             emptyMessage="No members are assigned to a location yet."
@@ -188,7 +186,7 @@ export function UserListPage({
             onDelete={onDelete}
             onAssignLocation={onAssignLocation}
           />
-        </>
+        </div>
       )}
     </div>
   )

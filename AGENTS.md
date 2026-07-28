@@ -26,7 +26,7 @@ ERP UI boilerplate. Prefer existing shared systems over one-off patterns. Human 
 | Toasts | `sonner` (`toast`) | error-handling + modals docs | — |
 | Shared zod | `src/lib/schemas/<model>.ts` | forms + error-handling | — |
 | Auth / RBAC | `permissions.ts` (`Actions`, `can`) + `session.ts` (`authorize`) | `.docs/components/auth.md` | `auth-rbac.mdc` |
-| DynamicTable | `@/components/shared/table/dynamic-table` | `.docs/components/tables.md` | `dynamic-table.mdc` |
+| DynamicTable | `@/components/shared/table` (`DynamicTable`, `DataTableFrame`, `TablePageViewport`) | `.docs/components/tables.md` | `dynamic-table.mdc` |
 | List-page CRUD | feature hook + `*list-page` view | `.docs/components/list-pages.md` | `list-page-crud.mdc` |
 | Feature architecture | `src/features/<f>/` layout | `.docs/components/architecture.md` | `feature-architecture.mdc` |
 | Logging / audit | `@/features/logging/server` → `logActivity` | `.docs/components/logging.md` | `logging.mdc` |
@@ -39,7 +39,7 @@ ERP UI boilerplate. Prefer existing shared systems over one-off patterns. Human 
 - **Auth**: jose cookie sessions + `loginAction` / `logoutAction` / `getMeAction` only. Do not add REST `/api/auth/*` or axios session clients.
 - **Forms**: FieldDef arrays + thin `*Form` wrappers around `DynamicForm`. `onSubmit(values, form)`. Shared validators from `src/lib/schemas/`.
 - **Modals**: `confirm` / `notify` / `openModal({ type: "form" })`. Transient feedback → toast, not `notify`. Modal package must not import form types.
-- **Tables**: `DynamicTable` + `toXTableRow` + `toolbarActions` / `rowActions` (not action cells in `format`). Client-side search/filter/sort/pagination only — do not invent server `page`/`cursor` list APIs unless building that system deliberately.
+- **Tables**: `DynamicTable` + `toXTableRow` + `toolbarActions` / `rowActions` (not action cells in `format`). Sticky toolbar / scrollable body via `DataTableFrame` + `TablePageViewport` on list routes — do not invent page-level scroll that moves the search bar. Client-side search/filter/sort/pagination only — do not invent server `page`/`cursor` list APIs unless building that system deliberately.
 - **List UI only**: verticals are list + modal CRUD. Do not add `[id]` detail routes unless the task asks for them.
 - **Layout**: Error Boundary wraps content only inside `AppShell` — leave sidebar/header outside. Providers in `AppProviders` (Modal → Auth → Error → ModalRoot).
 - **Import hygiene**: client may import `@/features/errors` (barrel). Never import `@/features/errors/server` from client code. Same for `@/features/logging` vs `@/features/logging/server`.

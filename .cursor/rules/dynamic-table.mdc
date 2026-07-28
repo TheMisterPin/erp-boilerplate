@@ -1,6 +1,6 @@
 ---
-description: DynamicTable columns, row mapping, toolbarActions and rowActions
-globs: src/components/shared/table/**/*,src/features/**/components/tables/**/*,src/features/**/components/pages/**
+description: DynamicTable sticky toolbar, DataTableFrame, TablePageViewport
+globs: src/components/shared/table/**/*,src/features/**/components/tables/**/*,src/features/**/components/pages/**,src/app/(app)/**/page.tsx
 alwaysApply: false
 ---
 
@@ -12,9 +12,42 @@ Use the shared `DynamicTable` for feature lists. Do not invent a parallel DataTa
 
 | Concern | Path |
 |---------|------|
+| Frame (sticky toolbar) | `src/components/shared/table/data-table-frame.tsx` |
 | Table | `src/components/shared/table/dynamic-table.tsx` |
+| Barrel | `@/components/shared/table` |
 | Feature columns | `src/features/<feature>/components/tables/*-table-columns.tsx` |
-| List pages | `src/features/<feature>/components/pages/*list-page-component.tsx` |
+| List pages | `src/features/<feature>/components/pages/*` |
+
+## Sticky toolbar contract (required)
+
+Toolbar / search stay fixed; **only** the body scrolls. Pagination stays in the footer.
+
+1. Route: wrap with `<TablePageViewport>` (bounded height, `overflow-hidden`)
+2. Table: use `<DynamicTable>` (uses `DataTableFrame` internally) or empty/loading via `<DataTableFrame>`
+3. Parent of `DynamicTable` must be in a `h-full` / `min-h-0` / `flex-1` / `overflow-hidden` chain
+4. **Never** put `DynamicTable` inside a page-level `overflow-y-auto` that scrolls the toolbar away
+5. Multi-section pages: each section is `flex-1 min-h-0 overflow-hidden` with the table filling that section
+
+```tsx
+// ✅ route
+import { TablePageViewport } from "@/components/shared/table"
+
+export default function Page() {
+  const page = useXListPage()
+  return (
+    <TablePageViewport>
+      <XListPage {...page} />
+    </TablePageViewport>
+  )
+}
+```
+
+```tsx
+// ❌ page scrolls the whole table including search
+<div className="overflow-y-auto">
+  <DynamicTable … />
+</div>
+```
 
 ## API
 
@@ -36,7 +69,7 @@ type DynamicTableProps = {
 - Map `row.id` back to the domain entity for Edit/Delete handlers
 - `toolbarActions` → Create (and similar); `rowActions` → Edit/Delete
 - Actions column is automatic when `rowActions` is set; skip group header rows
-- Never use key `__actions` in column configs / search fields
+- Never use key `__ed` in column configs / search fields
 
 ## Feature columns file
 

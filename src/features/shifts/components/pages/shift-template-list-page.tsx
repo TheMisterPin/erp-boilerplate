@@ -2,7 +2,10 @@
 
 import { CalendarPlus, Pencil, Plus, Trash2 } from "lucide-react"
 
-import { DynamicTable } from "@/components/shared/table/dynamic-table"
+import {
+  DataTableFrame,
+  DynamicTable,
+} from "@/components/shared/table"
 import { Button } from "@/components/ui/button"
 import {
   shiftTemplateTableColumns,
@@ -41,27 +44,25 @@ export function ShiftTemplateListPage({
 
   if (!loaded) {
     return (
-      <div className="table-shell">
-        <div className="table-body-region">
-          <p className="text-sm text-muted-foreground">Loading templates…</p>
-        </div>
-      </div>
+      <DataTableFrame>
+        <p className="text-sm text-muted-foreground">Loading templates…</p>
+      </DataTableFrame>
     )
   }
 
   if (templates.length === 0) {
     return (
-      <div className="table-shell">
-        <header className="table-toolbar">
-          <div />
-          <div className="flex flex-wrap items-center gap-2">{createButton}</div>
-        </header>
-        <div className="table-body-region">
-          <p className="text-sm text-muted-foreground">
-            No shift templates found.
-          </p>
-        </div>
-      </div>
+      <DataTableFrame
+        toolbar={
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            {createButton}
+          </div>
+        }
+      >
+        <p className="text-sm text-muted-foreground">
+          No shift templates found.
+        </p>
+      </DataTableFrame>
     )
   }
 

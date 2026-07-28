@@ -2,7 +2,10 @@
 
 import { Pencil, Plus, Trash2 } from "lucide-react"
 
-import { DynamicTable } from "@/components/shared/table/dynamic-table"
+import {
+  DataTableFrame,
+  DynamicTable,
+} from "@/components/shared/table"
 import { Button } from "@/components/ui/button"
 import {
   locationTableColumns,
@@ -26,7 +29,6 @@ type LocationSectionProps = {
   locations: Location[]
   rows: ReturnType<typeof toLocationTableRow>[]
   canWrite: boolean
-  toolbarActions?: React.ReactNode
   onEdit: (location: Location) => void
   onDelete: (location: Location) => void
 }
@@ -37,24 +39,23 @@ function LocationSection({
   locations,
   rows,
   canWrite,
-  toolbarActions,
   onEdit,
   onDelete,
 }: LocationSectionProps) {
   return (
-    <section className="flex min-h-0 flex-col gap-2">
-      <div className="flex items-center justify-between gap-2 px-1">
+    <section className="flex min-h-0 flex-1 basis-0 flex-col overflow-hidden">
+      <div className="flex shrink-0 items-center justify-between gap-2 px-1 pb-2">
         <h2 className="text-sm font-semibold tracking-tight">{title}</h2>
         <span className="text-xs text-muted-foreground">
           {locations.length}
         </span>
       </div>
       {locations.length === 0 ? (
-        <div className="rounded-lg border border-dashed p-6">
+        <div className="flex min-h-0 flex-1 items-center justify-center rounded-lg border border-dashed p-6">
           <p className="text-sm text-muted-foreground">{emptyMessage}</p>
         </div>
       ) : (
-        <div className="min-h-[240px] overflow-hidden rounded-lg border">
+        <div className="min-h-0 flex-1 overflow-hidden rounded-lg border">
           <DynamicTable
             data={rows}
             columns={locationTableColumns}
@@ -62,7 +63,6 @@ function LocationSection({
             searchable
             sortable
             filterable
-            toolbarActions={toolbarActions}
             rowActions={
               canWrite
                 ? ({ row }) => {
@@ -118,11 +118,9 @@ export function LocationListPage({
 
   if (!loaded) {
     return (
-      <div className="table-shell">
-        <div className="table-body-region">
-          <p className="text-sm text-muted-foreground">Loading locations…</p>
-        </div>
-      </div>
+      <DataTableFrame>
+        <p className="text-sm text-muted-foreground">Loading locations…</p>
+      </DataTableFrame>
     )
   }
 
@@ -130,8 +128,8 @@ export function LocationListPage({
   const withoutManager = locations.filter((location) => !location.managerId)
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-6 overflow-y-auto p-4">
-      <header className="flex flex-wrap items-center justify-between gap-2">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden">
+      <header className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b px-4 py-3">
         <div>
           <h1 className="text-lg font-semibold tracking-tight">Locations</h1>
           <p className="text-sm text-muted-foreground">
@@ -142,11 +140,11 @@ export function LocationListPage({
       </header>
 
       {locations.length === 0 ? (
-        <div className="rounded-lg border border-dashed p-8">
+        <div className="flex min-h-0 flex-1 items-center justify-center p-8">
           <p className="text-sm text-muted-foreground">No locations found.</p>
         </div>
       ) : (
-        <>
+        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden p-4">
           <LocationSection
             title="With a manager"
             emptyMessage="No locations have a manager assigned yet."
@@ -165,7 +163,7 @@ export function LocationListPage({
             onEdit={onEdit}
             onDelete={onDelete}
           />
-        </>
+        </div>
       )}
     </div>
   )

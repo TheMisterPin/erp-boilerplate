@@ -12,11 +12,11 @@ export default function AppShell({
   return (
     <SidebarProvider className="h-svh overflow-hidden">
       <AppSidebar />
-      <SidebarInset className="h-svh min-h-0 overflow-hidden bg-transparent">
-        <header className="surface-header flex h-16 shrink-0 items-center border-b border-sidebar-border px-4 text-sidebar-foreground">
+      <SidebarInset className="h-svh min-h-0 overflow-hidden bg-background">
+        <header className="flex h-16 shrink-0 items-center border-b border-border bg-surface-1 px-6 text-foreground">
           <AppHeader />
         </header>
-        <div className="min-h-0 flex-1 overflow-y-auto bg-background p-4">
+        <div className="min-h-0 flex-1 overflow-y-auto bg-background p-8">
           <ErrorBoundary>{children}</ErrorBoundary>
         </div>
       </SidebarInset>

@@ -3,7 +3,7 @@
 import type * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { ChevronRight } from "lucide-react"
+import { ChevronRight, Hexagon } from "lucide-react"
 
 import { SidebarUser } from "./sidebar-user"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
@@ -29,20 +29,32 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname()
 
   return (
-    <Sidebar
-      collapsible="icon"
-      className="[&_[data-sidebar=sidebar]]:surface-panel"
-      {...props}
-    >
+    <Sidebar collapsible="icon" {...props}>
       <SidebarHeader className="shrink-0 gap-0 border-b border-sidebar-border p-0">
-        <div className="flex h-16 items-center px-2">
-          <SidebarMenu>
+        <div className="flex h-16 items-center gap-1 px-2">
+          <SidebarMenu className="min-w-0 flex-1">
             <SidebarMenuItem>
-              <SidebarMenuButton size="lg" asChild tooltip="Toggle Sidebar">
-                <SidebarTrigger />
+              <SidebarMenuButton
+                size="lg"
+                asChild
+                className="data-[slot=sidebar-menu-button]:p-2"
+                tooltip="Components Playground"
+              >
+                <Link href="/">
+                  <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-accent-muted text-primary">
+                    <Hexagon className="size-4" />
+                  </div>
+                  <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
+                    <span className="truncate font-semibold">Playground</span>
+                    <span className="truncate text-xs text-muted-foreground">
+                      ERP UI
+                    </span>
+                  </div>
+                </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
+          <SidebarTrigger className="shrink-0 group-data-[collapsible=icon]:hidden" />
         </div>
       </SidebarHeader>
       <SidebarContent>

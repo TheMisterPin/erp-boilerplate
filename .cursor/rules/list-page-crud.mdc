@@ -15,9 +15,10 @@ Canonical pattern: **`useXListPage` + `XListPage`**. Mirror `src/features/users/
 3. Hook: Create/Edit → `openModal({ type: "form", … })` + dirty bridge + `run` + `applyServerErrors` + toast + `closeModal` + `load()`
 4. Hook: Delete → `confirm({ variant: "destructive" })` → `run(deleteX(id))` → toast + `load()`
 5. View: render `DynamicTable` / empty / loading from props; build toolbar/row UI from `canWrite` + callbacks
-6. Route: `const page = useXListPage(); return <XListPage {...page} />` inside the table shell wrapper
+6. Route: `const page = useXListPage(); return <TablePageViewport><XListPage {...page} /></TablePageViewport>`
 7. Empty state still shows Create when `canWrite`. Lists are full arrays — DynamicTable pages client-side only
 8. Do not add `[id]` detail routes or orphan `getX(id)` unless the task asks for them
+9. Tables: sticky toolbar + scrollable body via `DataTableFrame` / `DynamicTable` — never page-scroll the search bar away
 
 ```ts
 const canWrite = me ? can(me.role, Actions.users.write) : false

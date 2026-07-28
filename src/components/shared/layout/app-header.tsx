@@ -14,8 +14,10 @@ export function AppHeader() {
     <div className="flex w-full items-center justify-between gap-2 md:justify-start">
       <SidebarTrigger className="md:hidden" />
       <div className="flex items-center gap-2">
-        <Icon className="size-5 shrink-0 text-sidebar-primary" />
-        <h1 className="font-heading text-lg font-semibold">{getPageTitle(pathname)}</h1>
+        <Icon className="size-5 shrink-0 text-primary" />
+        <h1 className="text-lg font-semibold tracking-tight text-foreground">
+          {getPageTitle(pathname)}
+        </h1>
       </div>
     </div>
   )

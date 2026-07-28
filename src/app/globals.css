@@ -5,16 +5,24 @@
 @custom-variant dark (&:is(.dark *));
 
 /* ------------------------------------------------------------------ */
-/*  THEME MAP — exposes CSS vars as Tailwind utilities                  */
-/*        */
-/*  neutrals, full semantic set (info/success/warning/error) + grads   */
+/*  THEME MAP — Midnight Enterprise (DESIGN.md)                         */
 /* ------------------------------------------------------------------ */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-heading);
+  --font-heading: var(--font-sans);
+
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-surface-selected: var(--surface-selected);
+  --color-accent-muted: var(--accent-muted);
+  --color-border-subtle: var(--border-subtle);
+  --color-border-strong: var(--border-strong);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
 
   /* sidebar */
   --color-sidebar-ring: var(--sidebar-ring);
@@ -54,7 +62,7 @@
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
 
-  /* semantic message colors — solid / on-color / soft surface / soft border */
+  /* semantic message colors */
   --color-info: var(--info);
   --color-info-foreground: var(--info-foreground);
   --color-info-surface: var(--info-surface);
@@ -89,204 +97,117 @@
   --color-table-border: var(--table-border);
   --color-table-surface: var(--table-surface);
 
-  /* radius scale (unchanged) */
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  /* radius: 8px base (buttons/inputs); cards ≈12px via xl */
+  --radius-sm: calc(var(--radius) * 0.75);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) * 1.5);
+  --radius-xl: calc(var(--radius) * 2);
+  --radius-2xl: calc(var(--radius) * 2.5);
+  --radius-3xl: calc(var(--radius) * 3);
+  --radius-4xl: calc(var(--radius) * 3.5);
 }
 
 /* ================================================================== */
-/*  LIGHT — warm grey-blue, blue-tinted neutrals (not pure white)      */
+/*  Midnight Enterprise — dark graphite (DESIGN.md §3–4)               */
+/*  Applied as default :root and .dark so dark: utilities work.        */
 /* ================================================================== */
-:root {
-  /* surfaces & text — low-chroma slate-blue undertone (~240) */
-
-  --background: oklch(0.965 0.008 242);
-  --foreground: oklch(0.28 0.022 245);
-  --card: oklch(0.978 0.006 242);
-  --card-foreground: oklch(0.28 0.022 245);
-  --popover: oklch(0.978 0.006 242);
-  --popover-foreground: oklch(0.28 0.022 245);
-
-  /* primary — muted warm steel blue, restrained chroma */
-  --primary: oklch(0.48 0.07 240);
-  --primary-foreground: oklch(0.97 0.008 240);
-
-  /* secondary — soft blue-grey */
-  --secondary: oklch(0.93 0.01 242);
-  --secondary-foreground: oklch(0.32 0.025 245);
-
-  --muted: oklch(0.94 0.008 242);
-  --muted-foreground: oklch(0.52 0.02 245);
-
-  /* accent — soft slate wash for hover surfaces */
-  --accent: oklch(0.915 0.016 240);
-  --accent-foreground: oklch(0.32 0.03 245);
-
-  /* destructive == error — warm red, clear of brand blue */
-  --destructive: oklch(0.55 0.18 25);
-  --destructive-foreground: oklch(0.97 0.01 25);
-
-  --border: oklch(0.88 0.012 242);
-  --input: oklch(0.88 0.012 242);
-  --ring: oklch(0.48 0.07 240);
-
-  /* ---- semantic messages ---- */
-  --info: oklch(0.52 0.1 245);
-  --info-foreground: oklch(0.97 0.008 245);
-  --info-surface: oklch(0.94 0.025 245);
-  --info-border: oklch(0.86 0.04 245);
-
-  --success: oklch(0.55 0.11 155);
-  --success-foreground: oklch(0.97 0.01 155);
-  --success-surface: oklch(0.945 0.03 155);
-  --success-border: oklch(0.86 0.05 155);
-
-  --warning: oklch(0.72 0.12 78);
-  --warning-foreground: oklch(0.32 0.04 70);
-  --warning-surface: oklch(0.95 0.035 82);
-  --warning-border: oklch(0.88 0.06 80);
-
-  --error: oklch(0.55 0.18 25);
-  --error-foreground: oklch(0.97 0.01 25);
-  --error-surface: oklch(0.945 0.025 25);
-  --error-border: oklch(0.88 0.05 25);
-
-  /* ---- charts: slate-blue led, hue-spread for legibility ---- */
-  --chart-1: oklch(0.50 0.08 240);
-  /* steel blue (brand) */
-  --chart-2: oklch(0.52 0.08 210);
-  /* teal-blue */
-  --chart-3: oklch(0.55 0.07 195);
-  /* cyan-slate */
-  --chart-4: oklch(0.55 0.09 155);
-  /* green */
-  --chart-5: oklch(0.58 0.08 80);
-  /* amber */
-
-  --radius: 0.625rem;
-
-  /* ---- sidebar: softly tinted slate panel ---- */
-  --sidebar: oklch(0.945 0.012 242);
-  --sidebar-foreground: oklch(0.32 0.025 245);
-  --sidebar-primary: oklch(0.48 0.07 240);
-  --sidebar-primary-foreground: oklch(0.97 0.008 240);
-  --sidebar-accent: oklch(0.91 0.018 240);
-  --sidebar-accent-foreground: oklch(0.30 0.03 245);
-  --sidebar-border: oklch(0.88 0.012 242);
-  --sidebar-ring: oklch(0.48 0.07 240);
-
-  /* ---- data table ---- */
-  --table-toolbar: oklch(0.978 0.006 242 / 92%);
-  --table-toolbar-foreground: oklch(0.28 0.022 245);
-  --table-toolbar-border: oklch(0.88 0.012 242);
-  --table-header: oklch(0.94 0.01 242);
-  --table-header-foreground: oklch(0.34 0.025 245);
-  --table-header-border: oklch(0.86 0.014 242);
-  --table-row: oklch(0.978 0.005 242);
-  --table-row-alt: oklch(0.965 0.008 242);
-  --table-row-hover: oklch(0.945 0.014 240);
-  --table-cell-foreground: oklch(0.30 0.022 245);
-  --table-border: oklch(0.88 0.012 242);
-  --table-surface: oklch(0.978 0.006 242);
-
-  /* ---- gradients ---- */
-  --gradient-app: linear-gradient(180deg, oklch(0.97 0.008 242) 0%, oklch(0.95 0.012 245) 100%);
-  --gradient-surface: linear-gradient(180deg, oklch(0.955 0.01 242) 0%, oklch(0.935 0.014 245) 100%);
-  --gradient-header: linear-gradient(90deg, oklch(0.96 0.01 242) 0%, oklch(0.94 0.016 245) 100%);
-  --gradient-card: linear-gradient(180deg, oklch(0.982 0.005 242) 0%, oklch(0.968 0.008 242) 100%);
-  --gradient-primary: linear-gradient(135deg, oklch(0.58 0.06 235) 0%, oklch(0.45 0.08 245) 100%);
-}
-
-/* ================================================================== */
-/*  DARK — lifted slate charcoal (blue undertone, soft not harsh)      */
-/* ================================================================== */
+:root,
 .dark {
-  --background: oklch(0.26 0.016 242);
-  --foreground: oklch(0.90 0.01 240);
-  --card: oklch(0.30 0.018 242);
-  --card-foreground: oklch(0.90 0.01 240);
-  --popover: oklch(0.30 0.018 242);
-  --popover-foreground: oklch(0.90 0.01 240);
+  /* Design tokens */
+  --surface-1: #111820;
+  --surface-2: #16202a;
+  --surface-3: #1b2733;
+  --surface-selected: #1d2e3d;
+  --border-subtle: #263442;
+  --border-strong: #344556;
+  --text-primary: #edf2f7;
+  --text-secondary: #a7b2be;
+  --text-muted: #778594;
+  --brand-accent: #5a9fd4;
+  --brand-accent-hover: #72afe0;
+  --accent-muted: #1c3a50;
+  --focus-ring: #6bade0;
 
-  /* primary — softer lifted steel blue, low chroma */
-  --primary: oklch(0.68 0.07 235);
-  --primary-foreground: oklch(0.24 0.02 245);
+  /* shadcn bridge */
+  --background: #0b0f14;
+  --foreground: #edf2f7;
+  --card: #16202a;
+  --card-foreground: #edf2f7;
+  --popover: #1b2733;
+  --popover-foreground: #edf2f7;
 
-  --secondary: oklch(0.34 0.016 242);
-  --secondary-foreground: oklch(0.90 0.01 240);
+  --primary: #5a9fd4;
+  --primary-foreground: #0b0f14;
 
-  --muted: oklch(0.325 0.014 242);
-  --muted-foreground: oklch(0.70 0.016 240);
+  --secondary: #1b2733;
+  --secondary-foreground: #edf2f7;
 
-  --accent: oklch(0.36 0.022 240);
-  --accent-foreground: oklch(0.90 0.01 240);
+  --muted: #1b2733;
+  --muted-foreground: #778594;
 
-  --destructive: oklch(0.62 0.16 25);
-  --destructive-foreground: oklch(0.95 0.01 30);
+  /* Hover / selected wash (not the blue brand — that is --primary) */
+  --accent: #1c3a50;
+  --accent-foreground: #edf2f7;
 
-  --border: oklch(0.88 0.02 240 / 14%);
-  --input: oklch(0.88 0.02 240 / 16%);
-  --ring: oklch(0.68 0.07 235);
+  --destructive: #e47777;
+  --destructive-foreground: #0b0f14;
 
-  --info: oklch(0.68 0.09 245);
-  --info-foreground: oklch(0.24 0.02 245);
-  --info-surface: oklch(0.34 0.04 245);
-  --info-border: oklch(0.44 0.05 245);
+  --border: #263442;
+  --input: #263442;
+  --ring: #6bade0;
 
-  --success: oklch(0.68 0.11 155);
-  --success-foreground: oklch(0.24 0.03 155);
-  --success-surface: oklch(0.34 0.04 155);
-  --success-border: oklch(0.44 0.055 155);
+  /* Semantic — soft surfaces for badges; FG for text/icons */
+  --info: #78b4df;
+  --info-foreground: #78b4df;
+  --info-surface: #183247;
+  --info-border: #263442;
 
-  --warning: oklch(0.76 0.11 80);
-  --warning-foreground: oklch(0.28 0.04 70);
-  --warning-surface: oklch(0.36 0.04 78);
-  --warning-border: oklch(0.46 0.06 78);
+  --success: #71c99a;
+  --success-foreground: #71c99a;
+  --success-surface: #153428;
+  --success-border: #263442;
 
-  --error: oklch(0.62 0.16 25);
-  --error-foreground: oklch(0.95 0.01 30);
-  --error-surface: oklch(0.35 0.055 28);
-  --error-border: oklch(0.46 0.08 28);
+  --warning: #e5b85c;
+  --warning-foreground: #e5b85c;
+  --warning-surface: #3a2e16;
+  --warning-border: #263442;
 
-  --chart-1: oklch(0.68 0.08 235);
-  --chart-2: oklch(0.68 0.08 210);
-  --chart-3: oklch(0.70 0.07 195);
-  --chart-4: oklch(0.70 0.09 155);
-  --chart-5: oklch(0.72 0.08 80);
+  --error: #e47777;
+  --error-foreground: #e47777;
+  --error-surface: #3a1e22;
+  --error-border: #263442;
 
-  --sidebar: oklch(0.28 0.018 242);
-  --sidebar-foreground: oklch(0.88 0.01 240);
-  --sidebar-primary: oklch(0.68 0.07 235);
-  --sidebar-primary-foreground: oklch(0.24 0.02 245);
-  --sidebar-accent: oklch(0.35 0.022 240);
-  --sidebar-accent-foreground: oklch(0.88 0.01 240);
-  --sidebar-border: oklch(0.88 0.02 240 / 14%);
-  --sidebar-ring: oklch(0.68 0.07 235);
+  --chart-1: #5a9fd4;
+  --chart-2: #78b4df;
+  --chart-3: #71c99a;
+  --chart-4: #a7b2be;
+  --chart-5: #e5b85c;
 
-  /* ---- data table ---- */
-  --table-toolbar: oklch(0.30 0.018 242 / 92%);
-  --table-toolbar-foreground: oklch(0.90 0.01 240);
-  --table-toolbar-border: oklch(0.88 0.02 240 / 14%);
-  --table-header: oklch(0.33 0.02 242);
-  --table-header-foreground: oklch(0.88 0.01 240);
-  --table-header-border: oklch(0.88 0.02 240 / 16%);
-  --table-row: oklch(0.30 0.018 242);
-  --table-row-alt: oklch(0.285 0.016 242);
-  --table-row-hover: oklch(0.35 0.022 240);
-  --table-cell-foreground: oklch(0.88 0.01 240);
-  --table-border: oklch(0.88 0.02 240 / 14%);
-  --table-surface: oklch(0.30 0.018 242);
+  --radius: 0.5rem;
 
-  --gradient-app: linear-gradient(180deg, oklch(0.275 0.016 242) 0%, oklch(0.245 0.015 245) 100%);
-  --gradient-surface: linear-gradient(180deg, oklch(0.30 0.018 242) 0%, oklch(0.275 0.016 245) 100%);
-  --gradient-header: linear-gradient(90deg, oklch(0.31 0.018 242) 0%, oklch(0.29 0.022 240) 100%);
-  --gradient-card: linear-gradient(180deg, oklch(0.315 0.018 242) 0%, oklch(0.295 0.016 245) 100%);
-  --gradient-primary: linear-gradient(135deg, oklch(0.70 0.06 230) 0%, oklch(0.58 0.08 245) 100%);
+  --sidebar: #111820;
+  --sidebar-foreground: #edf2f7;
+  --sidebar-primary: #5a9fd4;
+  --sidebar-primary-foreground: #0b0f14;
+  --sidebar-accent: #1c3a50;
+  --sidebar-accent-foreground: #edf2f7;
+  --sidebar-border: #263442;
+  --sidebar-ring: #6bade0;
+
+  --table-toolbar: #16202a;
+  --table-toolbar-foreground: #edf2f7;
+  --table-toolbar-border: #263442;
+  --table-header: #1b2733;
+  --table-header-foreground: #a7b2be;
+  --table-header-border: #263442;
+  --table-row: #16202a;
+  --table-row-alt: #16202a;
+  --table-row-hover: #1b2733;
+  --table-cell-foreground: #edf2f7;
+  --table-border: #263442;
+  --table-surface: #16202a;
+
+  --elevation-shadow: 0 12px 32px rgba(0, 0, 0, 0.24);
 }
 
 @layer base {
@@ -295,11 +216,9 @@
   }
 
   body {
-    @apply text-foreground;
-    background-color: var(--background);
-    background-image: var(--gradient-app);
-    background-attachment: fixed;
+    @apply bg-background text-foreground antialiased;
     min-height: 100vh;
+    font-feature-settings: "tnum" 1;
   }
 
   button:not(:disabled),
@@ -313,12 +232,12 @@
 }
 
 /* ------------------------------------------------------------------ */
-/*  Modal center spring                                                */
+/*  Modal enter/exit — calm ease, no elastic overshoot (DESIGN §21)    */
 /* ------------------------------------------------------------------ */
 @keyframes modal-spring-in {
   from {
     opacity: 0;
-    scale: 0.92;
+    scale: 0.98;
   }
 
   to {
@@ -335,30 +254,24 @@
 
   to {
     opacity: 0;
-    scale: 0.96;
+    scale: 0.98;
   }
 }
 
-/* ------------------------------------------------------------------ */
-/*  Gradient surface helpers                                           */
-/*  Use on chrome: <aside class="surface-panel">, <header ...> etc.    */
-/*  Raw vars also work anywhere: bg-[image:var(--gradient-card)]       */
-/* ------------------------------------------------------------------ */
 @layer components {
   .modal-content-spring {
-    /* Keep Dialog centering; only spring scale/opacity (not transform). */
     left: 50%;
     top: 50%;
     translate: -50% -50%;
-    /* Leave breathing room on short viewports; scroll inside when needed. */
     max-height: min(90dvh, calc(100dvh - 2rem));
     overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior: contain;
     scrollbar-width: none;
     -ms-overflow-style: none;
-    /* Beat shadcn Dialog/AlertDialog enter utilities (zoom + slide). */
-    animation: modal-spring-in 320ms cubic-bezier(0.34, 1.35, 0.64, 1) both !important;
+    box-shadow: var(--elevation-shadow);
+    border-radius: 1rem;
+    animation: modal-spring-in 200ms ease-out both !important;
   }
 
   .modal-content-spring::-webkit-scrollbar,
@@ -378,28 +291,29 @@
     animation: modal-spring-out 160ms ease-in both !important;
   }
 
+  @media (prefers-reduced-motion: reduce) {
+    .modal-content-spring,
+    .modal-content-spring[data-state="closed"] {
+      animation: none !important;
+    }
+  }
+
+  /* Flat surface helpers (no gradients) */
   .surface-app {
-    background-image: var(--gradient-app);
+    background-color: var(--background);
   }
 
   .surface-panel {
-    background-image: var(--gradient-surface);
+    background-color: var(--surface-1);
   }
 
-  /* sidebar / footer */
   .surface-header {
-    background-image: var(--gradient-header);
+    background-color: var(--surface-1);
   }
 
   .surface-card {
-    background-image: var(--gradient-card);
+    background-color: var(--surface-2);
   }
-
-  .gradient-primary {
-    background-image: var(--gradient-primary);
-  }
-
-  /* hero CTAs */
 
   /* ---- data table surfaces ---- */
   .table-shell {
@@ -408,7 +322,7 @@
   }
 
   .table-toolbar {
-    @apply sticky top-0 z-20 flex shrink-0 flex-col gap-3 border-b px-4 py-3 backdrop-blur-md;
+    @apply sticky top-0 z-20 flex shrink-0 flex-col gap-3 border-b px-4 py-3;
     background-color: var(--table-toolbar);
     color: var(--table-toolbar-foreground);
     border-color: var(--table-toolbar-border);
@@ -416,16 +330,25 @@
 
   .table-toolbar-search {
     @apply flex flex-wrap items-center gap-2 rounded-md border px-3 py-2 pl-8;
-    background-color: var(--table-surface);
+    background-color: var(--surface-1);
     border-color: var(--table-border);
+    min-height: 2.5rem;
   }
 
+  /* Only this region scrolls — toolbar/footer stay put */
   .table-body-region {
-    @apply flex min-h-0 flex-1 flex-col items-center justify-center overflow-auto p-4;
+    @apply min-h-0 flex-1 overflow-auto p-4;
+  }
+
+  .table-footer-region {
+    @apply shrink-0 border-t px-4 py-3;
+    border-color: var(--table-toolbar-border);
+    background-color: var(--table-toolbar);
+    color: var(--table-toolbar-foreground);
   }
 
   .table-surface {
-    @apply w-full overflow-hidden rounded-lg border;
+    @apply w-full overflow-hidden rounded-xl border;
     background-color: var(--table-surface);
     border-color: var(--table-border);
   }
@@ -446,24 +369,29 @@
     background-color: var(--table-row);
     border-color: var(--table-border);
     color: var(--table-cell-foreground);
-  }
-
-  .table-body-row:nth-child(even) {
-    background-color: var(--table-row-alt);
+    min-height: 3.25rem;
   }
 
   .table-body-row:hover {
     background-color: var(--table-row-hover);
   }
 
+  .table-body-row[data-selected="true"],
+  .table-body-row[aria-selected="true"] {
+    background-color: var(--surface-selected);
+    box-shadow: inset 3px 0 0 0 var(--brand-accent);
+  }
+
   .table-body-cell {
-    @apply px-3 py-2.5 align-middle text-sm;
+    @apply px-3 align-middle text-sm;
+    padding-top: 0.875rem;
+    padding-bottom: 0.875rem;
     color: var(--table-cell-foreground);
     border-color: var(--table-border);
   }
 
   .table-footer-bar {
-    @apply mt-3 flex flex-wrap items-center justify-between gap-3 text-sm;
+    @apply flex flex-wrap items-center justify-between gap-3 text-sm;
     color: var(--muted-foreground);
   }
 }

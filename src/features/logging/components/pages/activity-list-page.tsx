@@ -1,6 +1,9 @@
 "use client"
 
-import { DynamicTable } from "@/components/shared/table/dynamic-table"
+import {
+  DataTableFrame,
+  DynamicTable,
+} from "@/components/shared/table"
 import {
   activityTableColumns,
   toActivityTableRow,
@@ -22,20 +25,28 @@ export function ActivityListPage({
   rows,
 }: ActivityListPageProps) {
   if (!loaded) {
-    return <p className="p-4 text-sm text-muted-foreground">Loading…</p>
+    return (
+      <DataTableFrame>
+        <p className="text-sm text-muted-foreground">Loading…</p>
+      </DataTableFrame>
+    )
   }
 
   if (!canRead) {
     return (
-      <p className="p-4 text-sm text-muted-foreground">
-        You do not have permission to view activity logs.
-      </p>
+      <DataTableFrame>
+        <p className="text-sm text-muted-foreground">
+          You do not have permission to view activity logs.
+        </p>
+      </DataTableFrame>
     )
   }
 
   if (items.length === 0) {
     return (
-      <p className="p-4 text-sm text-muted-foreground">No activity yet.</p>
+      <DataTableFrame>
+        <p className="text-sm text-muted-foreground">No activity yet.</p>
+      </DataTableFrame>
     )
   }
 

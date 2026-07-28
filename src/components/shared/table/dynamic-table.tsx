@@ -23,6 +23,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { DataTableFrame } from "@/components/shared/table/data-table-frame"
 
 /** Cell value types DynamicTable can detect / filter on. */
 export type DataType =
@@ -493,9 +494,102 @@ export function DynamicTable({
     }
   }, [sortedAndGroupedData, currentPageSize, currentPage])
 
+  const paginationFooter =
+    totalPages > 1 ? (
+      <div className="table-footer-bar">
+        <div className="flex items-center space-x-2">
+          <span>Show</span>
+          <Select
+            value={currentPageSize.toString()}
+            onValueChange={(value) => {
+              const newPageSize = Number.parseInt(value)
+              setCurrentPageSize(newPageSize)
+              setCurrentPage(1)
+            }}
+          >
+            <SelectTrigger className="w-17.5">
+              <SelectValue placeholder={currentPageSize} />
+            </SelectTrigger>
+            <SelectContent>
+              {pageSizeOptions.map((size) => (
+                <SelectItem key={size} value={size.toString()}>
+                  {size}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <span>per page</span>
+        </div>
+        <div>
+          Showing {(currentPage - 1) * currentPageSize + 1} to{" "}
+          {Math.min(
+            currentPage * currentPageSize,
+            sortedAndGroupedData.length,
+          )}{" "}
+          of {sortedAndGroupedData.length} results
+        </div>
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => handlePageChange(1)}
+            disabled={currentPage === 1}
+          >
+            <ChevronsLeft className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+
+          <Select
+            value={currentPage.toString()}
+            onValueChange={(value) =>
+              handlePageChange(Number.parseInt(value))
+            }
+          >
+            <SelectTrigger className="w-16">
+              <SelectValue placeholder={currentPage} />
+            </SelectTrigger>
+            <SelectContent>
+              {Array.from({ length: totalPages }, (_, i) => (
+                <SelectItem key={i + 1} value={(i + 1).toString()}>
+                  {i + 1}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <span>of {totalPages}</span>
+
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => handlePageChange(totalPages)}
+            disabled={currentPage === totalPages}
+          >
+            <ChevronsRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    ) : undefined
+
   return (
-    <div className="table-shell">
-      <header className="table-toolbar">
+    <DataTableFrame
+      toolbar={
+        <>
         {searchable ? (
           <div className="relative">
             <Search className="absolute top-1/2 left-2.5 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -769,11 +863,11 @@ export function DynamicTable({
 
           {toolbarActions}
         </div>
-      </header>
-
-      <div className="table-body-region">
-        <div className="flex w-full max-w-6xl flex-col justify-center">
-          <div className="table-surface">
+        </>
+      }
+      footer={paginationFooter}
+    >
+      <div className="table-surface">
             <Table>
               <TableHeader>
                 <TableRow className="table-head-row border-b hover:bg-transparent">
@@ -932,101 +1026,8 @@ export function DynamicTable({
                 )}
               </TableBody>
             </Table>
-          </div>
-
-          {totalPages > 1 ? (
-            <div className="table-footer-bar">
-              <div className="flex items-center space-x-2">
-                <span>Show</span>
-                <Select
-                  value={currentPageSize.toString()}
-                  onValueChange={(value) => {
-                    const newPageSize = Number.parseInt(value)
-                    setCurrentPageSize(newPageSize)
-                    setCurrentPage(1)
-                  }}
-                >
-                  <SelectTrigger className="w-17.5">
-                    <SelectValue placeholder={currentPageSize} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {pageSizeOptions.map((size) => (
-                      <SelectItem key={size} value={size.toString()}>
-                        {size}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <span>per page</span>
-              </div>
-              <div>
-                Showing {(currentPage - 1) * currentPageSize + 1} to{" "}
-                {Math.min(
-                  currentPage * currentPageSize,
-                  sortedAndGroupedData.length,
-                )}{" "}
-                of {sortedAndGroupedData.length} results
-              </div>
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => handlePageChange(1)}
-                  disabled={currentPage === 1}
-                >
-                  <ChevronsLeft className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-
-                <Select
-                  value={currentPage.toString()}
-                  onValueChange={(value) =>
-                    handlePageChange(Number.parseInt(value))
-                  }
-                >
-                  <SelectTrigger className="w-16">
-                    <SelectValue placeholder={currentPage} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Array.from({ length: totalPages }, (_, i) => (
-                      <SelectItem key={i + 1} value={(i + 1).toString()}>
-                        {i + 1}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <span>of {totalPages}</span>
-
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => handlePageChange(totalPages)}
-                  disabled={currentPage === totalPages}
-                >
-                  <ChevronsRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          ) : null}
-        </div>
       </div>
-    </div>
+    </DataTableFrame>
   )
 }
 

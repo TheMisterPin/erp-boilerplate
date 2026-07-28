@@ -1,23 +1,13 @@
 import type { Metadata } from "next"
-import { Geist, Geist_Mono, Instrument_Sans, Roboto_Slab } from "next/font/google"
+import { Geist, Geist_Mono } from "next/font/google"
 
 import { AppProviders } from "@/components/shared/layout/app-providers"
 import { cn } from "@/lib/utils"
 
 import "./globals.css"
 
-const robotoSlabHeading = Roboto_Slab({
-  subsets: ["latin"],
-  variable: "--font-heading",
-})
-
-const instrumentSans = Instrument_Sans({
-  subsets: ["latin"],
-  variable: "--font-sans",
-})
-
 const geistSans = Geist({
-  variable: "--font-geist-sans",
+  variable: "--font-sans",
   subsets: ["latin"],
 })
 
@@ -40,13 +30,10 @@ export default function RootLayout({
     <html
       lang="en"
       className={cn(
-        "h-full",
-        "antialiased",
+        "dark h-full antialiased",
         geistSans.variable,
         geistMono.variable,
         "font-sans",
-        instrumentSans.variable,
-        robotoSlabHeading.variable,
       )}
     >
       <body className="h-svh overflow-hidden">

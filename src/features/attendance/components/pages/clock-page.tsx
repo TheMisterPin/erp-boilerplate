@@ -2,7 +2,10 @@
 
 import { LogIn, LogOut, Timer } from "lucide-react"
 
-import { DynamicTable } from "@/components/shared/table/dynamic-table"
+import {
+  DataTableFrame,
+  DynamicTable,
+} from "@/components/shared/table"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -74,7 +77,7 @@ export function ClockPage({
           </p>
         </div>
         <form
-          className="flex flex-col gap-4 rounded-xl border bg-card p-6 shadow-sm"
+          className="flex flex-col gap-4 rounded-xl border bg-card p-6"
           onSubmit={(event) => {
             event.preventDefault()
             void onLogin()
@@ -113,8 +116,8 @@ export function ClockPage({
   const isCheckedIn = !!clock?.openAttendance
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 py-10">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <div className="mx-auto flex h-svh min-h-0 w-full max-w-5xl flex-col gap-6 overflow-hidden px-4 py-10">
+      <header className="flex shrink-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-1">
           <h1 className="text-3xl font-semibold tracking-tight">Time clock</h1>
           <p className="text-sm text-muted-foreground">
@@ -142,12 +145,12 @@ export function ClockPage({
         </Button>
       </header>
 
-      <section className="rounded-xl border bg-card p-6 shadow-sm">
+      <section className="shrink-0 rounded-xl border bg-card p-6">
         <div className="flex flex-col items-center gap-6 text-center">
           <div
             className={`flex h-20 w-20 items-center justify-center rounded-full ${
               isCheckedIn
-                ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
+                ? "bg-success-surface text-success-foreground"
                 : "bg-muted text-muted-foreground"
             }`}
           >
@@ -197,8 +200,8 @@ export function ClockPage({
         </div>
       </section>
 
-      <section className="space-y-3">
-        <div>
+      <section className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
+        <div className="shrink-0">
           <h2 className="text-lg font-semibold tracking-tight">
             Attendance log
           </h2>
@@ -208,15 +211,15 @@ export function ClockPage({
           </p>
         </div>
         {!loaded ? (
-          <p className="text-sm text-muted-foreground">Loading attendance…</p>
+          <DataTableFrame>
+            <p className="text-sm text-muted-foreground">Loading attendance…</p>
+          </DataTableFrame>
         ) : rows.length === 0 ? (
-          <div className="rounded-lg border border-dashed p-8">
-            <p className="text-sm text-muted-foreground">
-              No check-ins yet.
-            </p>
-          </div>
+          <DataTableFrame>
+            <p className="text-sm text-muted-foreground">No check-ins yet.</p>
+          </DataTableFrame>
         ) : (
-          <div className="overflow-hidden rounded-lg border">
+          <div className="min-h-0 flex-1 overflow-hidden rounded-lg border">
             <DynamicTable
               data={rows}
               columns={attendanceTableColumns}
