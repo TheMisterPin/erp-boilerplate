@@ -2,6 +2,12 @@ import Link from "next/link"
 
 const demos = [
   {
+    href: "/clock",
+    title: "Time clock",
+    description:
+      "Kiosk check-in/out — login on the page, attendance table + activity log",
+  },
+  {
     href: "/team/members",
     title: "Members",
     description: "List-page CRUD — forms, modals, RBAC, and useError().run()",

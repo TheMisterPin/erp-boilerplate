@@ -36,6 +36,7 @@ model User {
   managedLocations Location[] @relation("LocationManager")
   shiftTemplates  ShiftTemplate[]  @relation("ShiftTemplateAssignee")
   shiftInstances  ShiftInstance[]  @relation("ShiftInstanceAssignee")
+  attendances     ShiftAttendance[]
 }
 
 model UserActivity {
@@ -75,6 +76,7 @@ model Location {
   users         User[]    @relation("UserLocation")
   shiftTemplates ShiftTemplate[]
   shiftInstances ShiftInstance[]
+  attendances    ShiftAttendance[]
 }
 
 enum ShiftType {
@@ -128,10 +130,33 @@ model ShiftInstance {
   createdAt  DateTime       @default(now())
   updatedAt  DateTime       @updatedAt
   deletedAt  DateTime?
+  attendances ShiftAttendance[]
 
   @@index([locationId, date])
   @@index([userId, date])
   @@index([templateId])
+}
+
+model ShiftAttendance {
+  id              String         @id @default(uuid())
+  userId          String
+  user            User           @relation(fields: [userId], references: [id])
+  shiftInstanceId String?
+  shiftInstance   ShiftInstance? @relation(fields: [shiftInstanceId], references: [id])
+  locationId      String?
+  location        Location?      @relation(fields: [locationId], references: [id])
+  checkInAt       DateTime
+  checkOutAt      DateTime?
+  /** Minutes on the clock; set when checking out. */
+  durationMinutes Int?
+  checkInActivityId  String?
+  checkOutActivityId String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([userId, checkInAt])
+  @@index([locationId, checkInAt])
+  @@index([shiftInstanceId])
 }
 
 enum Activity {
@@ -147,4 +172,6 @@ enum Activity {
   SHIFT_INSTANCE_CREATE
   SHIFT_INSTANCE_UPDATE
   SHIFT_INSTANCE_DELETE
+  SHIFT_CHECK_IN
+  SHIFT_CHECK_OUT
 }

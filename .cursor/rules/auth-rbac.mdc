@@ -23,7 +23,7 @@ Use jose cookie sessions + the permission-matrix action catalog. Do not invent N
 ## Middleware
 
 - Unauthenticated non-public routes → redirect `/login?next=…`
-- Public: `/login` only
+- Public: `/login`, `/clock`
 - Authenticated `/login` → `/`
 - With session → refresh cookie via `updateSession`
 

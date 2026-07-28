@@ -41,7 +41,7 @@ Do not put passwords in the JWT. Public user shape is `Me` (`src/features/auth/t
 | No session, not public | Redirect `/login?next=<pathname>` |
 | Session on `/login` | Redirect `/` |
 | Session elsewhere | Refresh cookie (`updateSession`) then continue |
-| Public | `/login` |
+| Public | `/login`, `/clock` |
 
 Login client should honor `next` (safe same-origin path only) after successful sign-in.
 

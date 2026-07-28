@@ -1,6 +1,6 @@
 import { ErrorBoundary } from "@/features/errors"
 
-/** Minimal chrome for unauthenticated routes (login). */
+/** Minimal chrome for unauthenticated / kiosk routes (login, clock). */
 export default function AuthLayout({
   children,
 }: Readonly<{

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 
 import { decrypt, SESSION_COOKIE, updateSession } from "./features/auth/utils"
 
-const PUBLIC_PATHS = new Set(["/login"])
+const PUBLIC_PATHS = new Set(["/login", "/clock"])
 
 function isPublicPath(pathname: string): boolean {
   return PUBLIC_PATHS.has(pathname)

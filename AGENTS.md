@@ -79,6 +79,7 @@ if (data) toast.success("Saved")
 |-------|----------------|
 | `/` | Home landing — links to list CRUD + activity demos |
 | `/login` | Auth gate entry + `SESSION_EXPIRED` acknowledge target |
+| `/clock` | Kiosk time clock — on-page login, check-in/out, attendance ↔ `UserActivity` |
 | `/team/members` | List-page CRUD (forms + modals + `run()`) |
 | `/team/activity` | Audit trail list (`logActivity` + ADMIN `logging:read`) |
 | `/team/shift-templates` | Shift templates CRUD + generate instances (Admin / location manager) |
