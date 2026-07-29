@@ -70,6 +70,7 @@ type DynamicTableProps = {
 - `data` is flattened rows (`toXTableRow`), not rich domain objects
 - Map `row.id` back to the domain entity for Edit/Delete handlers
 - `toolbarActions` → Create (and similar); `rowActions` → use `RowActionsMenu` + `RowActionItem` (single ⋯ trigger, actions in a popover with tooltips). Do not stack bare icon buttons in the actions column.
+- Toolbar: search + `toolbarActions` on one row; Filters / Group by / Clear live in a toolbar `RowActionsMenu` (`⋯`), not as separate always-visible buttons.
 - Actions column is automatic when `rowActions` is set; skip group header rows
 - Never use key `__ed` in column configs / search fields
 

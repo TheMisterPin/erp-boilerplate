@@ -11,7 +11,9 @@ List wiring: [List pages](./list-pages.md)
 
 ## Sticky toolbar (required)
 
-The search / filter toolbar must stay fixed while rows scroll. Pagination stays in a fixed footer.
+The toolbar (search, table tools menu, and primary actions) must stay fixed while rows scroll. Pagination stays in a fixed footer.
+
+Toolbar layout is a single row: search grows on the left; secondary controls (Filters, Group by, Clear all filters) live in a toolbar `RowActionsMenu` (`⋯`); `toolbarActions` (e.g. Create) stays visible on the same row—not inside the menu.
 
 | Piece | Role |
 |-------|------|
@@ -47,8 +49,8 @@ Empty / loading states should also use `DataTableFrame` so height and chrome sta
 | `data` | `Record<string, unknown>[]` (flattened rows) |
 | `columns` | Optional `ColumnConfig[]` (else auto-detect keys) |
 | `pageSize` | Fixed page size (default `PAGE_SIZE`) |
-| `searchable` / `sortable` / `filterable` / `groupable` | Toolbar features |
-| `toolbarActions` | Right-side toolbar slot (e.g. Create button) |
+| `searchable` / `sortable` / `filterable` / `groupable` | Toolbar features (`filterable` / `groupable` expose Filters / Group by via the toolbar `⋯` menu, not as always-visible buttons) |
+| `toolbarActions` | Right-side toolbar slot (e.g. Create button)—always visible on the search row, outside the `⋯` menu |
 | `rowActions` | Per data-row Actions column renderer |
 
 ```ts
@@ -112,6 +114,7 @@ const rows = useMemo(() => users.map(toUserTableRow), [users])
 
 ## Constraints
 
+- Toolbar secondary controls (Filters, Group by, Clear all filters) render inside the toolbar `RowActionsMenu` (`⋯`); `toolbarActions` (Create) stays visible on the same row as search
 - Prefer `toolbarActions` / `rowActions` over action columns in `format`
 - Keep domain entities in React state; table rows are a projection
 - Soft-deleted rows should not appear (`listX` filters `deletedAt: null`)
