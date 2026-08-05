@@ -322,7 +322,7 @@
   }
 
   .table-toolbar {
-    @apply sticky top-0 z-20 flex shrink-0 flex-col gap-3 border-b px-4 py-3;
+    @apply sticky top-0 z-20 flex shrink-0 flex-row flex-wrap items-center gap-2 border-b px-4 py-3;
     background-color: var(--table-toolbar);
     color: var(--table-toolbar-foreground);
     border-color: var(--table-toolbar-border);

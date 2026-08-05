@@ -9,6 +9,7 @@ import {
   RowActionsMenu,
 } from "@/components/shared/table"
 import { Button } from "@/components/ui/button"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   toUserTableRow,
   userTableColumns,
@@ -27,8 +28,7 @@ export type UserListPageProps = {
   onAssignLocation: (user: User) => void
 }
 
-type UserSectionProps = {
-  title: string
+type UserTabPanelProps = {
   emptyMessage: string
   users: User[]
   canWrite: boolean
@@ -38,8 +38,7 @@ type UserSectionProps = {
   onAssignLocation: (user: User) => void
 }
 
-function UserSection({
-  title,
+function UserTabPanel({
   emptyMessage,
   users,
   canWrite,
@@ -47,69 +46,65 @@ function UserSection({
   onEdit,
   onDelete,
   onAssignLocation,
-}: UserSectionProps) {
+}: UserTabPanelProps) {
   const showActions = canWrite || canAssignLocation
 
-  return (
-    <section className="flex min-h-0 flex-1 basis-0 flex-col overflow-hidden">
-      <div className="flex shrink-0 items-center justify-between gap-2 px-1 pb-2">
-        <h2 className="text-sm font-semibold tracking-tight">{title}</h2>
-        <span className="text-xs text-muted-foreground">{users.length}</span>
+  if (users.length === 0) {
+    return (
+      <div className="flex min-h-0 flex-1 items-center justify-center rounded-lg border border-dashed p-6">
+        <p className="text-sm text-muted-foreground">{emptyMessage}</p>
       </div>
-      {users.length === 0 ? (
-        <div className="flex min-h-0 flex-1 items-center justify-center rounded-lg border border-dashed p-6">
-          <p className="text-sm text-muted-foreground">{emptyMessage}</p>
-        </div>
-      ) : (
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <DynamicTable
-            data={users.map(toUserTableRow)}
-            columns={userTableColumns}
-            searchable
-            sortable
-            filterable
-            rowActions={
-              showActions
-                ? ({ row }) => {
-                    const user = users.find((item) => item.id === row.id)
-                    if (!user) return null
-                    return (
-                      <RowActionsMenu label={`Actions for ${user.fullName}`}>
-                        {canAssignLocation ? (
-                          <RowActionItem
-                            label="Assign location"
-                            icon={<MapPin className="h-4 w-4" />}
-                            onClick={() => onAssignLocation(user)}
-                          />
-                        ) : null}
-                        {canWrite ? (
-                          <RowActionItem
-                            label="Edit"
-                            icon={<Pencil className="h-4 w-4" />}
-                            onClick={() => onEdit(user)}
-                          />
-                        ) : null}
-                        {canWrite ? (
-                          <RowActionItem
-                            label="Delete"
-                            icon={<Trash2 className="h-4 w-4" />}
-                            destructive
-                            onClick={() => void onDelete(user)}
-                          />
-                        ) : null}
-                      </RowActionsMenu>
-                    )
-                  }
-                : undefined
-            }
-          />
-        </div>
-      )}
-    </section>
+    )
+  }
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      <DynamicTable
+        data={users.map(toUserTableRow)}
+        columns={userTableColumns}
+        searchable
+        sortable
+        filterable
+        rowActions={
+          showActions
+            ? ({ row }) => {
+                const user = users.find((item) => item.id === row.id)
+                if (!user) return null
+                return (
+                  <RowActionsMenu label={`Actions for ${user.fullName}`}>
+                    {canAssignLocation ? (
+                      <RowActionItem
+                        label="Assign location"
+                        icon={<MapPin className="h-4 w-4" />}
+                        onClick={() => onAssignLocation(user)}
+                      />
+                    ) : null}
+                    {canWrite ? (
+                      <RowActionItem
+                        label="Edit"
+                        icon={<Pencil className="h-4 w-4" />}
+                        onClick={() => onEdit(user)}
+                      />
+                    ) : null}
+                    {canWrite ? (
+                      <RowActionItem
+                        label="Delete"
+                        icon={<Trash2 className="h-4 w-4" />}
+                        destructive
+                        onClick={() => void onDelete(user)}
+                      />
+                    ) : null}
+                  </RowActionsMenu>
+                )
+              }
+            : undefined
+        }
+      />
+    </div>
   )
 }
 
-/** Stateless members list — with-location and without-location sections. */
+/** Stateless members list — assigned / unassigned location tabs. */
 export function UserListPage({
   loaded,
   users,
@@ -155,28 +150,49 @@ export function UserListPage({
           <p className="text-sm text-muted-foreground">No users found.</p>
         </div>
       ) : (
-        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden p-4">
-          <UserSection
-            title="Assigned to a location"
-            emptyMessage="No members are assigned to a location yet."
-            users={withLocation}
-            canWrite={canWrite}
-            canAssignLocation={canAssignLocation}
-            onEdit={onEdit}
-            onDelete={onDelete}
-            onAssignLocation={onAssignLocation}
-          />
-          <UserSection
-            title="Without a location"
-            emptyMessage="Every member has a location."
-            users={withoutLocation}
-            canWrite={canWrite}
-            canAssignLocation={canAssignLocation}
-            onEdit={onEdit}
-            onDelete={onDelete}
-            onAssignLocation={onAssignLocation}
-          />
-        </div>
+        <Tabs
+          defaultValue="with-location"
+          className="flex min-h-0 flex-1 flex-col overflow-hidden px-4 pt-3 pb-4"
+        >
+          <TabsList className="mb-3 w-fit shrink-0 self-start">
+            <TabsTrigger value="with-location">
+              Assigned to a location ({withLocation.length})
+            </TabsTrigger>
+            <TabsTrigger value="without-location">
+              Without a location ({withoutLocation.length})
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent
+            value="with-location"
+            className="mt-0 flex min-h-0 flex-1 flex-col overflow-hidden data-[state=inactive]:hidden"
+          >
+            <UserTabPanel
+              emptyMessage="No members are assigned to a location yet."
+              users={withLocation}
+              canWrite={canWrite}
+              canAssignLocation={canAssignLocation}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              onAssignLocation={onAssignLocation}
+            />
+          </TabsContent>
+
+          <TabsContent
+            value="without-location"
+            className="mt-0 flex min-h-0 flex-1 flex-col overflow-hidden data-[state=inactive]:hidden"
+          >
+            <UserTabPanel
+              emptyMessage="Every member has a location."
+              users={withoutLocation}
+              canWrite={canWrite}
+              canAssignLocation={canAssignLocation}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              onAssignLocation={onAssignLocation}
+            />
+          </TabsContent>
+        </Tabs>
       )}
     </div>
   )

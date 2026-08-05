@@ -20,11 +20,12 @@ import {
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { DataTableFrame } from "@/components/shared/table/data-table-frame"
 import { PAGE_SIZE } from "@/components/shared/table/table-constant"
+import { RowActionItem, RowActionsMenu } from "./row-actions-menu"
 
 /** Cell value types DynamicTable can detect / filter on. */
 export type DataType =
@@ -120,6 +121,8 @@ export function DynamicTable({
   const [groupByField, setGroupByField] = useState<string | null>(null)
   const [appliedTags, setAppliedTags] = useState<string[]>([])
   const [expandedGroups, setExpandedGroups] = useState<string[]>([])
+  const [filterDialogOpen, setFilterDialogOpen] = useState(false)
+  const [groupPopoverOpen, setGroupPopoverOpen] = useState(false)
 
   
   const autoDetectedColumns = useMemo((): ColumnConfig[] => {
@@ -496,6 +499,9 @@ export function DynamicTable({
     resultCount === 0 ? 0 : (currentPage - 1) * pageSize + 1
   const rangeEnd = Math.min(currentPage * pageSize, resultCount)
   const showPagination = totalPages > 1
+  const hasClearableState =
+    appliedTags.length > 0 || !!groupByField || !!searchQuery
+  const showToolbarMenu = filterable || groupable || hasClearableState
 
   const paginationFooter = (
     <div className="table-footer-bar">
@@ -568,64 +574,148 @@ export function DynamicTable({
     <DataTableFrame
       toolbar={
         <>
-        {searchable ? (
-          <div className="relative">
-            <Search className="absolute top-1/2 left-2.5 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <div className="table-toolbar-search">
-              {appliedTags.map((tag, index) => (
-                <Badge
-                  key={index}
-                  variant="secondary"
-                  className="flex items-center gap-1"
-                >
-                  <Filter className="h-3 w-3" />
-                  {tag}
-                  <X
-                    className="h-3 w-3 cursor-pointer"
-                    onClick={() => removeFilter(index)}
-                  />
-                </Badge>
-              ))}
-              {groupByField ? (
-                <Badge variant="secondary" className="flex items-center gap-1">
-                  <Group className="h-3 w-3" />
-                  Grouped by: {groupByField}
-                  <X
-                    className="h-3 w-3 cursor-pointer"
-                    onClick={() => setGroupByField(null)}
-                  />
-                </Badge>
-              ) : null}
-              {searchQuery ? (
-                <Badge variant="secondary" className="flex items-center gap-1">
-                  <Search className="h-3 w-3" />
-                  {autoDetectedColumns[0]?.label}: {searchQuery}
-                  <X
-                    className="h-3 w-3 cursor-pointer"
-                    onClick={() => setSearchQuery("")}
-                  />
-                </Badge>
-              ) : null}
-              <Input
-                type="search"
-                placeholder="Search…"
-                className="grow border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+          {searchable ? (
+            <div className="relative min-w-0 flex-1">
+              <Search className="absolute top-1/2 left-2.5 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <div className="table-toolbar-search">
+                {appliedTags.map((tag, index) => (
+                  <Badge
+                    key={index}
+                    variant="secondary"
+                    className="flex items-center gap-1"
+                  >
+                    <Filter className="h-3 w-3" />
+                    {tag}
+                    <X
+                      className="h-3 w-3 cursor-pointer"
+                      onClick={() => removeFilter(index)}
+                    />
+                  </Badge>
+                ))}
+                {groupByField ? (
+                  <Badge variant="secondary" className="flex items-center gap-1">
+                    <Group className="h-3 w-3" />
+                    Grouped by: {groupByField}
+                    <X
+                      className="h-3 w-3 cursor-pointer"
+                      onClick={() => setGroupByField(null)}
+                    />
+                  </Badge>
+                ) : null}
+                {searchQuery ? (
+                  <Badge variant="secondary" className="flex items-center gap-1">
+                    <Search className="h-3 w-3" />
+                    {autoDetectedColumns[0]?.label}: {searchQuery}
+                    <X
+                      className="h-3 w-3 cursor-pointer"
+                      onClick={() => setSearchQuery("")}
+                    />
+                  </Badge>
+                ) : null}
+                <Input
+                  type="search"
+                  placeholder="Search…"
+                  className="grow border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
             </div>
-          </div>
-        ) : null}
+          ) : (
+            <div className="min-w-0 flex-1" />
+          )}
 
-        <div className="flex flex-wrap items-center gap-2">
-          {filterable ? (
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <Filter className="mr-2 h-4 w-4" />
-                  Filters
-                </Button>
-              </DialogTrigger>
+          <div className="flex shrink-0 items-center gap-2">
+            {showToolbarMenu ? (
+              <RowActionsMenu label="Table tools">
+                {filterable ? (
+                  <RowActionItem
+                    label="Filters"
+                    icon={<Filter className="h-4 w-4" />}
+                    onClick={() => setFilterDialogOpen(true)}
+                  />
+                ) : null}
+                {groupable ? (
+                  <RowActionItem
+                    label="Group by"
+                    icon={<Group className="h-4 w-4" />}
+                    onClick={() => setGroupPopoverOpen(true)}
+                  />
+                ) : null}
+                {hasClearableState ? (
+                  <RowActionItem
+                    label="Clear all filters"
+                    icon={<X className="h-4 w-4" />}
+                    onClick={() => {
+                      setFilterState({ logicOperator: "AND", rules: [] })
+                      setActiveFilters({ logicOperator: "AND", rules: [] })
+                      setAppliedTags([])
+                      setGroupByField(null)
+                      setSearchQuery("")
+                    }}
+                  />
+                ) : null}
+              </RowActionsMenu>
+            ) : null}
+
+            {groupable ? (
+              <Popover
+                open={groupPopoverOpen}
+                onOpenChange={setGroupPopoverOpen}
+              >
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    className="sr-only"
+                    tabIndex={-1}
+                    aria-label="Group by anchor"
+                  />
+                </PopoverTrigger>
+                <PopoverContent className="w-50 p-0" align="end">
+                  <div className="p-2">
+                    <div className="space-y-2">
+                      {autoDetectedColumns.map((column) => (
+                        <Button
+                          key={column.key}
+                          variant={
+                            groupByField === column.key ? "default" : "ghost"
+                          }
+                          size="sm"
+                          className="w-full justify-start"
+                          onClick={() => {
+                            setGroupByField(
+                              groupByField === column.key ? null : column.key,
+                            )
+                            setGroupPopoverOpen(false)
+                          }}
+                        >
+                          {column.label}
+                        </Button>
+                      ))}
+
+                      {groupByField ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="mt-2 w-full"
+                          onClick={() => {
+                            setGroupByField(null)
+                            setGroupPopoverOpen(false)
+                          }}
+                        >
+                          Clear grouping
+                        </Button>
+                      ) : null}
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            ) : null}
+
+            {toolbarActions}
+
+            {filterable ? (
+              <Dialog open={filterDialogOpen} onOpenChange={setFilterDialogOpen}>
               <DialogContent className="sm:max-w-150">
                 <DialogHeader>
                   <DialogTitle>Advanced filters</DialogTitle>
@@ -772,75 +862,19 @@ export function DynamicTable({
                   >
                     Clear
                   </Button>
-                  <Button onClick={applyFilter}>Apply</Button>
+                  <Button
+                    onClick={() => {
+                      applyFilter()
+                      setFilterDialogOpen(false)
+                    }}
+                  >
+                    Apply
+                  </Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
           ) : null}
-
-          {groupable ? (
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <Group className="mr-2 h-4 w-4" />
-                  Group by
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-50 p-0" align="start">
-                <div className="p-2">
-                  <div className="space-y-2">
-                    {autoDetectedColumns.map((column) => (
-                      <Button
-                        key={column.key}
-                        variant={
-                          groupByField === column.key ? "default" : "ghost"
-                        }
-                        size="sm"
-                        className="w-full justify-start"
-                        onClick={() =>
-                          setGroupByField(
-                            groupByField === column.key ? null : column.key,
-                          )
-                        }
-                      >
-                        {column.label}
-                      </Button>
-                    ))}
-
-                    {groupByField ? (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="mt-2 w-full"
-                        onClick={() => setGroupByField(null)}
-                      >
-                        Clear grouping
-                      </Button>
-                    ) : null}
-                  </div>
-                </div>
-              </PopoverContent>
-            </Popover>
-          ) : null}
-
-          {appliedTags.length > 0 || groupByField || searchQuery ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setFilterState({ logicOperator: "AND", rules: [] })
-                setActiveFilters({ logicOperator: "AND", rules: [] })
-                setAppliedTags([])
-                setGroupByField(null)
-                setSearchQuery("")
-              }}
-            >
-              Clear all filters
-            </Button>
-          ) : null}
-
-          {toolbarActions}
-        </div>
+          </div>
         </>
       }
       footer={paginationFooter}

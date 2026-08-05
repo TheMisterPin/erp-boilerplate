@@ -203,7 +203,7 @@ function WeekView({
 
   return (
     <div className="space-y-4 overflow-x-auto">
-      <div className="sticky top-0 grid grid-cols-[60px_repeat(7,_1fr)] gap-2 border-b border-border bg-background pb-2">
+      <div className="sticky top-0 grid grid-cols-[60px_repeat(7,1fr)] gap-2 border-b border-border bg-background pb-2">
         <div className="py-2 text-xs font-semibold text-muted-foreground">
           Time
         </div>
@@ -232,7 +232,7 @@ function WeekView({
         })}
       </div>
 
-      <div className="grid grid-cols-[60px_repeat(7,_1fr)] gap-2">
+      <div className="grid grid-cols-[60px_repeat(7,1fr)] gap-2">
         {hours.map((hour) => (
           <div key={`row-${hour}`} className="contents">
             <div className="py-2 text-center text-xs font-semibold text-muted-foreground">
