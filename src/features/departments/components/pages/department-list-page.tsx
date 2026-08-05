@@ -7,6 +7,7 @@ import {
   DynamicTable,
   RowActionItem,
   RowActionsMenu,
+  TableSkeleton,
 } from "@/components/shared/table"
 import { Button } from "@/components/ui/button"
 import {
@@ -36,18 +37,14 @@ export function DepartmentListPage({
   onDelete,
 }: DepartmentListPageProps) {
   const createButton = canWrite ? (
-    <Button size="sm" onClick={onCreate}>
+    <Button size="sm" onClick={onCreate} disabled={!loaded}>
       <Plus className="mr-2 h-4 w-4" />
       New department
     </Button>
   ) : null
 
   if (!loaded) {
-    return (
-      <DataTableFrame>
-        <p className="text-sm text-muted-foreground">Loading departments…</p>
-      </DataTableFrame>
-    )
+    return <TableSkeleton toolbarActions={createButton} />
   }
 
   if (departments.length === 0) {

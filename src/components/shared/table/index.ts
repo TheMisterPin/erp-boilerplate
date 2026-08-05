@@ -14,6 +14,8 @@ export type {
   TablePageViewportProps,
 } from "./data-table-frame"
 export { PAGE_SIZE } from "./table-constant"
+export { TableSkeleton } from "./table-skeleton"
+export type { TableSkeletonProps } from "./table-skeleton"
 export { RowActionsMenu, RowActionItem } from "./row-actions-menu"
 export type {
   RowActionsMenuProps,

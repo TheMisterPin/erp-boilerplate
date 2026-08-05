@@ -40,6 +40,26 @@ export default function Page() {
 
 Empty / loading states should also use `DataTableFrame` so height and chrome stay consistent.
 
+### Loading skeleton (required)
+
+Use shared `TableSkeleton` from `@/components/shared/table` while `!loaded`. It renders real toolbar chrome (disabled search + optional tools `⋯` + `toolbarActions`) and skeleton rows/footer — not placeholder text.
+
+```tsx
+import { TableSkeleton } from "@/components/shared/table"
+
+if (!loaded) {
+  return <TableSkeleton toolbarActions={disabledCreateButton} />
+}
+```
+
+| Prop | Purpose |
+|------|---------|
+| `toolbarActions` | Right-side slot (pass Create **disabled** until loaded) |
+| `rowCount` | Skeleton rows (default `PAGE_SIZE`) |
+| `showToolsMenu` | Disabled `⋯` affordance (default `true`) |
+
+Do not early-return a text-only `DataTableFrame` body that drops the search toolbar.
+
 ---
 
 ## Props

@@ -6,6 +6,7 @@ import { ArrowLeft, LogIn, LogOut, Timer } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Skeleton } from "@/components/ui/skeleton"
 import type { ClockStatus } from "@/features/attendance/types/attendance-types"
 
 export type ClockPageProps = {
@@ -63,9 +64,30 @@ export function ClockPage({
 }: ClockPageProps) {
   if (authLoading) {
     return (
-      <div className="mx-auto flex w-full max-w-lg flex-col gap-4 px-4 py-16 text-sm text-muted-foreground">
+      <div
+        className="mx-auto flex min-h-svh w-full max-w-lg flex-col gap-6 px-4 py-10"
+        aria-busy="true"
+        aria-label="Loading…"
+      >
         <HomeLink />
-        Loading…
+        <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-2">
+            <Skeleton className="h-9 w-40" />
+            <Skeleton className="h-4 w-56" />
+            <Skeleton className="h-4 w-64" />
+          </div>
+          <Skeleton className="h-9 w-24" />
+        </header>
+        <section className="rounded-xl border bg-card p-6">
+          <div className="flex flex-col items-center gap-6 text-center">
+            <Skeleton className="h-20 w-20 rounded-full" />
+            <div className="space-y-2">
+              <Skeleton className="mx-auto h-6 w-44" />
+              <Skeleton className="mx-auto h-4 w-52" />
+            </div>
+            <Skeleton className="h-11 w-48" />
+          </div>
+        </section>
       </div>
     )
   }

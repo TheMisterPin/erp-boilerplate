@@ -12,7 +12,7 @@ Related: [List pages](./list-pages.md), [Forms](./forms.md), [Auth](./auth.md), 
 |-------|------|----------------|
 | `src/app/(app)/…/page.tsx` | Layout shell + **wire hook → view** | Business logic, fetch, modals |
 | `features/<f>/hooks/` | State, effects, `run()`, modals, RBAC gates | JSX layout (beyond modal form trees) |
-| `features/<f>/components/` | Stateless UI from props | `useState` / data fetching for the page |
+| `features/<f>/components/` | Stateless UI from props (`TableSkeleton` / page skeletons while `!loaded`) | `useState` / data fetching for the page |
 | `features/<f>/actions/` | Server mutations/queries + `authorize` | UI |
 | `src/components/shared/` | Cross-feature systems (forms, modals, table) | Feature domain rules |
 

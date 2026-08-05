@@ -16,9 +16,10 @@ Canonical pattern: **`useXListPage` + `XListPage`**. Mirror `src/features/users/
 4. Hook: Delete → `confirm({ variant: "destructive" })` → `run(deleteX(id))` → toast + `load()`
 5. View: render `DynamicTable` / empty / loading from props; build toolbar/row UI from `canWrite` + callbacks
 6. Route: `const page = useXListPage(); return <TablePageViewport><XListPage {...page} /></TablePageViewport>`
-7. Empty state still shows Create when `canWrite`. Lists are full arrays — DynamicTable pages client-side only
-8. Do not add `[id]` detail routes or orphan `getX(id)` unless the task asks for them
-9. Tables: sticky toolbar + scrollable body via `DataTableFrame` / `DynamicTable` — never page-scroll the search bar away
+7. Loading (`!loaded`): use `TableSkeleton` — keep toolbar / page chrome visible; disable Create/search until loaded. Never bare “Loading…” text. Tabbed pages keep header + tab shells.
+8. Empty state still shows Create when `canWrite`. Lists are full arrays — DynamicTable pages client-side only
+9. Do not add `[id]` detail routes or orphan `getX(id)` unless the task asks for them
+10. Tables: sticky toolbar + scrollable body via `DataTableFrame` / `DynamicTable` — never page-scroll the search bar away
 
 ```ts
 const canWrite = me ? can(me.role, Actions.users.write) : false
@@ -32,7 +33,7 @@ await authorize(Actions.users.write) // server actions only
 |------|------|
 | Hook | `features/<f>/hooks/use-*-list-page` |
 | View | `features/<f>/components/pages/*-list-page` |
-| Table | `@/components/shared/table/dynamic-table` |
+| Table | `@/components/shared/table` (`DynamicTable`, `TableSkeleton`) |
 | Modals | `@/components/shared/modals` → `useModal` (in the **hook**) |
 | Errors | `@/features/errors` → `useError` (in the **hook**) |
 | RBAC UI | `@/features/auth/permissions` → `Actions`, `can` |
