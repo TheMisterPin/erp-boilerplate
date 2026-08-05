@@ -14,6 +14,7 @@ Use the shared `DynamicTable` for feature lists. Do not invent a parallel DataTa
 |---------|------|
 | Frame (sticky toolbar) | `src/components/shared/table/data-table-frame.tsx` |
 | Table | `src/components/shared/table/dynamic-table.tsx` |
+| Loading skeleton | `src/components/shared/table/table-skeleton.tsx` (`TableSkeleton`) |
 | Barrel | `@/components/shared/table` |
 | Feature columns | `src/features/<feature>/components/tables/*-table-columns.tsx` |
 | List pages | `src/features/<feature>/components/pages/*` |
@@ -24,11 +25,12 @@ Toolbar / search stay fixed; **only** the body scrolls. Pagination stays in the 
 Column headers are sticky inside the body so sort controls stay reachable while scrolling rows.
 
 1. Route: wrap with `<TablePageViewport>` (fills the locked AppShell content slot)
-2. Table: use `<DynamicTable>` (uses `DataTableFrame` internally) or empty/loading via `<DataTableFrame>`
-3. Parent of `DynamicTable` must be in a `h-full` / `min-h-0` / `flex-1` / `overflow-hidden` chain
-4. **Never** put `DynamicTable` inside a page-level `overflow-y-auto` that scrolls the toolbar away — only `.table-surface` scrolls
-5. Multi-section pages: each section is `flex-1 min-h-0 overflow-hidden` with the table filling that section
-6. Paginate with `PAGE_SIZE` from `@/components/shared/table` (default; override `pageSize` only when needed). Footer stays pinned: results summary left, page controls right (omit controls when a single page)
+2. Table: use `<DynamicTable>` (uses `DataTableFrame` internally) or empty via `<DataTableFrame>`
+3. Loading: use `<TableSkeleton toolbarActions={disabledCreate} />` — keep toolbar chrome; never text-only “Loading…”
+4. Parent of `DynamicTable` / `TableSkeleton` must be in a `h-full` / `min-h-0` / `flex-1` / `overflow-hidden` chain
+5. **Never** put `DynamicTable` inside a page-level `overflow-y-auto` that scrolls the toolbar away — only `.table-surface` scrolls
+6. Multi-section pages: each section is `flex-1 min-h-0 overflow-hidden` with the table filling that section
+7. Paginate with `PAGE_SIZE` from `@/components/shared/table` (default; override `pageSize` only when needed). Footer stays pinned: results summary left, page controls right (omit controls when a single page)
 
 ```tsx
 // ✅ route

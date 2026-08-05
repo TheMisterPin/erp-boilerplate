@@ -1,5 +1,6 @@
 "use client"
 
+import { ShiftScheduleSkeleton } from "@/features/shifts/components/pages/shift-schedule-skeleton"
 import { ShiftCalendar } from "@/features/shifts/components/shift-calendar"
 import type { CalendarShift } from "@/features/shifts/types/shift-types"
 import { SHIFT_TYPE_META } from "@/features/shifts/types/shift-types"
@@ -21,9 +22,7 @@ export function ShiftSchedulePage({
   onShiftDelete,
 }: ShiftSchedulePageProps) {
   if (!loaded) {
-    return (
-      <p className="text-sm text-muted-foreground">Loading shifts…</p>
-    )
+    return <ShiftScheduleSkeleton />
   }
 
   return (

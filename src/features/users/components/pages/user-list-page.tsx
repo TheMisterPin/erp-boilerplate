@@ -3,10 +3,10 @@
 import { MapPin, Pencil, Plus, Trash2 } from "lucide-react"
 
 import {
-  DataTableFrame,
   DynamicTable,
   RowActionItem,
   RowActionsMenu,
+  TableSkeleton,
 } from "@/components/shared/table"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -116,19 +116,11 @@ export function UserListPage({
   onAssignLocation,
 }: UserListPageProps) {
   const createButton = canWrite ? (
-    <Button size="sm" onClick={onCreate}>
+    <Button size="sm" onClick={onCreate} disabled={!loaded}>
       <Plus className="mr-2 h-4 w-4" />
       New member
     </Button>
   ) : null
-
-  if (!loaded) {
-    return (
-      <DataTableFrame>
-        <p className="text-sm text-muted-foreground">Loading members…</p>
-      </DataTableFrame>
-    )
-  }
 
   const withLocation = users.filter((user) => !!user.locationId)
   const withoutLocation = users.filter((user) => !user.locationId)
@@ -145,7 +137,27 @@ export function UserListPage({
         {createButton}
       </header>
 
-      {users.length === 0 ? (
+      {!loaded ? (
+        <Tabs
+          defaultValue="with-location"
+          className="flex min-h-0 flex-1 flex-col overflow-hidden px-4 pt-3 pb-4"
+        >
+          <TabsList className="mb-3 w-fit shrink-0 self-start">
+            <TabsTrigger value="with-location" disabled>
+              Assigned to a location (—)
+            </TabsTrigger>
+            <TabsTrigger value="without-location" disabled>
+              Without a location (—)
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent
+            value="with-location"
+            className="mt-0 flex min-h-0 flex-1 flex-col overflow-hidden data-[state=inactive]:hidden"
+          >
+            <TableSkeleton showToolsMenu />
+          </TabsContent>
+        </Tabs>
+      ) : users.length === 0 ? (
         <div className="flex min-h-0 flex-1 items-center justify-center p-8">
           <p className="text-sm text-muted-foreground">No users found.</p>
         </div>

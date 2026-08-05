@@ -14,7 +14,7 @@ Mirror **`src/features/users/`**. Route pages inject hook state into a **statele
 |-------|------|-----|
 | Route | `src/app/(app)/…/page.tsx` | Shell + `const page = useXListPage(); return <XListPage {...page} />` |
 | Hook | `features/<f>/hooks/use-*-list-page.ts(x)` | State, `run()`, modals, RBAC |
-| View | `features/<f>/components/pages/*-list-page.tsx` | Props → UI only |
+| View | `features/<f>/components/pages/*-list-page.tsx` | Props → UI only (`TableSkeleton` while `!loaded`) |
 | Actions | `features/<f>/actions/` | Server `ActionResult` + `authorize` |
 | Forms / tables | `components/forms`, `components/tables` | FieldDefs, `*Form`, columns, `toXTableRow` |
 | Types | `features/<f>/types/` | Domain types (no React) |

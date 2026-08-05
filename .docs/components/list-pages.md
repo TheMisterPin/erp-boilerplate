@@ -141,9 +141,28 @@ Soft-delete is the server convention (`deletedAt` + `isActive: false`).
 
 Handled in the **view** from props the hook provides:
 
-1. `loaded` boolean — show “Loading…” until the first `run(listX())` settles
-2. After load, empty list still shows Create when `canWrite` (not a dead end)
-3. Read-only lists: if `!canRead`, show a permission message; hook skips the list fetch
+1. `loaded` boolean — until the first `run(listX())` settles, keep page chrome and show [`TableSkeleton`](./tables.md) (not “Loading…” text)
+2. Toolbar / Create stay **visible but disabled** while `!loaded`
+3. Tabbed pages (Members, Locations): keep header + tab shells during load; active tab body = `TableSkeleton`; counts can show `—` until data arrives
+4. After load, empty list still shows Create when `canWrite` (not a dead end)
+5. Read-only lists: if `!canRead`, show a permission message; hook skips the list fetch
+
+```tsx
+if (!loaded) {
+  return (
+    <TableSkeleton
+      toolbarActions={
+        canWrite ? (
+          <Button size="sm" disabled>
+            <Plus className="mr-2 h-4 w-4" />
+            New …
+          </Button>
+        ) : null
+      }
+    />
+  )
+}
+```
 
 `DynamicTable` search / filter / sort / page are **client-side** on the full array from `listX()`. Do not add server pagination unless deliberately building that pattern.
 

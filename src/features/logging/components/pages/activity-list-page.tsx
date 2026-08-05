@@ -3,6 +3,7 @@
 import {
   DataTableFrame,
   DynamicTable,
+  TableSkeleton,
 } from "@/components/shared/table"
 import {
   activityTableColumns,
@@ -25,11 +26,7 @@ export function ActivityListPage({
   rows,
 }: ActivityListPageProps) {
   if (!loaded) {
-    return (
-      <DataTableFrame>
-        <p className="text-sm text-muted-foreground">Loading…</p>
-      </DataTableFrame>
-    )
+    return <TableSkeleton showToolsMenu />
   }
 
   if (!canRead) {
