@@ -89,7 +89,14 @@ export function useProfilePage(): ProfilePageProps {
       toast.success("Profile saved")
       await refreshMe()
       const reloaded = await run(getProfile())
-      setProfile(reloaded ?? saved)
+      const updated = reloaded ?? saved
+      setProfile(updated)
+      form.reset({
+        firstName: updated.firstName,
+        lastName: updated.lastName,
+        pictureUrl: updated.pictureUrl ?? "",
+        password: "",
+      })
     },
     [refreshMe, run],
   )
