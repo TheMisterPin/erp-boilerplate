@@ -84,6 +84,8 @@ if (data) toast.success("Saved")
 | `/team/activity` | Audit trail list (`logActivity` + ADMIN `logging:read`) |
 | `/team/shift-templates` | Shift templates CRUD + generate instances (Admin / location manager) |
 | `/team/my-shifts` | Schedule calendar — own shifts (users) / managed locations (managers) |
+| `/profile` | Self-service hub — edit profile, upcoming shifts, request time off / sick |
+| `/team/time-off` | Leave requests inbox — admin / location manager approve; cancels overlapping shifts |
 | `/organization/departments` | Org vertical + list CRUD |
 | `/organization/locations` | Org vertical + manager select + list CRUD |
 

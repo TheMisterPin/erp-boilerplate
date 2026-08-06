@@ -29,6 +29,18 @@ const demos = [
     description: "Calendar schedule — own shifts or managed-location coverage",
   },
   {
+    href: "/profile",
+    title: "Profile",
+    description:
+      "Self-service hub — edit profile, upcoming shifts, request time off / sick",
+  },
+  {
+    href: "/team/time-off",
+    title: "Time off",
+    description:
+      "Leave requests inbox — admin / location manager approve cancels shifts",
+  },
+  {
     href: "/organization/departments",
     title: "Departments",
     description: "Organization vertical with the same list CRUD pattern",

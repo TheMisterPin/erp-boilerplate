@@ -107,6 +107,7 @@ Read-only lists (e.g. logging) skip forms/modals but still use **hook + stateles
 - Named exports; no `any` on public APIs.
 - Route pages must not import `@/features/*/actions` directly for orchestration — go through the feature hook (views stay free of actions too).
 - Never import `@/features/errors/server` or `@/features/logging/server` from client hooks/views.
+- Self-service profile edits (`features/profile`, session-scoped actions) do not require `users:write`; admin member CRUD stays on `features/users`.
 - Do not invent a second layout or state library for feature pages.
 
 ---
