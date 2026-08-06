@@ -115,12 +115,15 @@ export async function listTimeOffRequests(): Promise<
       orderBy: { createdAt: "desc" },
     })
 
-    return Promise.all(
-      rows.map(async (row) =>
-        toPublicRequest(
-          row,
-          await canReviewTimeOff(session, row.user.locationId),
-        ),
+    const isAdmin = session.role === "ADMIN"
+    const managedIdSet = new Set(managedIds)
+    return rows.map((row) =>
+      toPublicRequest(
+        row,
+        isAdmin ||
+          (row.userId !== session.userId &&
+            row.user.locationId !== null &&
+            managedIdSet.has(row.user.locationId)),
       ),
     )
   })
@@ -153,7 +156,7 @@ export async function createTimeOffRequest(
 
     return toPublicRequest(
       row,
-      await canReviewTimeOff(session, row.user.locationId),
+      await canReviewTimeOff(session, row.userId, row.user.locationId),
     )
   })
 }
@@ -197,7 +200,7 @@ export async function cancelTimeOffRequest(
 
     return toPublicRequest(
       row,
-      await canReviewTimeOff(session, row.user.locationId),
+      await canReviewTimeOff(session, row.userId, row.user.locationId),
     )
   })
 }
@@ -214,7 +217,11 @@ export async function approveTimeOffRequest(
     })
     if (!existing) throw requestNotFound()
 
-    await assertCanReviewTimeOff(session, existing.user.locationId)
+    await assertCanReviewTimeOff(
+      session,
+      existing.userId,
+      existing.user.locationId,
+    )
     if (existing.status !== "PENDING") throw requestNotPending()
 
     const reviewedAt = new Date()
@@ -282,7 +289,11 @@ export async function rejectTimeOffRequest(
     })
     if (!existing) throw requestNotFound()
 
-    await assertCanReviewTimeOff(session, existing.user.locationId)
+    await assertCanReviewTimeOff(
+      session,
+      existing.userId,
+      existing.user.locationId,
+    )
     if (existing.status !== "PENDING") throw requestNotPending()
 
     const transition = await prisma.timeOffRequest.updateMany({

@@ -46,6 +46,14 @@ function fullNameFrom(firstName: string, lastName: string): string {
   return `${firstName.trim()} ${lastName.trim()}`.trim()
 }
 
+function userNotFound(): AppError {
+  return new AppError({
+    kind: "not_found",
+    code: "USER_NOT_FOUND",
+    message: "Your profile could not be found.",
+  })
+}
+
 export async function getProfile(): Promise<ActionResult<Profile>> {
   return withErrorBoundary(async () => {
     const session = await requireSession()
@@ -53,13 +61,7 @@ export async function getProfile(): Promise<ActionResult<Profile>> {
       where: { id: session.userId, deletedAt: null },
       include: profileInclude,
     })
-    if (!row) {
-      throw new AppError({
-        kind: "not_found",
-        code: "USER_NOT_FOUND",
-        message: "Your profile could not be found.",
-      })
-    }
+    if (!row) throw userNotFound()
     return toProfile(row)
   })
 }
@@ -71,6 +73,7 @@ export async function updateOwnProfile(
     const session = await requireSession()
     const parsed = updateOwnProfileSchema.parse(input)
     const pictureUrl = parsed.pictureUrl || null
+    const passwordChanged = Boolean(parsed.password && parsed.password.length > 0)
 
     const data: {
       firstName: string
@@ -84,20 +87,29 @@ export async function updateOwnProfile(
       fullName: fullNameFrom(parsed.firstName, parsed.lastName),
       pictureUrl,
     }
-    if (parsed.password && parsed.password.length > 0) {
+    if (passwordChanged && parsed.password) {
       data.password = await hashPassword(parsed.password)
     }
 
-    const row = await prisma.user.update({
-      where: { id: session.userId },
+    const update = await prisma.user.updateMany({
+      where: { id: session.userId, deletedAt: null },
       data,
+    })
+    if (update.count === 0) throw userNotFound()
+
+    const row = await prisma.user.findFirst({
+      where: { id: session.userId, deletedAt: null },
       include: profileInclude,
     })
+    if (!row) throw userNotFound()
 
     await logActivity({
       userId: session.userId,
       activity: "PROFILE_UPDATE",
-      activityData: { fields: Object.keys(data).filter((k) => k !== "password") },
+      activityData: {
+        fields: Object.keys(data).filter((key) => key !== "password"),
+        passwordChanged,
+      },
     })
 
     return toProfile(row)

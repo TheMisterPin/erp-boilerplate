@@ -2,13 +2,14 @@ import type { AppSession } from "@/features/auth/session"
 import { AppError } from "@/features/errors/server"
 import { listManagedLocationIds } from "@/features/shifts/actions/shift-access"
 
-/** ADMIN always; otherwise must manage the requester's location. */
+/** ADMIN always; otherwise cannot self-review and must manage the requester. */
 export async function assertCanReviewTimeOff(
   session: AppSession,
+  requesterUserId: string,
   requesterLocationId: string | null,
 ): Promise<void> {
   if (session.role === "ADMIN") return
-  if (!requesterLocationId) {
+  if (session.userId === requesterUserId || !requesterLocationId) {
     throw new AppError({
       kind: "permission",
       code: "FORBIDDEN",
@@ -27,10 +28,11 @@ export async function assertCanReviewTimeOff(
 
 export async function canReviewTimeOff(
   session: AppSession,
+  requesterUserId: string,
   requesterLocationId: string | null,
 ): Promise<boolean> {
   if (session.role === "ADMIN") return true
-  if (!requesterLocationId) return false
+  if (session.userId === requesterUserId || !requesterLocationId) return false
   const managed = await listManagedLocationIds(session)
   return managed.includes(requesterLocationId)
 }
