@@ -177,11 +177,17 @@ export async function cancelTimeOffRequest(
     }
     if (existing.status !== "PENDING") throw requestNotPending()
 
-    const row = await prisma.timeOffRequest.update({
-      where: { id },
+    const transition = await prisma.timeOffRequest.updateMany({
+      where: { id, status: "PENDING", deletedAt: null },
       data: { status: "CANCELLED" },
+    })
+    if (transition.count === 0) throw requestNotPending()
+
+    const row = await prisma.timeOffRequest.findUnique({
+      where: { id },
       include: timeOffRequestInclude,
     })
+    if (!row) throw requestNotFound()
 
     await logActivity({
       userId: session.userId,
@@ -212,41 +218,51 @@ export async function approveTimeOffRequest(
     if (existing.status !== "PENDING") throw requestNotPending()
 
     const reviewedAt = new Date()
-    const { row, cancelledShiftCount } = await prisma.$transaction(
-      async (transaction) => {
-        const updated = await transaction.timeOffRequest.update({
-          where: { id: existing.id },
-          data: {
-            status: "APPROVED",
-            reviewedById: session.userId,
-            reviewedAt,
-            reviewNote: parsed.reviewNote || null,
-          },
-          include: timeOffRequestInclude,
-        })
-        const cancelled = await transaction.shiftInstance.updateMany({
-          where: {
-            userId: existing.userId,
-            deletedAt: null,
-            status: "SCHEDULED",
-            date: {
-              gte: existing.startDate,
-              lte: existing.endDate,
-            },
-          },
-          data: { status: "CANCELLED" },
-        })
-        return { row: updated, cancelledShiftCount: cancelled.count }
-      },
-    )
+    const row = await prisma.$transaction(async (transaction) => {
+      const transition = await transaction.timeOffRequest.updateMany({
+        where: {
+          id: existing.id,
+          status: "PENDING",
+          deletedAt: null,
+        },
+        data: {
+          status: "APPROVED",
+          reviewedById: session.userId,
+          reviewedAt,
+          reviewNote: parsed.reviewNote || null,
+        },
+      })
+      if (transition.count === 0) throw requestNotPending()
 
-    await logActivity({
-      userId: session.userId,
-      activity: "TIME_OFF_APPROVE",
-      activityData: {
-        requestId: row.id,
-        cancelledShiftCount,
-      },
+      const cancelled = await transaction.shiftInstance.updateMany({
+        where: {
+          userId: existing.userId,
+          deletedAt: null,
+          status: "SCHEDULED",
+          date: {
+            gte: existing.startDate,
+            lte: existing.endDate,
+          },
+        },
+        data: { status: "CANCELLED" },
+      })
+      await transaction.userActivity.create({
+        data: {
+          userId: session.userId,
+          activity: "TIME_OFF_APPROVE",
+          activityData: {
+            requestId: existing.id,
+            cancelledShiftCount: cancelled.count,
+          },
+        },
+      })
+
+      const updated = await transaction.timeOffRequest.findUnique({
+        where: { id: existing.id },
+        include: timeOffRequestInclude,
+      })
+      if (!updated) throw requestNotFound()
+      return updated
     })
 
     return toPublicRequest(row, true)
@@ -268,16 +284,26 @@ export async function rejectTimeOffRequest(
     await assertCanReviewTimeOff(session, existing.user.locationId)
     if (existing.status !== "PENDING") throw requestNotPending()
 
-    const row = await prisma.timeOffRequest.update({
-      where: { id: existing.id },
+    const transition = await prisma.timeOffRequest.updateMany({
+      where: {
+        id: existing.id,
+        status: "PENDING",
+        deletedAt: null,
+      },
       data: {
         status: "REJECTED",
         reviewedById: session.userId,
         reviewedAt: new Date(),
         reviewNote: parsed.reviewNote || null,
       },
+    })
+    if (transition.count === 0) throw requestNotPending()
+
+    const row = await prisma.timeOffRequest.findUnique({
+      where: { id: existing.id },
       include: timeOffRequestInclude,
     })
+    if (!row) throw requestNotFound()
 
     await logActivity({
       userId: session.userId,
