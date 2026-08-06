@@ -246,8 +246,8 @@ export async function approveTimeOffRequest(
         },
         data: { status: "CANCELLED" },
       })
-      await transaction.userActivity.create({
-        data: {
+      await logActivity(
+        {
           userId: session.userId,
           activity: "TIME_OFF_APPROVE",
           activityData: {
@@ -255,7 +255,8 @@ export async function approveTimeOffRequest(
             cancelledShiftCount: cancelled.count,
           },
         },
-      })
+        transaction,
+      )
 
       const updated = await transaction.timeOffRequest.findUnique({
         where: { id: existing.id },
