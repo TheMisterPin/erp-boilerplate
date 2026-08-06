@@ -40,6 +40,11 @@ export function SidebarUser() {
 
   if (!me) return null
 
+  const handleOpenProfile = () => {
+    if (isMobile) setOpenMobile(false)
+    router.push("/profile")
+  }
+
   const handleLogout = async () => {
     await logout()
     toast.success("Signed out")
@@ -52,27 +57,37 @@ export function SidebarUser() {
     <SidebarMenu>
       <SidebarMenuItem>
         <div className="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0">
-          <Avatar className="h-8 w-8 rounded-lg">
-            {me.pictureUrl ? (
-              <AvatarImage src={me.pictureUrl} alt={me.fullName} />
-            ) : null}
-            <AvatarFallback className="rounded-lg text-xs">
-              {initialsFromName(me.fullName)}
-            </AvatarFallback>
-          </Avatar>
-          <div className="grid min-w-0 flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
-            <span className="truncate font-medium">{me.fullName}</span>
-            <span className="truncate text-xs text-muted-foreground">
-              {me.email}
-            </span>
-          </div>
+          <button
+            type="button"
+            aria-label="Open profile"
+            className="flex min-w-0 flex-1 items-center gap-2 rounded-md text-left outline-none hover:text-sidebar-accent-foreground focus-visible:ring-2 focus-visible:ring-sidebar-ring group-data-[collapsible=icon]:justify-center"
+            onClick={handleOpenProfile}
+          >
+            <Avatar className="h-8 w-8 rounded-lg">
+              {me.pictureUrl ? (
+                <AvatarImage src={me.pictureUrl} alt={me.fullName} />
+              ) : null}
+              <AvatarFallback className="rounded-lg text-xs">
+                {initialsFromName(me.fullName)}
+              </AvatarFallback>
+            </Avatar>
+            <div className="grid min-w-0 flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
+              <span className="truncate font-medium">{me.fullName}</span>
+              <span className="truncate text-xs text-muted-foreground">
+                {me.email}
+              </span>
+            </div>
+          </button>
           <Button
             type="button"
             variant="ghost"
             size="icon"
             className="h-8 w-8 shrink-0 group-data-[collapsible=icon]:hidden"
             aria-label="Sign out"
-            onClick={() => void handleLogout()}
+            onClick={(event) => {
+              event.stopPropagation()
+              void handleLogout()
+            }}
           >
             <LogOut className="h-4 w-4" />
           </Button>
