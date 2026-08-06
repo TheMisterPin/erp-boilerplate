@@ -37,6 +37,8 @@ model User {
   shiftTemplates  ShiftTemplate[]  @relation("ShiftTemplateAssignee")
   shiftInstances  ShiftInstance[]  @relation("ShiftInstanceAssignee")
   attendances     ShiftAttendance[]
+  timeOffRequests         TimeOffRequest[] @relation("TimeOffRequester")
+  reviewedTimeOffRequests TimeOffRequest[] @relation("TimeOffReviewer")
 }
 
 model UserActivity {
@@ -159,6 +161,39 @@ model ShiftAttendance {
   @@index([shiftInstanceId])
 }
 
+enum TimeOffType {
+  TIME_OFF
+  SICK
+}
+
+enum TimeOffStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+model TimeOffRequest {
+  id           String        @id @default(uuid())
+  userId       String
+  user         User          @relation("TimeOffRequester", fields: [userId], references: [id])
+  type         TimeOffType
+  status       TimeOffStatus @default(PENDING)
+  startDate    DateTime
+  endDate      DateTime
+  note         String?
+  reviewedById String?
+  reviewedBy   User?         @relation("TimeOffReviewer", fields: [reviewedById], references: [id])
+  reviewedAt   DateTime?
+  reviewNote   String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  deletedAt    DateTime?
+
+  @@index([userId, status])
+  @@index([status, startDate])
+}
+
 enum Activity {
   LOGIN
   LOGOUT
@@ -174,4 +209,9 @@ enum Activity {
   SHIFT_INSTANCE_DELETE
   SHIFT_CHECK_IN
   SHIFT_CHECK_OUT
+  PROFILE_UPDATE
+  TIME_OFF_REQUEST
+  TIME_OFF_APPROVE
+  TIME_OFF_REJECT
+  TIME_OFF_CANCEL
 }

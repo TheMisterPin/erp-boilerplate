@@ -11,6 +11,8 @@ export type Permission =
   | "shifts:read"
   | "shifts:write"
   | "logging:read"
+  | "timeOff:read"
+  | "timeOff:write"
 
 /** Typed action object — maps a stable id to a matrix permission. */
 export type AppAction = {
@@ -30,12 +32,16 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "shifts:read",
     "shifts:write",
     "logging:read",
+    "timeOff:read",
+    "timeOff:write",
   ],
   USER: [
     "users:read",
     "departments:read",
     "locations:read",
     "shifts:read",
+    "timeOff:read",
+    "timeOff:write",
   ],
 }
 
@@ -59,6 +65,10 @@ export const Actions = {
   },
   logging: {
     read: { id: "logging.read", permission: "logging:read" },
+  },
+  timeOff: {
+    read: { id: "timeOff.read", permission: "timeOff:read" },
+    write: { id: "timeOff.write", permission: "timeOff:write" },
   },
 } as const satisfies Record<string, Record<string, AppAction>>
 
