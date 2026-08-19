@@ -11,7 +11,8 @@
     "start": "next start",
     "db:seed": "prisma db seed",
     "db:migrate": "prisma migrate dev",
-    "db:generate": "prisma generate"
+    "db:generate": "prisma generate",
+    "test": "tsx --test scripts/should-seed.test.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
