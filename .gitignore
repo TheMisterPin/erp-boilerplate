@@ -25,6 +25,11 @@
 *.pem
 .superpowers/*
 docs/*
+!docs/superpowers/
+!docs/superpowers/**
+
+# Generated macOS launcher apps
+packaging/macos/dist/
 
 # debug
 npm-debug.log*

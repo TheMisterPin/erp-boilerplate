@@ -12,7 +12,11 @@
     "db:seed": "prisma db seed",
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
-    "test": "tsx --test scripts/should-seed.test.ts"
+    "test": "tsx --test scripts/should-seed.test.ts",
+    "packaging:macos": "packaging/macos/build-apps.sh",
+    "docker:up": "docker compose up -d --build",
+    "docker:down": "docker compose stop",
+    "docker:reset": "docker compose down -v"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
