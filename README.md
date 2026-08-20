@@ -33,6 +33,8 @@ If you move this repo, run `pnpm packaging:macos` again so the apps pick up the 
 
 Compose env is demo-only (`JWT_SECRET` is not for production). Published ports: **3000** (app), **5432** (Postgres).
 
+If **Start ERP** reports that port 5432 is already in use, quit local Postgres (or whichever process is bound to that port) and retry. Check the stack with `docker compose -p erp-boilerplate logs`. To run `pnpm dev` against the Compose database, use `DATABASE_URL=postgresql://erp:erp@localhost:5432/components_playground`.
+
 ```bash
 pnpm docker:up      # same stack as Start, without the browser
 pnpm docker:down    # same as Stop (keeps the database volume)

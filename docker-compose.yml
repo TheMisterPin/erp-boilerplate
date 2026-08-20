@@ -8,7 +8,7 @@ services:
       POSTGRES_PASSWORD: erp
       POSTGRES_DB: components_playground
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -19,8 +19,9 @@ services:
 
   app:
     build: .
+    restart: on-failure
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     environment:
       DATABASE_URL: postgresql://erp:erp@db:5432/components_playground
       JWT_SECRET: erp-boilerplate-docker-demo-jwt-secret-not-for-production

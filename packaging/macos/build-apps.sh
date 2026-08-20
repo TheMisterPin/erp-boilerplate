@@ -18,7 +18,7 @@ dest, script_path = sys.argv[1], sys.argv[2]
 # AppleScript string literal: escape backslash and double quote
 escaped = script_path.replace("\\", "\\\\").replace('"', '\\"')
 pathlib.Path(dest).write_text(
-    f'do shell script quoted form of "{escaped}"\n',
+    f'try\n\tdo shell script quoted form of "{escaped}"\nend try\n',
     encoding="utf-8",
 )
 PY
