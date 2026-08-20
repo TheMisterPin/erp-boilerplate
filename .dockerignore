@@ -1,0 +1,17 @@
+node_modules
+.next
+.git
+.cursor
+.docs
+.superpowers
+.vscode
+coverage
+packaging/macos/dist
+.env
+.env.*
+!.env.example
+*.md
+!README.md
+docs
+.DS_Store
+tsconfig.tsbuildinfo
