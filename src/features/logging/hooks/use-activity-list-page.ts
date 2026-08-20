@@ -13,17 +13,14 @@ import type { UserActivityItem } from "@/features/logging/types/activity-types"
 /** Page logic for activity list — inject into `ActivityListPage`. */
 export function useActivityListPage(): ActivityListPageProps {
   const { run } = useError()
-  const { me } = useAuth()
+  const { me, status } = useAuth()
   const [items, setItems] = useState<UserActivityItem[]>([])
   const [loaded, setLoaded] = useState(false)
 
   const canRead = me ? can(me.role, Actions.logging.read) : false
 
   useEffect(() => {
-    if (!canRead) {
-      setLoaded(true)
-      return
-    }
+    if (status !== "authenticated" || !canRead) return
 
     let cancelled = false
     void (async () => {
@@ -36,12 +33,12 @@ export function useActivityListPage(): ActivityListPageProps {
     return () => {
       cancelled = true
     }
-  }, [canRead, run])
+  }, [canRead, run, status])
 
   const rows = useMemo(() => items.map(toActivityTableRow), [items])
 
   return {
-    loaded,
+    loaded: status !== "loading" && (!canRead || loaded),
     canRead,
     items,
     rows,

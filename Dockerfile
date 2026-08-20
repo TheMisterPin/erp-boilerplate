@@ -15,7 +15,7 @@ COPY docker.npmrc .npmrc
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN pnpm db:generate && pnpm exec next build --no-lint
+RUN pnpm db:generate && pnpm build
 
 FROM base AS runner
 ENV NODE_ENV=production
