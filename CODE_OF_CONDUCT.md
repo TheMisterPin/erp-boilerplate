@@ -22,7 +22,7 @@ Project maintainers are responsible for clarifying and enforcing this code of co
 
 ## Reporting
 
-If you experience or witness unacceptable behavior, contact project maintainers privately through GitHub direct channels.
+If you experience or witness unacceptable behavior, report it privately through the maintainer contact form: `https://github.com/contact?to=TheMisterPin`.
 
 ## Attribution
 

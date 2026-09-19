@@ -17,6 +17,8 @@
 
 ## Compatibility expectations
 
-- Runtime and architecture assumptions follow the current project stack (Next.js App Router + Prisma + PostgreSQL).
+- Runtime and architecture assumptions follow the canonical stack/setup documented in:
+  - `README.md` (stack + project layout)
+  - `CONTRIBUTING.md` (local setup + contributor workflow)
 - Backward compatibility for internal APIs, schema shape, and UX is **best effort** during `0.x` and may change between minor versions.
 - Contributors should include migration/documentation notes whenever behavior or schema changes.

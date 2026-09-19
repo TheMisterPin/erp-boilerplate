@@ -13,7 +13,7 @@ Use one of these private channels instead:
 1. **GitHub Security Advisories (preferred):**
    - Open a private report at: `https://github.com/TheMisterPin/erp-boilerplate/security/advisories/new`
 2. **Maintainer contact fallback:**
-   - Open a private maintainer contact via repository owner profile if advisory UI is unavailable.
+   - Contact the maintainer via the private GitHub contact form at: `https://github.com/contact?to=TheMisterPin`
 
 Include:
 
