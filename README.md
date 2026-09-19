@@ -185,6 +185,15 @@ AGENTS.md                   Agent entrypoint (Next.js + this repo)
 | Modals | [`.docs/components/modals.md`](.docs/components/modals.md) |
 | Tables | [`.docs/components/tables.md`](.docs/components/tables.md) |
 
+### Community and contribution docs
+
+| Guide | Path |
+|-------|------|
+| Contributing | [`CONTRIBUTING.md`](CONTRIBUTING.md) |
+| Security policy | [`SECURITY.md`](SECURITY.md) |
+| Code of Conduct | [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) |
+| Support and compatibility | [`SUPPORT.md`](SUPPORT.md) |
+
 Agent instructions: [`AGENTS.md`](AGENTS.md) (also referenced by `CLAUDE.md`). Cursor rules in [`.cursor/rules/`](.cursor/rules/) mirror the guides.
 
 ### Design specs
