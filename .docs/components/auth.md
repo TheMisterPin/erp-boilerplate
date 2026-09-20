@@ -11,6 +11,7 @@ Related: [Error Handling](./error-handling.md) (how `FORBIDDEN` / `SESSION_EXPIR
 ```
 src/features/auth/
   utils.ts           encrypt / decrypt / createSession / getSession / updateSession
+  session-policy.ts  idle/absolute lifetime and cookie policy helpers
   permissions.ts     Permission, ROLE_PERMISSIONS, Actions, can, hasPermission
   session.ts         requireSession, authorize (server-only)
   password.ts        hash / authenticate
@@ -26,11 +27,27 @@ src/components/shared/layout/app-providers.tsx
 
 ## Session cookie
 
-- Cookie name: `session` (HTTP-only, lax, path `/`)
-- Payload: `userId`, `email`, `role`, `fullName`, `expires`
-- Secret / TTL: `JWT_SECRET`, `SESSION_MAX_AGE_SECONDS` via `src/lib/env.ts`
+- Cookie name: `session` (HTTP-only, lax, path `/`, Secure in production)
+- Payload: `userId`, `email`, `role`, `fullName`, `expires`, `absoluteExpires`
+- Secret: `JWT_SECRET` via `src/lib/env.ts`; production requires at least 32 characters
+- Idle lifetime: `SESSION_IDLE_MAX_AGE_SECONDS` (default 7 days)
+- Absolute lifetime: `SESSION_ABSOLUTE_MAX_AGE_SECONDS` (default 30 days)
+- JWT identity: `SESSION_JWT_ISSUER` / `SESSION_JWT_AUDIENCE`
 
 Do not put passwords in the JWT. Public user shape is `Me` (`src/features/auth/types.ts`).
+
+Authenticated requests roll the idle expiry forward, capped at the original absolute
+expiry. Activity can therefore keep a session alive only until its absolute lifetime.
+Changing the signing secret, issuer, or audience invalidates existing sessions. Tokens
+created before the absolute-lifetime fields were introduced are intentionally invalid and
+users must sign in again after that deployment.
+
+`SESSION_MAX_AGE_SECONDS` remains a deprecated fallback for the idle lifetime so existing
+development environments do not break immediately. New configuration must use
+`SESSION_IDLE_MAX_AGE_SECONDS`.
+
+Secret rotation currently invalidates every existing session. To rotate safely, deploy the
+new secret and expect users to authenticate again; multi-key overlap is not implemented.
 
 ---
 
@@ -40,7 +57,7 @@ Do not put passwords in the JWT. Public user shape is `Me` (`src/features/auth/t
 |------|----------|
 | No session, not public | Redirect `/login?next=<pathname>` |
 | Session on `/login` | Redirect `/` |
-| Session elsewhere | Refresh cookie (`updateSession`) then continue |
+| Session elsewhere | Refresh idle expiry up to the absolute expiry, then continue |
 | Public | `/login`, `/clock` |
 
 Login client should honor `next` (safe same-origin path only) after successful sign-in.
