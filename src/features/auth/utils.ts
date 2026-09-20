@@ -2,8 +2,19 @@ import { SignJWT, jwtVerify, type JWTPayload } from "jose"
 import { cookies } from "next/headers"
 import { NextRequest, NextResponse } from "next/server"
 
-import { getJwtSecret, getSessionMaxAgeSeconds } from "@/lib/env"
+import {
+  getJwtSecret,
+  getSessionAbsoluteMaxAgeSeconds,
+  getSessionIdleMaxAgeSeconds,
+  getSessionJwtAudience,
+  getSessionJwtIssuer,
+} from "@/lib/env"
 import type { Role } from "@/generated/prisma/client"
+import {
+  createSessionDates,
+  getSessionCookieOptions,
+  refreshSessionIdleExpiry,
+} from "@/features/auth/session-policy"
 
 export const SESSION_COOKIE = "session"
 
@@ -13,6 +24,7 @@ export type SessionPayload = {
   role: Role
   fullName: string
   expires: string
+  absoluteExpires: string
 }
 
 type SessionJWTPayload = JWTPayload & {
@@ -21,30 +33,30 @@ type SessionJWTPayload = JWTPayload & {
   role: Role
   fullName: string
   expires: string
+  absoluteExpires: string
 }
 
 function getKey() {
   return new TextEncoder().encode(getJwtSecret())
 }
 
-function getExpiryDate(): Date {
-  return new Date(Date.now() + getSessionMaxAgeSeconds() * 1000)
-}
-
 export async function encrypt(
-  payload: Omit<SessionPayload, "expires"> & { expires?: Date },
+  payload: Omit<SessionPayload, "expires" | "absoluteExpires">,
+  dates: { idleExpires: Date; absoluteExpires: Date },
 ): Promise<string> {
-  const expires = payload.expires ?? getExpiryDate()
   return await new SignJWT({
     userId: payload.userId,
     email: payload.email,
     role: payload.role,
     fullName: payload.fullName,
-    expires: expires.toISOString(),
+    expires: dates.idleExpires.toISOString(),
+    absoluteExpires: dates.absoluteExpires.toISOString(),
   } satisfies Omit<SessionJWTPayload, keyof JWTPayload>)
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
-    .setExpirationTime(expires)
+    .setIssuer(getSessionJwtIssuer())
+    .setAudience(getSessionJwtAudience())
+    .setExpirationTime(dates.idleExpires)
     .sign(getKey())
 }
 
@@ -52,6 +64,8 @@ export async function decrypt(input: string): Promise<SessionPayload | null> {
   try {
     const { payload } = await jwtVerify(input, getKey(), {
       algorithms: ["HS256"],
+      issuer: getSessionJwtIssuer(),
+      audience: getSessionJwtAudience(),
     })
     const data = payload as SessionJWTPayload
     if (
@@ -59,7 +73,15 @@ export async function decrypt(input: string): Promise<SessionPayload | null> {
       typeof data.email !== "string" ||
       typeof data.role !== "string" ||
       typeof data.fullName !== "string" ||
-      typeof data.expires !== "string"
+      typeof data.expires !== "string" ||
+      typeof data.absoluteExpires !== "string"
+    ) {
+      return null
+    }
+    const absoluteExpires = new Date(data.absoluteExpires)
+    if (
+      !Number.isFinite(absoluteExpires.getTime()) ||
+      absoluteExpires.getTime() <= Date.now()
     ) {
       return null
     }
@@ -69,6 +91,7 @@ export async function decrypt(input: string): Promise<SessionPayload | null> {
       role: data.role,
       fullName: data.fullName,
       expires: data.expires,
+      absoluteExpires: data.absoluteExpires,
     }
   } catch {
     return null
@@ -81,21 +104,29 @@ export async function createSession(user: {
   role: Role
   fullName: string
 }): Promise<void> {
-  const expires = getExpiryDate()
-  const session = await encrypt({
-    userId: user.id,
-    email: user.email,
-    role: user.role,
-    fullName: user.fullName,
-    expires,
-  })
+  const dates = createSessionDates(
+    new Date(),
+    getSessionIdleMaxAgeSeconds(),
+    getSessionAbsoluteMaxAgeSeconds(),
+  )
+  const session = await encrypt(
+    {
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+      fullName: user.fullName,
+    },
+    dates,
+  )
   const cookieStore = await cookies()
-  cookieStore.set(SESSION_COOKIE, session, {
-    expires,
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
-  })
+  cookieStore.set(
+    SESSION_COOKIE,
+    session,
+    getSessionCookieOptions(
+      dates.idleExpires,
+      process.env.NODE_ENV === "production",
+    ),
+  )
 }
 
 export async function clearSession(): Promise<void> {
@@ -104,6 +135,7 @@ export async function clearSession(): Promise<void> {
     expires: new Date(0),
     httpOnly: true,
     sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
     path: "/",
   })
 }
@@ -122,21 +154,30 @@ export async function updateSession(request: NextRequest) {
   const parsed = await decrypt(session)
   if (!parsed) return NextResponse.next()
 
-  const expires = getExpiryDate()
+  const absoluteExpires = new Date(parsed.absoluteExpires)
+  const idleExpires = refreshSessionIdleExpiry(
+    new Date(),
+    getSessionIdleMaxAgeSeconds(),
+    absoluteExpires,
+  )
+  if (!idleExpires) return NextResponse.next()
+
   const res = NextResponse.next()
   res.cookies.set({
     name: SESSION_COOKIE,
-    value: await encrypt({
-      userId: parsed.userId,
-      email: parsed.email,
-      role: parsed.role,
-      fullName: parsed.fullName,
-      expires,
-    }),
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
-    expires,
+    value: await encrypt(
+      {
+        userId: parsed.userId,
+        email: parsed.email,
+        role: parsed.role,
+        fullName: parsed.fullName,
+      },
+      { idleExpires, absoluteExpires },
+    ),
+    ...getSessionCookieOptions(
+      idleExpires,
+      process.env.NODE_ENV === "production",
+    ),
   })
   return res
 }

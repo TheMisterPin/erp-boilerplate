@@ -13,6 +13,7 @@ Use jose cookie sessions + the permission-matrix action catalog. Do not invent N
 | Concern | Path |
 |---------|------|
 | Cookie JWT | `src/features/auth/utils.ts` |
+| Session policy | `src/features/auth/session-policy.ts` |
 | Matrix + `Actions` + `can` | `src/features/auth/permissions.ts` (isomorphic — safe on client) |
 | Server gates | `src/features/auth/session.ts` (`requireSession`, `authorize`) |
 | Client session | `useAuth()` → `src/features/auth/hooks/` |
@@ -25,7 +26,9 @@ Use jose cookie sessions + the permission-matrix action catalog. Do not invent N
 - Unauthenticated non-public routes → redirect `/login?next=…`
 - Public: `/login`, `/clock`
 - Authenticated `/login` → `/`
-- With session → refresh cookie via `updateSession`
+- With session → refresh the idle expiry via `updateSession`, capped at the original absolute expiry
+- Production cookies are Secure; all session cookies are HTTP-only, SameSite=Lax, and path `/`
+- JWT verification pins the configured issuer, audience, and HS256 algorithm
 
 ## Auth surface
 
