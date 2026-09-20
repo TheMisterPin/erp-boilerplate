@@ -14,6 +14,7 @@ Use jose cookie sessions + the permission-matrix action catalog. Do not invent N
 |---------|------|
 | Cookie JWT | `src/features/auth/utils.ts` |
 | Session policy | `src/features/auth/session-policy.ts` |
+| Current account state | `src/features/auth/session-state.ts` |
 | Matrix + `Actions` + `can` | `src/features/auth/permissions.ts` (isomorphic — safe on client) |
 | Server gates | `src/features/auth/session.ts` (`requireSession`, `authorize`) |
 | Client session | `useAuth()` → `src/features/auth/hooks/` |
@@ -43,6 +44,10 @@ Server actions only: `loginAction` / `logoutAction` / `getMeAction` via `useAuth
 ## RBAC
 
 **Source of truth:** `ROLE_PERMISSIONS` in `permissions.ts`.
+
+`requireSession()` must resolve the signed user ID against the database. The current
+database role and active/deleted state are authoritative; never authorize from the JWT role
+claim alone.
 
 ```ts
 // ✅ server — inside withErrorBoundary

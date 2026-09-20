@@ -6,13 +6,36 @@ import {
   permissionsForRole,
 } from "@/features/auth/permissions"
 import { getSession, type SessionPayload } from "@/features/auth/utils"
+import { resolveCurrentSession } from "@/features/auth/session-state"
+import { prisma } from "@/lib/db"
 
 export type AppSession = SessionPayload
 
 export { hasPermission, permissionsForRole }
 
 export async function requireSession(): Promise<AppSession> {
-  const session = await getSession()
+  const tokenSession = await getSession()
+  if (!tokenSession) {
+    throw new AppError({
+      kind: "auth",
+      code: "SESSION_EXPIRED",
+      message: "Your session has expired. Please sign in again.",
+    })
+  }
+
+  const account = await prisma.user.findUnique({
+    where: { id: tokenSession.userId },
+    select: {
+      id: true,
+      email: true,
+      role: true,
+      fullName: true,
+      isActive: true,
+      deletedAt: true,
+    },
+  })
+  const session = resolveCurrentSession(tokenSession, account)
+
   if (!session) {
     throw new AppError({
       kind: "auth",
@@ -20,10 +43,11 @@ export async function requireSession(): Promise<AppSession> {
       message: "Your session has expired. Please sign in again.",
     })
   }
+
   return session
 }
 
-/** Universal RBAC gate — session role must hold `action.permission`. */
+/** Universal RBAC gate — the current database role must hold the permission. */
 export async function authorize(action: AppAction): Promise<AppSession> {
   const session = await requireSession()
   if (!hasPermission(session.role, action.permission)) {

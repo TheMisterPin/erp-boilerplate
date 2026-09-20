@@ -12,6 +12,7 @@ Related: [Error Handling](./error-handling.md) (how `FORBIDDEN` / `SESSION_EXPIR
 src/features/auth/
   utils.ts           encrypt / decrypt / createSession / getSession / updateSession
   session-policy.ts  idle/absolute lifetime and cookie policy helpers
+  session-state.ts   resolve signed identity against current database account state
   permissions.ts     Permission, ROLE_PERMISSIONS, Actions, can, hasPermission
   session.ts         requireSession, authorize (server-only)
   password.ts        hash / authenticate
@@ -35,6 +36,14 @@ src/components/shared/layout/app-providers.tsx
 - JWT identity: `SESSION_JWT_ISSUER` / `SESSION_JWT_AUDIENCE`
 
 Do not put passwords in the JWT. Public user shape is `Me` (`src/features/auth/types.ts`).
+
+The signed JWT proves the session identity but is not the authorization source of truth.
+Every call to `requireSession` reloads the user by ID and rejects missing, inactive, or
+soft-deleted accounts. It replaces the token's email, name, and role with current database
+values before any permission or resource-scope check. Role downgrades and account
+deactivation therefore apply on the next protected server action without waiting for the
+cookie to expire. Middleware validates the token for routing, but it does not replace this
+server-side account lookup.
 
 Authenticated requests roll the idle expiry forward, capped at the original absolute
 expiry. Activity can therefore keep a session alive only until its absolute lifetime.
