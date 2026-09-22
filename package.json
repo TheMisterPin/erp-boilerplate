@@ -1,6 +1,17 @@
 {
   "name": "erp-boilerplate",
-  "description": "A Boilerplate for ERP applications",
+  "description": "Production-minded ERP and internal-operations boilerplate built with Next.js, Prisma, PostgreSQL, and RBAC.",
+  "keywords": [
+    "erp",
+    "internal-tools",
+    "nextjs",
+    "typescript",
+    "prisma",
+    "postgresql",
+    "rbac",
+    "boilerplate"
+  ],
+  "license": "MIT",
   "version": "0.0.1",
   "private": false,
   "scripts": {
