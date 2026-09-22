@@ -74,6 +74,25 @@ test("rejects a token issued by a different issuer", async () => {
   assert.equal(await decrypt(token), null)
 })
 
+test("rejects a token whose signature was modified", async () => {
+  const token = await encrypt(
+    {
+      userId: "user-1",
+      email: "user@example.com",
+      role: "USER",
+      fullName: "Example User",
+    },
+    {
+      idleExpires: new Date(Date.now() + 60_000),
+      absoluteExpires: new Date(Date.now() + 300_000),
+    },
+  )
+
+  const forgedToken = `${token.slice(0, -1)}${token.endsWith("a") ? "b" : "a"}`
+
+  assert.equal(await decrypt(forgedToken), null)
+})
+
 test("rejects a token beyond its absolute lifetime", async () => {
   const token = await encrypt(
     {
