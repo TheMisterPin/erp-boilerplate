@@ -1,55 +1,41 @@
-# Components Playground
+# ERP Boilerplate
 
-Next.js (App Router) ERP boilerplate / component playground. Shared UI systems live under `src/components/shared`; feature verticals under `src/features`. Auth uses jose cookie sessions + Prisma; middleware requires login for all app routes.
+A production-minded foundation for internal operations software: start with a
+working Next.js application, PostgreSQL data model, server-side authorization,
+reusable CRUD systems, and operational demos—instead of losing a week to auth,
+tables, modal behaviour, and sidebar colours.
 
-## Stack
+It is deliberately a **foundation**, not a finished ERP. The included people,
+organization, scheduling, attendance, leave, and audit modules show the
+architecture in use. Build your inventory, purchasing, finance, restaurant, or
+other domain modules on the same patterns.
 
-- **Next.js 15** App Router + TypeScript
-- **shadcn/ui** + Tailwind
-- **react-hook-form** + **zod**
-- **Prisma** + PostgreSQL
-- **sonner** toasts
-- Package manager: **pnpm**
-- **Docker Compose** for the packaged Mac app (Postgres + Next.js)
+## Start here
 
-## Getting started
+### Fastest path: Docker Compose
 
-### Option A — Mac apps (Docker)
-
-Prerequisite: [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running. Host Node is not required to *run* this path (you need pnpm only to generate the `.app` icons).
+Prerequisite: [Docker Desktop](https://www.docker.com/products/docker-desktop/).
 
 ```bash
-pnpm packaging:macos
+git clone https://github.com/TheMisterPin/erp-boilerplate.git
+cd erp-boilerplate
+docker compose up --build
 ```
 
-That writes two apps:
+Open [http://localhost:3000](http://localhost:3000). The first run applies
+Prisma migrations and seeds the demo database automatically. Stop it with
+`docker compose stop`; use `docker compose down -v` only when you deliberately
+want to delete the local database volume.
 
-- `packaging/macos/dist/Start ERP.app`
-- `packaging/macos/dist/Stop ERP.app`
+### Local development
 
-Drag them to the Desktop, `/Applications`, or the Dock. Double-click **Start ERP**: Compose builds/starts Postgres (volume `pgdata`) and the app, then opens [http://localhost:3000](http://localhost:3000). First start downloads images and can take a few minutes; later starts are faster. Closing the browser leaves the stack running. Double-click **Stop ERP** to stop containers. Data survives.
-
-If you move this repo, run `pnpm packaging:macos` again so the apps pick up the new path.
-
-Compose env is demo-only (`JWT_SECRET` is not for production). Published ports: **3000** (app), **5432** (Postgres).
-
-If **Start ERP** reports that port 5432 is already in use, quit local Postgres (or whichever process is bound to that port) and retry. Check the stack with `docker compose -p erp-boilerplate logs`. To run `pnpm dev` against the Compose database, use `DATABASE_URL=postgresql://erp:erp@localhost:5432/components_playground`.
+Prerequisites: Node.js 22+, pnpm, and PostgreSQL 16+ (or the database service
+from the Compose file).
 
 ```bash
-pnpm docker:up      # same stack as Start, without the browser
-pnpm docker:down    # same as Stop (keeps the database volume)
-pnpm docker:reset   # docker compose down -v — deletes all packaged DB data
-```
-
-After `docker:reset`, the next Start re-runs migrations and seed.
-
-### Option B — local development
-
-```bash
+git clone https://github.com/TheMisterPin/erp-boilerplate.git
+cd erp-boilerplate
 cp .env.example .env
-# Edit .env — set DATABASE_URL and JWT_SECRET
-# DATABASE_URL can point at localhost:5432 if the Docker db service is running
-
 pnpm install
 pnpm db:generate
 pnpm db:migrate
@@ -57,158 +43,139 @@ pnpm db:seed
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Set `DATABASE_URL` and a strong `JWT_SECRET` in `.env` before starting. If you
+use the Compose database from local Node, its connection string is:
 
-### Demo credentials
+```bash
+DATABASE_URL="postgresql://erp:erp@localhost:5432/components_playground"
+```
 
-Seeded on first empty database (`pnpm db:seed` or Docker first run):
+## Demo accounts
 
-| Email | Password | Role |
-|-------|----------|------|
-| `admin@example.com` | `password123` | ADMIN (read + write) |
-| `user@example.com` | `password123` | USER (read-only) |
+These accounts exist **only in a newly seeded local demo database**. They are
+not safe credentials and must never be used in a public deployment.
 
-### Scripts
+| Account | Password | What to try |
+|---|---|---|
+| `admin@example.com` | `password123` | Full CRUD, organization, activity trail |
+| `user@example.com` | `password123` | Read-only access and self-service routes |
+| `manager@example.com` | `password123` | Location-scoped shift-management rules |
 
-| Script | Command |
-|--------|---------|
-| Dev | `pnpm dev` |
-| Build | `pnpm build` |
-| Lint | `pnpm lint` |
-| Typecheck | `pnpm typecheck` |
-| Test | `pnpm test` |
-| Start | `pnpm start` |
+## What is included
+
+| Capability | Status | Where to look |
+|---|---|---|
+| Cookie sessions, server-side guards, RBAC, current-account checks | Implemented | [`auth` guide](.docs/components/auth.md) |
+| Abuse-safe sign-in throttling | Implemented | [`auth` guide](.docs/components/auth.md) |
+| Users, departments, locations, forms, modals, table CRUD | Implemented | `/team/members`, `/organization/*` |
+| Shift templates, schedule calendar, clock in/out | Implemented | `/team/shift-templates`, `/team/my-shifts`, `/clock` |
+| Profile and time-off workflow | Implemented | `/profile`, `/team/time-off` |
+| Audit trail | Implemented | `/team/activity` |
+| Feature-folder architecture and typed server-action errors | Implemented | [`architecture`](.docs/components/architecture.md), [`errors`](.docs/components/error-handling.md) |
+| Inventory, purchasing, accounting, CRM, multi-tenancy | Not included | Build as domain verticals |
+| Password reset, MFA, durable session revocation | Planned | Security roadmap |
+| Distributed rate limiting, email delivery, production observability | Planned | Replace the local adapters |
+| GitHub Actions quality gate | Planned | CI roadmap |
+
+## Take the demo tour
+
+1. Sign in as `admin@example.com`.
+2. Open **Team → Members** and create, edit, or archive a member: this is the
+   reference CRUD vertical.
+3. Open **Organization → Locations**, assign a manager, then compare that
+   manager's scope with the admin's.
+4. Open **Team → Activity** to see the audit log created by sign-ins and
+   privileged mutations.
+5. Sign out and try `user@example.com` to see that hiding buttons is only a
+   UX choice—the server still enforces permissions.
+
+## Architecture at a glance
+
+```text
+app route → feature hook → stateless page/component
+                   ↓
+          server action → authorize() → Prisma
+                   ↓
+             ActionResult → useError().run()
+```
+
+Feature modules follow one repeatable shape:
+
+```text
+src/features/<feature>/
+  types/        domain and form types
+  actions/      server actions, validation, authorization
+  hooks/        client orchestration and modal state
+  components/   forms, tables, stateless page views
+```
+
+The `users` vertical is the reference implementation. Read the full
+[architecture guide](.docs/components/architecture.md) before creating a new
+domain module.
+
+## Create your first feature
+
+Use a small, boring domain first—`vendors`, `cost-centres`, or `equipment`—to
+learn the shape before building a large workflow.
+
+1. Copy the folder layout from `src/features/users/`.
+2. Define your model in `prisma/schema.prisma`, run a migration, and generate
+   the client.
+3. Add a shared Zod schema in `src/lib/schemas/`.
+4. Add permissions and `Actions.<feature>` in
+   `src/features/auth/permissions.ts`.
+5. Add server actions using `withErrorBoundary()` and
+   `authorize(Actions.<feature>.*)`.
+6. Build typed FieldDefs, a thin form wrapper, table columns, then a feature
+   hook and stateless page view.
+7. Add the route and sidebar entry; record audit events for privileged changes.
+
+That sounds structured because it is. The point is that the second feature
+should feel repetitive, not like a fresh architectural debate.
+
+## Common commands
+
+| Task | Command |
+|---|---|
+| Start development | `pnpm dev` |
+| Run all checks | `pnpm lint && pnpm typecheck && pnpm test && pnpm build` |
 | Generate Prisma client | `pnpm db:generate` |
-| Migrate DB | `pnpm db:migrate` |
-| Seed demo data | `pnpm db:seed` |
-| Mac Start/Stop apps | `pnpm packaging:macos` |
-| Docker up | `pnpm docker:up` |
-| Docker stop | `pnpm docker:down` |
-| Docker reset (deletes volume) | `pnpm docker:reset` |
+| Create a development migration | `pnpm db:migrate` |
+| Seed a local demo database | `pnpm db:seed` |
+| Start/stop Compose | `pnpm docker:up` / `pnpm docker:down` |
+| Reset Compose data | `pnpm docker:reset` |
+| Build Mac Docker launchers | `pnpm packaging:macos` |
 
-## What’s implemented
+`pnpm docker:reset` deletes the local Docker volume. It is intentionally
+destructive.
 
-| System | Where to see it | Docs | Cursor rule |
-|--------|-----------------|------|-------------|
-| **Dynamic forms** — FieldDef registry, layouts, conditional fields | Feature forms (e.g. member create/edit modal) | [`.docs/components/forms.md`](.docs/components/forms.md) | [`.cursor/rules/dynamic-forms.mdc`](.cursor/rules/dynamic-forms.mdc) |
-| **Universal modals** — stack of notify / confirm / form | List-page create/edit/delete | [`.docs/components/modals.md`](.docs/components/modals.md) | [`.cursor/rules/universal-modals.mdc`](.cursor/rules/universal-modals.mdc) |
-| **Error handling** — `ActionResult`, `withErrorBoundary`, `useError().run()` | Server actions + list CRUD | [`.docs/components/error-handling.md`](.docs/components/error-handling.md) | [`.cursor/rules/error-handling.mdc`](.cursor/rules/error-handling.mdc) |
-| **Auth / RBAC** — jose session, middleware, `Actions` / `authorize` / `can` | `/login`, list write gates | [`.docs/components/auth.md`](.docs/components/auth.md) | [`.cursor/rules/auth-rbac.mdc`](.cursor/rules/auth-rbac.mdc) |
-| **DynamicTable** — columns, toolbar/row actions | Members / org lists | [`.docs/components/tables.md`](.docs/components/tables.md) | [`.cursor/rules/dynamic-table.mdc`](.cursor/rules/dynamic-table.mdc) |
-| **List-page CRUD** — hook + stateless view + RBAC | `/team/members`, org pages | [`.docs/components/list-pages.md`](.docs/components/list-pages.md) | [`.cursor/rules/list-page-crud.mdc`](.cursor/rules/list-page-crud.mdc) |
-| **Feature architecture** — folder layout, hook → view | `src/features/users/` | [`.docs/components/architecture.md`](.docs/components/architecture.md) | [`.cursor/rules/feature-architecture.mdc`](.cursor/rules/feature-architecture.mdc) |
-| **Logging / audit** — `logActivity` + ADMIN activity list | `/team/activity`, login/logout | [`.docs/components/logging.md`](.docs/components/logging.md) | [`.cursor/rules/logging.mdc`](.cursor/rules/logging.mdc) |
+## Production caveats
 
-### Demos
-
-| Route | What it proves |
-|-------|----------------|
-| `/` | Home landing — links to list CRUD + activity demos |
-| `/login` | Auth gate + `SESSION_EXPIRED` acknowledge target |
-| `/clock` | Kiosk time clock — on-page login, check-in/out, attendance ↔ `UserActivity` |
-| `/team/members` | List-page CRUD (forms + modals + `run()`) |
-| `/team/activity` | Audit trail (`logActivity` + ADMIN `logging:read`) |
-| `/team/shift-templates` | Shift templates CRUD + generate instances |
-| `/team/my-shifts` | Schedule calendar — own shifts / managed locations |
-| `/profile` | Self-service hub — profile, upcoming shifts, time off / sick |
-| `/team/time-off` | Leave inbox — approve/reject; cancels overlapping shifts |
-| `/organization/departments` | Org vertical + list CRUD |
-| `/organization/locations` | Org vertical + manager select + list CRUD |
-
-### Layout
-
-`AppShell` (`src/components/shared/layout/app-shell.tsx`) provides sidebar + header for authenticated routes. Root `AppProviders` mounts `ModalProvider`, `AuthProvider`, `ErrorProvider`, `ModalRoot`, and Sonner. Login lives under `(auth)` without the sidebar.
-
-### Users vertical (reference)
-
-- Forms: `src/features/users/components/forms/`
-- Shared schema: `src/lib/schemas/user.ts`
-- Server actions: `src/features/users/actions/user-actions.ts`
-- Session / RBAC: `src/features/auth/permissions.ts` (`Actions`, `can`) + `session.ts` (`authorize`)
-
-Canonical client submit:
-
-```ts
-const data = await run(updateUser(values), { form })
-if (data) toast.success("Saved")
-```
-
-## Project layout
-
-```
-src/
-  app/                      Routes (login, home, team, organization, profile, clock)
-  components/
-    shared/forms/           DynamicForm system
-    shared/modals/          Modal stack
-    shared/layout/          AppShell, sidebar, header
-    shared/table/           DynamicTable
-    ui/                     shadcn primitives
-  features/
-    auth/                   Sessions, RBAC, login actions
-    errors/                 Error DTO, boundary, useError (client barrel)
-    users/                  Reference vertical (members)
-    departments/            Org vertical
-    locations/              Org vertical
-    logging/                Audit trail (logActivity + activity list)
-    shifts/                 Templates, instances, calendar, clock
-    profile/                Self-service hub
-    time-off/               Leave requests + inbox
-  lib/
-    schemas/                Shared zod (FieldDefs + server)
-    navigation.ts           Sidebar nav
-    db.ts / env.ts          Prisma + env helpers
-
-prisma/                     Schema, migrations, seed
-Dockerfile                  Production Next + Prisma image
-docker-compose.yml          app + Postgres (volume pgdata)
-packaging/macos/            Start/Stop app build scripts
-scripts/                    Docker entrypoint + seed-once helper
-.docs/components/           Human guides
-docs/superpowers/specs/     Design specs
-.cursor/rules/              Agent rules (glob-scoped)
-AGENTS.md                   Agent entrypoint (Next.js + this repo)
-```
+- The supplied Docker Compose secrets and demo credentials are for local use
+  only. Set real environment variables in every deployment.
+- The default sign-in limiter is process-local. Replace it with an atomic
+  Redis/KV adapter for multi-instance or serverless deployments.
+- Client source limiting relies on proxy headers. Only trust those headers
+  behind infrastructure that overwrites them.
+- Authorization is server-side and reloads the current database account state;
+  client-side visibility is not a security boundary.
+- This is not yet a complete business product. It does not include tenancy,
+  backups, email delivery, accounting controls, or a production operations
+  runbook out of the box.
 
 ## Documentation
 
-### Human guides
+| Guide | Use it for |
+|---|---|
+| [Auth and RBAC](.docs/components/auth.md) | sessions, roles, limits, protected actions |
+| [Feature architecture](.docs/components/architecture.md) | new verticals and thin routes |
+| [Forms](.docs/components/forms.md) | FieldDefs and DynamicForm |
+| [List pages](.docs/components/list-pages.md) | CRUD table pages |
+| [Error handling](.docs/components/error-handling.md) | `ActionResult` and client error UX |
+| [Logging](.docs/components/logging.md) | audit events |
+| [Contributing](CONTRIBUTING.md) | local workflow and pull requests |
+| [Security policy](SECURITY.md) | responsible vulnerability reporting |
 
-| Guide | Path |
-|-------|------|
-| Architecture | [`.docs/components/architecture.md`](.docs/components/architecture.md) |
-| Auth / RBAC | [`.docs/components/auth.md`](.docs/components/auth.md) |
-| Error handling | [`.docs/components/error-handling.md`](.docs/components/error-handling.md) |
-| Forms | [`.docs/components/forms.md`](.docs/components/forms.md) |
-| List pages | [`.docs/components/list-pages.md`](.docs/components/list-pages.md) |
-| Logging | [`.docs/components/logging.md`](.docs/components/logging.md) |
-| Modals | [`.docs/components/modals.md`](.docs/components/modals.md) |
-| Tables | [`.docs/components/tables.md`](.docs/components/tables.md) |
+## Licence
 
-### Community and contribution docs
-
-| Guide | Path |
-|-------|------|
-| Contributing | [`CONTRIBUTING.md`](CONTRIBUTING.md) |
-| Security policy | [`SECURITY.md`](SECURITY.md) |
-| Code of Conduct | [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) |
-| Support and compatibility | [`SUPPORT.md`](SUPPORT.md) |
-
-Agent instructions: [`AGENTS.md`](AGENTS.md) (also referenced by `CLAUDE.md`). Cursor rules in [`.cursor/rules/`](.cursor/rules/) mirror the guides.
-
-### Design specs
-
-| Spec | Path |
-|------|------|
-| Table toolbar / members tabs | [`docs/superpowers/specs/2026-07-28-table-toolbar-members-tabs-design.md`](docs/superpowers/specs/2026-07-28-table-toolbar-members-tabs-design.md) |
-| Loading skeletons | [`docs/superpowers/specs/2026-08-05-loading-skeletons-design.md`](docs/superpowers/specs/2026-08-05-loading-skeletons-design.md) |
-| Profile hub & time off | [`docs/superpowers/specs/2026-08-06-profile-time-off-design.md`](docs/superpowers/specs/2026-08-06-profile-time-off-design.md) |
-| Mac Docker launcher | [`docs/superpowers/specs/2026-08-18-mac-docker-launcher-design.md`](docs/superpowers/specs/2026-08-18-mac-docker-launcher-design.md) |
-
-## Notes
-
-- Prefer **pnpm**.
-- This Next.js version may differ from training data — see `AGENTS.md` and `node_modules/next/dist/docs/` before inventing APIs.
-- Auth uses jose cookie sessions + Prisma; `authorize(Actions.*)` / `can(role, Actions.*)` use the permission matrix and throw/gate with stable `AppError` kinds/codes.
-- Generated Prisma client lives under `src/generated/prisma` (gitignored) — run `pnpm db:generate` after install.
-- The Docker JWT secret is a fixed demo value in `docker-compose.yml`, not a production secret.
+Released under the [MIT License](LICENSE).
