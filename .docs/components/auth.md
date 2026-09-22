@@ -13,6 +13,8 @@ src/features/auth/
   utils.ts           encrypt / decrypt / createSession / getSession / updateSession
   session-policy.ts  idle/absolute lifetime and cookie policy helpers
   session-state.ts   resolve signed identity against current database account state
+  credentials.ts     constant-work credential comparison helper
+  login-rate-limit.ts replaceable limiter contract + bounded local adapter
   permissions.ts     Permission, ROLE_PERMISSIONS, Actions, can, hasPermission
   session.ts         requireSession, authorize (server-only)
   password.ts        hash / authenticate
@@ -142,6 +144,39 @@ Route groups:
 ## Login channels
 
 Auth is **server actions only**: `loginAction` / `logoutAction` / `getMeAction` via `useAuth`. Do not add REST `/api/auth/*` or axios session clients.
+
+### Login abuse protection
+
+`loginAction` normalizes email identifiers, applies failed-attempt limits to both the
+identifier and the client source when a trusted proxy supplies one, and returns the stable
+`LOGIN_RATE_LIMITED` code when either threshold is reached. Unknown accounts, inactive
+accounts, and wrong passwords all return `INVALID_CREDENTIALS`; the unknown-account path
+still performs one bcrypt comparison against a fixed dummy hash to reduce timing leaks.
+
+The default policy is configurable:
+
+| Variable | Default | Meaning |
+|----------|---------|---------|
+| `LOGIN_RATE_LIMIT_MAX_ATTEMPTS` | `5` | Failures allowed for one normalized identifier |
+| `LOGIN_RATE_LIMIT_SOURCE_MAX_ATTEMPTS` | `25` | Failures allowed for one client source across identifiers |
+| `LOGIN_RATE_LIMIT_WINDOW_SECONDS` | `900` | Fixed counter lifetime |
+
+A successful login clears that identifier's counter. The aggregate source counter ages out
+instead of being reset by one valid account, so an attacker cannot use a known credential to
+erase failures against other accounts. Throttle events are written to operational logs with
+one-way fingerprints and the retry delay; raw email addresses, client sources, and passwords
+are never logged.
+
+The bundled `InMemoryLoginRateLimiter` is intentionally **process-local**. It is bounded to
+avoid unbounded memory growth, but its counters are not shared across replicas and disappear
+on restart or serverless cold start. Multi-instance and serverless deployments must replace
+the exported `loginRateLimiter` binding with a Redis/KV-backed implementation of the
+`LoginRateLimiter` interface whose increments and expiries are atomic. Do not describe the
+local adapter as distributed protection.
+
+Client-source limiting trusts `x-forwarded-for` (falling back to `x-real-ip`). Only enable
+that dimension behind a proxy that overwrites these headers; otherwise clients can spoof
+them. Identifier limiting remains active when no source is available.
 
 ---
 

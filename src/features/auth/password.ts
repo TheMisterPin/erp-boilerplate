@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs"
 
 import { prisma } from "@/lib/db"
+import { credentialsMatch } from "@/features/auth/credentials"
 import { AppError } from "@/features/errors/server"
 import type { Role } from "@/generated/prisma/client"
 
@@ -43,16 +44,8 @@ export async function authenticateUser(
     },
   })
 
-  if (!user || !user.isActive) {
-    throw new AppError({
-      kind: "auth",
-      code: "INVALID_CREDENTIALS",
-      message: "Invalid email or password.",
-    })
-  }
-
-  const valid = await verifyPassword(password, user.password)
-  if (!valid) {
+  const valid = await credentialsMatch(user, password, verifyPassword)
+  if (!valid || !user) {
     throw new AppError({
       kind: "auth",
       code: "INVALID_CREDENTIALS",

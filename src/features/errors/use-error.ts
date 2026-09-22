@@ -33,8 +33,13 @@ export type RunOptions<TForm extends FieldValues = FieldValues> = {
   overrides?: HandleOverrides
 }
 
-function channelTitle(kind: ErrorKind): string {
-  switch (kind) {
+function channelTitle(error: ErrorDTO): string {
+  if (error.code === "LOGIN_RATE_LIMITED") {
+    return "Sign-in temporarily limited"
+  }
+  if (error.code === "INVALID_CREDENTIALS") return "Sign-in failed"
+
+  switch (error.kind) {
     case "auth":
       return "Session expired"
     case "permission":
@@ -74,7 +79,7 @@ export function useError() {
       // modal
       notify({
         variant: "error",
-        title: channelTitle(error.kind),
+        title: channelTitle(error),
         message: error.message,
         onAcknowledge:
           error.code === "SESSION_EXPIRED"

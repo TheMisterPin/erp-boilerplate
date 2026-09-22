@@ -15,6 +15,8 @@ Use jose cookie sessions + the permission-matrix action catalog. Do not invent N
 | Cookie JWT | `src/features/auth/utils.ts` |
 | Session policy | `src/features/auth/session-policy.ts` |
 | Current account state | `src/features/auth/session-state.ts` |
+| Credential comparison | `src/features/auth/credentials.ts` |
+| Login abuse limiting | `src/features/auth/login-rate-limit.ts` |
 | Matrix + `Actions` + `can` | `src/features/auth/permissions.ts` (isomorphic — safe on client) |
 | Server gates | `src/features/auth/session.ts` (`requireSession`, `authorize`) |
 | Client session | `useAuth()` → `src/features/auth/hooks/` |
@@ -34,6 +36,12 @@ Use jose cookie sessions + the permission-matrix action catalog. Do not invent N
 ## Auth surface
 
 Server actions only: `loginAction` / `logoutAction` / `getMeAction` via `useAuth`. Do not invent REST `/api/auth/*` or axios session clients.
+
+Login failures use one response for unknown accounts, inactive accounts, and wrong
+passwords (`auth` / `INVALID_CREDENTIALS`). Preserve the dummy-hash comparison for missing
+accounts. Failed attempts pass through the replaceable `LoginRateLimiter`; the bundled
+adapter is process-local only and must not be presented as distributed-safe. Never log raw
+email addresses, client sources, passwords, or credential input.
 
 ## Provider order
 
@@ -83,6 +91,8 @@ can(me.role, Actions.users.write)
 |---------|------|------|
 | No session | `auth` | `SESSION_EXPIRED` |
 | Missing permission | `permission` | `FORBIDDEN` |
+| Invalid login | `auth` | `INVALID_CREDENTIALS` |
+| Login throttled | `auth` | `LOGIN_RATE_LIMITED` |
 
 Client channel table routes these via `useError().run()` — do not invent parallel handling.
 
