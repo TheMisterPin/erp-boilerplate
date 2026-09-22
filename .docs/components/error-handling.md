@@ -81,7 +81,7 @@ type ActionResult<T> =
 | Kind | Channel | UI |
 |------|---------|-----|
 | `validation` | `silent` | Inline via `applyServerErrors` (form owns it) |
-| `auth` | `modal` | `notify({ variant: "error" })`; `SESSION_EXPIRED` → `/login` on acknowledge |
+| `auth` | `modal` | `notify({ variant: "error" })`; code-aware sign-in titles; `SESSION_EXPIRED` → `/login` on acknowledge |
 | `permission` | `modal` | Blocking notification |
 | `conflict` | `toast` | `toast.error(message)` |
 | `not_found` | `toast` | same |

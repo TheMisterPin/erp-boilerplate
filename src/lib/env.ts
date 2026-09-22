@@ -1,5 +1,8 @@
 const DEFAULT_SESSION_IDLE_MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
 const DEFAULT_SESSION_ABSOLUTE_MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
+const DEFAULT_LOGIN_RATE_LIMIT_MAX_ATTEMPTS = 5;
+const DEFAULT_LOGIN_RATE_LIMIT_SOURCE_MAX_ATTEMPTS = 25;
+const DEFAULT_LOGIN_RATE_LIMIT_WINDOW_SECONDS = 60 * 15;
 const MINIMUM_PRODUCTION_JWT_SECRET_LENGTH = 32;
 
 function requireEnv(name: string): string {
@@ -85,4 +88,28 @@ export function getSessionJwtIssuer(): string {
 
 export function getSessionJwtAudience(): string {
   return process.env.SESSION_JWT_AUDIENCE ?? "erp-boilerplate-app";
+}
+
+export function getLoginRateLimitMaxAttempts(): number {
+  return parsePositiveInteger(
+    "LOGIN_RATE_LIMIT_MAX_ATTEMPTS",
+    process.env.LOGIN_RATE_LIMIT_MAX_ATTEMPTS,
+    DEFAULT_LOGIN_RATE_LIMIT_MAX_ATTEMPTS,
+  );
+}
+
+export function getLoginRateLimitSourceMaxAttempts(): number {
+  return parsePositiveInteger(
+    "LOGIN_RATE_LIMIT_SOURCE_MAX_ATTEMPTS",
+    process.env.LOGIN_RATE_LIMIT_SOURCE_MAX_ATTEMPTS,
+    DEFAULT_LOGIN_RATE_LIMIT_SOURCE_MAX_ATTEMPTS,
+  );
+}
+
+export function getLoginRateLimitWindowSeconds(): number {
+  return parsePositiveInteger(
+    "LOGIN_RATE_LIMIT_WINDOW_SECONDS",
+    process.env.LOGIN_RATE_LIMIT_WINDOW_SECONDS,
+    DEFAULT_LOGIN_RATE_LIMIT_WINDOW_SECONDS,
+  );
 }

@@ -1,9 +1,19 @@
 "use server"
 
+import { headers } from "next/headers"
+
 import { prisma } from "@/lib/db"
 import type { ActionResult } from "@/features/errors/dto"
 import { AppError, withErrorBoundary } from "@/features/errors/server"
 import { authenticateUser } from "@/features/auth/password"
+import {
+  createLoginRateLimitSubject,
+  getLoginClientSource,
+  loginRateLimiter,
+  normalizeLoginIdentifier,
+  type LoginRateLimitDecision,
+  type LoginRateLimitSubject,
+} from "@/features/auth/login-rate-limit"
 import {
   createSession,
   clearSession,
@@ -11,6 +21,29 @@ import {
 } from "@/features/auth/utils"
 import { toMe, type Me } from "@/features/auth/types"
 import { logActivity } from "@/features/logging/server"
+
+function throwLoginRateLimited(
+  subject: LoginRateLimitSubject,
+  decision: LoginRateLimitDecision,
+): never {
+  console.warn("[auth.login_throttled]", {
+    identifierFingerprint: subject.identifierFingerprint,
+    sourceFingerprint: subject.sourceFingerprint,
+    retryAfterSeconds: decision.retryAfterSeconds,
+  })
+
+  throw new AppError({
+    kind: "auth",
+    code: "LOGIN_RATE_LIMITED",
+    message: "Too many sign-in attempts. Please try again later.",
+  })
+}
+
+function isInvalidCredentialsError(error: unknown): boolean {
+  return (
+    error instanceof AppError && error.dto.code === "INVALID_CREDENTIALS"
+  )
+}
 
 export async function loginAction(
   input: unknown,
@@ -20,7 +53,10 @@ export async function loginAction(
       typeof input === "object" && input !== null
         ? (input as { email?: unknown; password?: unknown })
         : {}
-    const email = typeof body.email === "string" ? body.email.trim() : ""
+    const email =
+      typeof body.email === "string"
+        ? normalizeLoginIdentifier(body.email)
+        : ""
     const password = typeof body.password === "string" ? body.password : ""
 
     if (!email || !password) {
@@ -31,7 +67,30 @@ export async function loginAction(
       })
     }
 
-    const user = await authenticateUser(email, password)
+    const requestHeaders = await headers()
+    const subject = createLoginRateLimitSubject(
+      email,
+      getLoginClientSource(requestHeaders),
+    )
+    const currentLimit = await loginRateLimiter.check(subject)
+    if (!currentLimit.allowed) {
+      throwLoginRateLimited(subject, currentLimit)
+    }
+
+    let user: Awaited<ReturnType<typeof authenticateUser>>
+    try {
+      user = await authenticateUser(email, password)
+    } catch (error) {
+      if (isInvalidCredentialsError(error)) {
+        const nextLimit = await loginRateLimiter.recordFailure(subject)
+        if (!nextLimit.allowed) {
+          throwLoginRateLimited(subject, nextLimit)
+        }
+      }
+      throw error
+    }
+
+    await loginRateLimiter.resetIdentifier(subject)
     await createSession(user)
 
     await logActivity({
