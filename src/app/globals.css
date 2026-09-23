@@ -397,3 +397,7 @@
     color: var(--muted-foreground);
   }
 }
+
+.dev {
+  border: 1px solid red;
+}

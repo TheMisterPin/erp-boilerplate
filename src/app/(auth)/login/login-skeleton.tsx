@@ -4,7 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 export function LoginSkeleton() {
   return (
     <div
-      className="mx-auto flex w-full max-w-md flex-col gap-6 px-4 py-16"
+      className="mx-auto flex w-full max-w-md flex-col gap-6 rounded-xl border border-border-subtle bg-card px-6 py-6"
       aria-busy="true"
       aria-label="Loading…"
     >

@@ -65,7 +65,7 @@ export function ClockPage({
   if (authLoading) {
     return (
       <div
-        className="mx-auto flex min-h-svh w-full max-w-lg flex-col gap-6 px-4 py-10"
+        className="mx-auto flex w-full max-w-lg flex-col gap-6 px-4 py-6"
         aria-busy="true"
         aria-label="Loading…"
       >
@@ -145,7 +145,7 @@ export function ClockPage({
   const isCheckedIn = !!clock?.openAttendance
 
   return (
-    <div className="mx-auto flex min-h-svh w-full max-w-lg flex-col gap-6 px-4 py-10">
+    <div className="mx-auto flex w-full max-w-lg flex-col gap-6 px-4 py-6">
       <HomeLink />
 
       <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
