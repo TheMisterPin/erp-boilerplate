@@ -1,4 +1,4 @@
-# Components Playground
+# ERP Boilerplate
 
 Next.js (App Router) ERP boilerplate / component playground. Shared UI systems live under `src/components/shared`; feature verticals under `src/features`. Auth uses jose cookie sessions + Prisma; middleware requires login for all app routes.
 

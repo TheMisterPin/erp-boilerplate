@@ -58,7 +58,7 @@ export default function Home() {
       <div className="mx-auto flex max-w-2xl flex-col gap-8">
         <div className="flex flex-col gap-2">
           <h1 className="text-[28px] font-semibold leading-9 tracking-tight">
-            Components Playground
+            ERP Boilerplate
           </h1>
           <p className="text-muted-foreground text-sm leading-relaxed">
             ERP UI boilerplate. Use the demos below as the reference pattern when
