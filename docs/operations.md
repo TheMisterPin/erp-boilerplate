@@ -43,7 +43,11 @@ code must continue to use `reportServerError` rather than a vendor SDK.
 
 - Dependabot opens weekly dependency and GitHub Actions update pull requests.
 - Dependency Review blocks a pull request that introduces a high or critical
-  vulnerability. Configure it as a required check on `main`.
+  vulnerability when GitHub's **Dependency graph** is enabled in repository
+  settings. The workflow remains non-blocking until that one-time setting is
+  enabled, because GitHub otherwise rejects the action before it can inspect a
+  pull request. After enabling it, remove `continue-on-error` and configure the
+  check as required on `main`.
 - CodeQL runs the `security-extended` JavaScript/TypeScript suite on pull
   requests, `main`, and weekly. It is available on public repositories and on
   GitHub Team/Enterprise repositories with Code Security enabled.
