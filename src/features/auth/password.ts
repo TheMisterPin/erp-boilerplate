@@ -31,6 +31,7 @@ export type AuthUser = {
   departmentId: string | null
   locationId: string | null
   password: string
+  sessionVersion: number
 }
 
 export async function authenticateUser(

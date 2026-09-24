@@ -143,7 +143,6 @@ function ProfilePanel({
             firstName: profile.firstName,
             lastName: profile.lastName,
             pictureUrl: profile.pictureUrl ?? "",
-            password: "",
           }}
           onSubmit={onSaveProfile}
         />

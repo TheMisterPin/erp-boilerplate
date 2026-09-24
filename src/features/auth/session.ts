@@ -32,6 +32,7 @@ export async function requireSession(): Promise<AppSession> {
       fullName: true,
       isActive: true,
       deletedAt: true,
+      sessionVersion: true,
     },
   })
   const session = resolveCurrentSession(tokenSession, account)

@@ -8,13 +8,14 @@ export type CurrentAccountState = {
   fullName: string
   isActive: boolean
   deletedAt: Date | null
+  sessionVersion: number
 }
 
 export function resolveCurrentSession(
   session: SessionPayload,
   account: CurrentAccountState | null,
 ): SessionPayload | null {
-  if (!account || !account.isActive || account.deletedAt) return null
+  if (!account || !account.isActive || account.deletedAt || account.sessionVersion !== session.sessionVersion) return null
 
   return {
     ...session,
