@@ -108,12 +108,110 @@
 }
 
 /* ================================================================== */
-/*  Midnight Enterprise — dark graphite (DESIGN.md §3–4)               */
-/*  Applied as default :root and .dark so dark: utilities work.        */
+/*  Light — cool graphite paper (Midnight Enterprise inverted)         */
 /* ================================================================== */
-:root,
+:root {
+  color-scheme: light;
+
+  --surface-1: #f4f6f8;
+  --surface-2: #ffffff;
+  --surface-3: #e8eef3;
+  --surface-selected: #dceaf4;
+  --border-subtle: #d5dee6;
+  --border-strong: #b7c4d0;
+  --text-primary: #0f1720;
+  --text-secondary: #4a5866;
+  --text-muted: #6b7a89;
+  --brand-accent: #3d7eac;
+  --brand-accent-hover: #337096;
+  --accent-muted: #e4f0f8;
+  --focus-ring: #5a9fd4;
+
+  --background: #eef2f6;
+  --foreground: #0f1720;
+  --card: #ffffff;
+  --card-foreground: #0f1720;
+  --popover: #ffffff;
+  --popover-foreground: #0f1720;
+
+  --primary: #3d7eac;
+  --primary-foreground: #ffffff;
+
+  --secondary: #e8eef3;
+  --secondary-foreground: #0f1720;
+
+  --muted: #e8eef3;
+  --muted-foreground: #6b7a89;
+
+  --accent: #e4f0f8;
+  --accent-foreground: #0f1720;
+
+  --destructive: #c45c5c;
+  --destructive-foreground: #ffffff;
+
+  --border: #d5dee6;
+  --input: #d5dee6;
+  --ring: #5a9fd4;
+
+  --info: #3d7eac;
+  --info-foreground: #3d7eac;
+  --info-surface: #e4f0f8;
+  --info-border: #d5dee6;
+
+  --success: #2f8a5a;
+  --success-foreground: #2f8a5a;
+  --success-surface: #e3f5eb;
+  --success-border: #d5dee6;
+
+  --warning: #a87a1a;
+  --warning-foreground: #a87a1a;
+  --warning-surface: #f8efd8;
+  --warning-border: #d5dee6;
+
+  --error: #c45c5c;
+  --error-foreground: #c45c5c;
+  --error-surface: #f8e4e6;
+  --error-border: #d5dee6;
+
+  --chart-1: #3d7eac;
+  --chart-2: #5a9fd4;
+  --chart-3: #2f8a5a;
+  --chart-4: #4a5866;
+  --chart-5: #a87a1a;
+
+  --radius: 0.5rem;
+
+  --sidebar: #f4f6f8;
+  --sidebar-foreground: #0f1720;
+  --sidebar-primary: #3d7eac;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e4f0f8;
+  --sidebar-accent-foreground: #0f1720;
+  --sidebar-border: #d5dee6;
+  --sidebar-ring: #5a9fd4;
+
+  --table-toolbar: #ffffff;
+  --table-toolbar-foreground: #0f1720;
+  --table-toolbar-border: #d5dee6;
+  --table-header: #f4f6f8;
+  --table-header-foreground: #4a5866;
+  --table-header-border: #d5dee6;
+  --table-row: #ffffff;
+  --table-row-alt: #f8fafc;
+  --table-row-hover: #eef4f8;
+  --table-cell-foreground: #0f1720;
+  --table-border: #d5dee6;
+  --table-surface: #ffffff;
+
+  --elevation-shadow: 0 12px 32px rgba(15, 23, 32, 0.08);
+}
+
+/* ================================================================== */
+/*  Midnight Enterprise — dark graphite (DESIGN.md §3–4)               */
+/* ================================================================== */
 .dark {
-  /* Design tokens */
+  color-scheme: dark;
+
   --surface-1: #111820;
   --surface-2: #16202a;
   --surface-3: #1b2733;
@@ -128,7 +226,6 @@
   --accent-muted: #1c3a50;
   --focus-ring: #6bade0;
 
-  /* shadcn bridge */
   --background: #0b0f14;
   --foreground: #edf2f7;
   --card: #16202a;
@@ -145,7 +242,6 @@
   --muted: #1b2733;
   --muted-foreground: #778594;
 
-  /* Hover / selected wash (not the blue brand — that is --primary) */
   --accent: #1c3a50;
   --accent-foreground: #edf2f7;
 
@@ -156,7 +252,6 @@
   --input: #263442;
   --ring: #6bade0;
 
-  /* Semantic — soft surfaces for badges; FG for text/icons */
   --info: #78b4df;
   --info-foreground: #78b4df;
   --info-surface: #183247;
@@ -182,8 +277,6 @@
   --chart-3: #71c99a;
   --chart-4: #a7b2be;
   --chart-5: #e5b85c;
-
-  --radius: 0.5rem;
 
   --sidebar: #111820;
   --sidebar-foreground: #edf2f7;

@@ -13,7 +13,7 @@ export default function AppShell({
     <SidebarProvider className="h-svh overflow-hidden">
       <AppSidebar />
       <SidebarInset className="flex h-svh min-h-0 flex-col overflow-hidden bg-background">
-        <header className="flex h-16 shrink-0 items-center border-b border-border bg-surface-1 px-6 text-foreground">
+        <header className="flex h-16 shrink-0 items-center border-b border-border bg-surface-1 px-6 text-foreground md:pl-10">
           <AppHeader />
         </header>
         {/* Locked content slot — pages must scroll internally (table body / PageScroll). */}

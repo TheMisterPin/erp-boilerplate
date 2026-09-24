@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation"
 import { ChevronRight, Hexagon } from "lucide-react"
 
 import { SidebarEdgeToggle } from "./sidebar-edge-toggle"
+import { SidebarThemeToggle } from "./sidebar-theme-toggle"
 import { SidebarUser } from "./sidebar-user"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import {
@@ -21,7 +22,6 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
   SidebarRail,
-  SidebarSeparator,
   useSidebar,
 } from "@/components/ui/sidebar"
 import { isNavItemActive, navigationItems } from "@/lib/navigation"
@@ -118,8 +118,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter className="border-t border-sidebar-border">
-        <SidebarSeparator className="mx-0" />
+      <SidebarFooter className="gap-1 border-t border-sidebar-border">
+        <SidebarThemeToggle />
         <SidebarUser />
       </SidebarFooter>
       <SidebarEdgeToggle />

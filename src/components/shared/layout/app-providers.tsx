@@ -1,6 +1,7 @@
 "use client"
 
 import { ModalProvider, ModalRoot } from "@/components/shared/modals"
+import { ThemeProvider } from "@/components/shared/layout/theme-provider"
 import { Toaster } from "@/components/ui/sonner"
 import { AuthProvider } from "@/features/auth/hooks/auth-context"
 import { ErrorProvider } from "@/features/errors"
@@ -12,14 +13,16 @@ import { ErrorProvider } from "@/features/errors"
  */
 export function AppProviders({ children }: { children: React.ReactNode }) {
   return (
-    <ModalProvider>
-      <AuthProvider>
-        <ErrorProvider>
-          {children}
-          <ModalRoot />
-          <Toaster />
-        </ErrorProvider>
-      </AuthProvider>
-    </ModalProvider>
+    <ThemeProvider>
+      <ModalProvider>
+        <AuthProvider>
+          <ErrorProvider>
+            {children}
+            <ModalRoot />
+            <Toaster />
+          </ErrorProvider>
+        </AuthProvider>
+      </ModalProvider>
+    </ThemeProvider>
   )
 }
