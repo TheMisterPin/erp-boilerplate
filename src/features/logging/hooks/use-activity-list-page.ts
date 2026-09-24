@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 
 import { Actions, can } from "@/features/auth/permissions"
 import { useAuth } from "@/features/auth/hooks/use-auth"
@@ -20,13 +20,15 @@ export function useActivityListPage(): ActivityListPageProps {
 
   const canRead = me ? can(me.role, Actions.logging.read) : false
 
+  const load = useCallback(async () => {
+    const data = await run(listActivities())
+    setItems(data ?? [])
+    setLoaded(true)
+  }, [run])
+
   useSharedPageLoad(
     status === "authenticated" && canRead ? "activity" : false,
-    async () => {
-      const data = await run(listActivities())
-      setItems(data ?? [])
-      setLoaded(true)
-    },
+    load,
   )
 
   const rows = useMemo(() => items.map(toActivityTableRow), [items])

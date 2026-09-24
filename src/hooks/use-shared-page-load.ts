@@ -10,8 +10,6 @@ export function useSharedPageLoad(
   key: string | false,
   load: () => Promise<void>,
 ) {
-  const loadRef = useRef(load)
-  loadRef.current = load
   const inflightRef = useRef<{ key: string; promise: Promise<void> } | null>(
     null,
   )
@@ -21,11 +19,11 @@ export function useSharedPageLoad(
 
     let inflight = inflightRef.current
     if (!inflight || inflight.key !== key) {
-      inflight = { key, promise: loadRef.current() }
+      inflight = { key, promise: load() }
       inflightRef.current = inflight
       void inflight.promise.finally(() => {
         if (inflightRef.current === inflight) inflightRef.current = null
       })
     }
-  }, [key])
+  }, [key, load])
 }
