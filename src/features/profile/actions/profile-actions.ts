@@ -38,20 +38,19 @@ function toProfile(row: {
   firstName: string
   lastName: string
   fullName: string
-  role: Profile["role"]
   pictureUrl: string | null
   departmentId: string | null
   locationId: string | null
   department?: { name: string } | null
   location?: { name: string } | null
-}): Profile {
+}, role: Profile["role"]): Profile {
   return {
     id: row.id,
     email: row.email,
     firstName: row.firstName,
     lastName: row.lastName,
     fullName: row.fullName,
-    role: row.role,
+    role,
     pictureUrl: row.pictureUrl,
     departmentId: row.departmentId,
     departmentName: row.department?.name ?? null,
@@ -183,7 +182,7 @@ export async function loadProfilePage(): Promise<ActionResult<ProfilePageData>> 
     ])
 
     return {
-      profile: toProfile(row),
+      profile: toProfile(row, session.role),
       upcomingShifts,
       ownRequests,
     }
@@ -198,7 +197,7 @@ export async function getProfile(): Promise<ActionResult<Profile>> {
       include: profileInclude,
     })
     if (!row) throw userNotFound()
-    return toProfile(row)
+    return toProfile(row, session.role)
   })
 }
 
@@ -250,6 +249,6 @@ export async function updateOwnProfile(
       },
     })
 
-    return toProfile(row)
+    return toProfile(row, session.role)
   })
 }

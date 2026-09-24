@@ -1,4 +1,4 @@
-import type { Role } from "@/generated/prisma/client"
+import type { OrganizationRoleKey } from "@/generated/prisma/client"
 import type { ShiftInstance } from "@/features/shifts/types/shift-types"
 import type { TimeOffRequest } from "@/features/time-off/types/time-off-types"
 
@@ -8,7 +8,7 @@ export type Profile = {
   firstName: string
   lastName: string
   fullName: string
-  role: Role
+  role: OrganizationRoleKey
   pictureUrl: string | null
   departmentId: string | null
   departmentName: string | null

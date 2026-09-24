@@ -119,7 +119,7 @@ function ProfilePanel({
 
   const details = [
     ["Email", profile.email],
-    ["Role", profile.role === "ADMIN" ? "Admin" : "User"],
+    ["Role", profile.role.charAt(0) + profile.role.slice(1).toLowerCase()],
     ["Department", profile.departmentName ?? "Not assigned"],
     ["Location", profile.locationName ?? "Not assigned"],
   ]

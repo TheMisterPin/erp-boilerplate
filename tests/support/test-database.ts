@@ -36,6 +36,7 @@ export async function resetTestDatabase(prisma: PrismaClient): Promise<void> {
   await prisma.$transaction(async (tx) => {
     await tx.shiftAttendance.deleteMany()
     await tx.membership.deleteMany()
+    await tx.organizationRole.deleteMany()
     await tx.userActivity.deleteMany()
     await tx.timeOffRequest.deleteMany()
     await tx.shiftInstance.deleteMany()
@@ -55,7 +56,7 @@ export async function createTestUser(
     email: string
     firstName: string
     lastName: string
-    role: "ADMIN" | "USER"
+    role: "ADMIN" | "MANAGER" | "OPERATOR" | "VIEWER" | "USER"
   }> = {},
 ) {
   factorySequence += 1
@@ -68,6 +69,38 @@ export async function createTestUser(
       slug: `test-organization-${factorySequence}`,
     },
   })
+  const organizationRole =
+    input.role === "USER" ? "OPERATOR" : (input.role ?? "OPERATOR")
+  const role = await prisma.organizationRole.create({
+    data: {
+      organizationId: organization.id,
+      key: organizationRole,
+      name: organizationRole,
+      permissions:
+        organizationRole === "ADMIN"
+          ? [
+              "users:read",
+              "users:write",
+              "departments:read",
+              "departments:write",
+              "locations:read",
+              "locations:write",
+              "shifts:read",
+              "shifts:write",
+              "logging:read",
+              "timeOff:read",
+              "timeOff:write",
+            ]
+          : [
+              "users:read",
+              "departments:read",
+              "locations:read",
+              "shifts:read",
+              "timeOff:read",
+              "timeOff:write",
+            ],
+    },
+  })
   const user = await prisma.user.create({
     data: {
       email: input.email ?? `test-user-${factorySequence}@example.test`,
@@ -75,12 +108,20 @@ export async function createTestUser(
       lastName,
       fullName: `${firstName} ${lastName}`,
       password: "not-a-real-password",
-      role: input.role ?? "USER",
+      role: input.role === "ADMIN" ? "ADMIN" : "USER",
     },
   })
   await prisma.membership.create({
-    data: { organizationId: organization.id, userId: user.id },
+    data: {
+      organizationId: organization.id,
+      userId: user.id,
+      roleAssignment: { create: { roleId: role.id } },
+    },
   })
 
-  return { ...user, activeOrganizationId: organization.id }
+  return {
+    ...user,
+    activeOrganizationId: organization.id,
+    organizationRole,
+  }
 }

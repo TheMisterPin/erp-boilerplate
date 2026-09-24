@@ -8,7 +8,7 @@ const tokenSession: SessionPayload = {
   userId: "user-1",
   activeOrganizationId: "organization-1",
   email: "old@example.com",
-  role: "ADMIN",
+  systemRole: "ADMIN",
   fullName: "Old Name",
   sessionVersion: 1,
   expires: "2026-01-01T00:01:00.000Z",
@@ -26,7 +26,7 @@ test("uses current database identity and role instead of JWT claims", () => {
     sessionVersion: 1,
   })
 
-  assert.equal(session?.role, "USER")
+  assert.equal(session?.systemRole, "USER")
   assert.equal(session?.email, "current@example.com")
   assert.equal(session?.fullName, "Current Name")
   assert.equal(session?.absoluteExpires, tokenSession.absoluteExpires)

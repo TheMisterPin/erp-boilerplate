@@ -1,4 +1,4 @@
-import type { Role } from "@/generated/prisma/client"
+import type { OrganizationRoleKey } from "@/generated/prisma/client"
 
 /** Safe current-user shape — never includes password. */
 export type Me = {
@@ -7,7 +7,7 @@ export type Me = {
   firstName: string
   lastName: string
   fullName: string
-  role: Role
+  role: OrganizationRoleKey
   pictureUrl: string | null
   isActive: boolean
   isVerified: boolean
@@ -21,20 +21,19 @@ export function toMe(user: {
   firstName: string
   lastName: string
   fullName: string
-  role: Role
   pictureUrl: string | null
   isActive: boolean
   isVerified: boolean
   departmentId: string | null
   locationId: string | null
-}): Me {
+}, role: OrganizationRoleKey): Me {
   return {
     id: user.id,
     email: user.email,
     firstName: user.firstName,
     lastName: user.lastName,
     fullName: user.fullName,
-    role: user.role,
+    role,
     pictureUrl: user.pictureUrl,
     isActive: user.isActive,
     isVerified: user.isVerified,

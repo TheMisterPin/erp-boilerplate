@@ -9,10 +9,22 @@ describe("permission matrix", () => {
     expect(can("ADMIN", Actions.timeOff.write)).toBe(true)
   })
 
-  it("keeps ordinary users out of administrative actions", () => {
-    expect(can("USER", Actions.users.write)).toBe(false)
-    expect(can("USER", Actions.logging.read)).toBe(false)
-    expect(can("USER", Actions.timeOff.write)).toBe(true)
-    expect(permissionsForRole("USER")).not.toContain("users:write")
+  it("gives managers operational write access without administration", () => {
+    expect(can("MANAGER", Actions.users.write)).toBe(false)
+    expect(can("MANAGER", Actions.shifts.write)).toBe(true)
+    expect(can("MANAGER", Actions.logging.read)).toBe(false)
+  })
+
+  it("preserves legacy user access in the operator role", () => {
+    expect(can("OPERATOR", Actions.users.write)).toBe(false)
+    expect(can("OPERATOR", Actions.logging.read)).toBe(false)
+    expect(can("OPERATOR", Actions.timeOff.write)).toBe(true)
+    expect(permissionsForRole("OPERATOR")).not.toContain("users:write")
+  })
+
+  it("keeps viewers read-only", () => {
+    expect(can("VIEWER", Actions.shifts.read)).toBe(true)
+    expect(can("VIEWER", Actions.shifts.write)).toBe(false)
+    expect(can("VIEWER", Actions.timeOff.write)).toBe(false)
   })
 })

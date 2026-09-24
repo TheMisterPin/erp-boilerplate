@@ -73,6 +73,17 @@ describe("auth server actions", () => {
         name: "Test Organization",
         slug: "test-organization",
       },
+      id: "membership-1",
+      roleAssignment: {
+        deletedAt: null,
+        role: {
+          key: "OPERATOR",
+          permissions: ["users:read"],
+          isActive: true,
+          deletedAt: null,
+          organizationId: "organization-1",
+        },
+      },
     })
 
     await expect(
@@ -85,7 +96,7 @@ describe("auth server actions", () => {
         firstName: user.firstName,
         lastName: user.lastName,
         fullName: user.fullName,
-        role: user.role,
+        role: "OPERATOR",
         pictureUrl: null,
         isActive: true,
         isVerified: false,

@@ -22,7 +22,7 @@ test("round-trips a session with issuer and audience validation", async () => {
       userId: "user-1",
       activeOrganizationId: "organization-1",
       email: "user@example.com",
-      role: "USER",
+      systemRole: "USER",
       fullName: "Example User",
       sessionVersion: 1,
     },
@@ -35,7 +35,7 @@ test("round-trips a session with issuer and audience validation", async () => {
   const session = await decrypt(token)
 
   assert.equal(session?.userId, "user-1")
-  assert.equal(session?.role, "USER")
+  assert.equal(session?.systemRole, "USER")
 })
 
 test("rejects a token issued for a different audience", async () => {
@@ -44,7 +44,7 @@ test("rejects a token issued for a different audience", async () => {
       userId: "user-1",
       activeOrganizationId: "organization-1",
       email: "user@example.com",
-      role: "USER",
+      systemRole: "USER",
       fullName: "Example User",
       sessionVersion: 1,
     },
@@ -65,7 +65,7 @@ test("rejects a token issued by a different issuer", async () => {
       userId: "user-1",
       activeOrganizationId: "organization-1",
       email: "user@example.com",
-      role: "USER",
+      systemRole: "USER",
       fullName: "Example User",
       sessionVersion: 1,
     },
@@ -86,7 +86,7 @@ test("rejects a token whose signature was modified", async () => {
       userId: "user-1",
       activeOrganizationId: "organization-1",
       email: "user@example.com",
-      role: "USER",
+      systemRole: "USER",
       fullName: "Example User",
       sessionVersion: 1,
     },
@@ -114,7 +114,7 @@ test("rejects a token beyond its absolute lifetime", async () => {
       userId: "user-1",
       activeOrganizationId: "organization-1",
       email: "user@example.com",
-      role: "USER",
+      systemRole: "USER",
       fullName: "Example User",
       sessionVersion: 1,
     },

@@ -21,7 +21,6 @@ type UserRow = {
   firstName: string
   lastName: string
   fullName: string
-  role: User["role"]
   pictureUrl: string | null
   departmentId: string | null
   locationId: string | null
@@ -31,21 +30,60 @@ type UserRow = {
   updatedAt: Date
   department?: { name: string } | null
   location?: { name: string } | null
+  memberships: Array<{
+    roleAssignment: {
+      role: { key: User["role"] }
+    } | null
+  }>
 }
 
-const userInclude = {
-  department: { select: { name: true } },
-  location: { select: { name: true } },
-} as const
+function userInclude(organizationId: string) {
+  return {
+    department: { select: { name: true } },
+    location: { select: { name: true } },
+    memberships: {
+      where: { organizationId, status: "ACTIVE" as const },
+      take: 1,
+      select: {
+        roleAssignment: {
+          select: { role: { select: { key: true } } },
+        },
+      },
+    },
+  }
+}
+
+function activeMembershipWhere(organizationId: string) {
+  return {
+    organizationId,
+    status: "ACTIVE" as const,
+    roleAssignment: {
+      is: {
+        deletedAt: null,
+        role: {
+          is: { organizationId, isActive: true, deletedAt: null },
+        },
+      },
+    },
+  }
+}
 
 function toPublicUser(row: UserRow): User {
+  const role = row.memberships[0]?.roleAssignment?.role.key
+  if (!role) {
+    throw new AppError({
+      kind: "permission",
+      code: "INVALID_ROLE_ASSIGNMENT",
+      message: "This membership does not have a valid organization role.",
+    })
+  }
   return {
     id: row.id,
     email: row.email,
     firstName: row.firstName,
     lastName: row.lastName,
     fullName: row.fullName,
-    role: row.role,
+    role,
     pictureUrl: row.pictureUrl,
     departmentId: row.departmentId,
     departmentName: row.department?.name ?? null,
@@ -96,10 +134,15 @@ async function assertLocationExists(locationId: string | null): Promise<void> {
 
 export async function listUsers(): Promise<ActionResult<User[]>> {
   return withErrorBoundary(async () => {
-    await authorize(Actions.users.read)
+    const session = await authorize(Actions.users.read)
     const rows = await prisma.user.findMany({
-      where: { deletedAt: null },
-      include: userInclude,
+      where: {
+        deletedAt: null,
+        memberships: {
+          some: activeMembershipWhere(session.activeOrganizationId),
+        },
+      },
+      include: userInclude(session.activeOrganizationId),
       orderBy: { createdAt: "desc" },
     })
     return rows.map(toPublicUser)
@@ -110,7 +153,7 @@ export async function createUser(
   input: unknown,
 ): Promise<ActionResult<User>> {
   return withErrorBoundary(async () => {
-    await authorize(Actions.users.write)
+    const session = await authorize(Actions.users.write)
     const parsed = createUserSchema.parse(input)
 
     const departmentId = parsed.departmentId || null
@@ -122,20 +165,45 @@ export async function createUser(
     const fullName = fullNameFrom(parsed.firstName, parsed.lastName)
 
     try {
-      const row = await prisma.user.create({
-        data: {
-          email: parsed.email,
-          firstName: parsed.firstName,
-          lastName: parsed.lastName,
-          fullName,
-          password: passwordHash,
-          role: parsed.role,
-          departmentId,
-          locationId,
-          pictureUrl: parsed.pictureUrl || null,
-          isActive: parsed.isActive ?? true,
-        },
-        include: userInclude,
+      const row = await prisma.$transaction(async (tx) => {
+        const role = await tx.organizationRole.findFirst({
+          where: {
+            organizationId: session.activeOrganizationId,
+            key: parsed.role,
+            isActive: true,
+            deletedAt: null,
+          },
+          select: { id: true },
+        })
+        if (!role) {
+          throw new AppError({
+            kind: "validation",
+            code: "INVALID_ORGANIZATION_ROLE",
+            message: "That organization role is not available.",
+          })
+        }
+
+        return tx.user.create({
+          data: {
+            email: parsed.email,
+            firstName: parsed.firstName,
+            lastName: parsed.lastName,
+            fullName,
+            password: passwordHash,
+            role: "USER",
+            departmentId,
+            locationId,
+            pictureUrl: parsed.pictureUrl || null,
+            isActive: parsed.isActive ?? true,
+            memberships: {
+              create: {
+                organizationId: session.activeOrganizationId,
+                roleAssignment: { create: { roleId: role.id } },
+              },
+            },
+          },
+          include: userInclude(session.activeOrganizationId),
+        })
       })
 
       await logActivity({
@@ -164,11 +232,17 @@ export async function updateUser(
   input: unknown,
 ): Promise<ActionResult<User>> {
   return withErrorBoundary(async () => {
-    await authorize(Actions.users.write)
+    const session = await authorize(Actions.users.write)
     const parsed = updateUserSchema.parse(input)
 
     const existing = await prisma.user.findFirst({
-      where: { id: parsed.id, deletedAt: null },
+      where: {
+        id: parsed.id,
+        deletedAt: null,
+        memberships: {
+          some: activeMembershipWhere(session.activeOrganizationId),
+        },
+      },
     })
     if (!existing) {
       throw new AppError({
@@ -189,7 +263,6 @@ export async function updateUser(
       firstName: parsed.firstName,
       lastName: parsed.lastName,
       fullName,
-      role: parsed.role,
       departmentId,
       locationId,
       pictureUrl: parsed.pictureUrl || null,
@@ -201,10 +274,44 @@ export async function updateUser(
     }
 
     try {
-      const row = await prisma.user.update({
-        where: { id: parsed.id },
-        data,
-        include: userInclude,
+      const row = await prisma.$transaction(async (tx) => {
+        const [role, membership] = await Promise.all([
+          tx.organizationRole.findFirst({
+            where: {
+              organizationId: session.activeOrganizationId,
+              key: parsed.role,
+              isActive: true,
+              deletedAt: null,
+            },
+            select: { id: true },
+          }),
+          tx.membership.findUnique({
+            where: {
+              organizationId_userId: {
+                organizationId: session.activeOrganizationId,
+                userId: parsed.id,
+              },
+            },
+            select: { id: true },
+          }),
+        ])
+        if (!role || !membership) {
+          throw new AppError({
+            kind: "validation",
+            code: "INVALID_ORGANIZATION_ROLE",
+            message: "That organization role is not available.",
+          })
+        }
+        await tx.roleAssignment.upsert({
+          where: { membershipId: membership.id },
+          update: { roleId: role.id, deletedAt: null },
+          create: { membershipId: membership.id, roleId: role.id },
+        })
+        return tx.user.update({
+          where: { id: parsed.id },
+          data,
+          include: userInclude(session.activeOrganizationId),
+        })
       })
       return toPublicUser(row)
     } catch (e) {
@@ -225,9 +332,14 @@ export async function updateUser(
 
 export async function deleteUser(id: string): Promise<ActionResult<true>> {
   return withErrorBoundary(async () => {
-    await authorize(Actions.users.write)
-    const existing = await prisma.user.findFirst({
-      where: { id, deletedAt: null },
+    const session = await authorize(Actions.users.write)
+    const existing = await prisma.membership.findUnique({
+      where: {
+        organizationId_userId: {
+          organizationId: session.activeOrganizationId,
+          userId: id,
+        },
+      },
     })
     if (!existing) {
       throw new AppError({
@@ -237,11 +349,10 @@ export async function deleteUser(id: string): Promise<ActionResult<true>> {
       })
     }
 
-    await prisma.user.update({
-      where: { id },
+    await prisma.membership.update({
+      where: { id: existing.id },
       data: {
-        deletedAt: new Date(),
-        isActive: false,
+        status: "INACTIVE",
       },
     })
 
@@ -262,7 +373,13 @@ export async function assignUserToLocation(
     const locationId = parsed.locationId || null
 
     const existing = await prisma.user.findFirst({
-      where: { id: parsed.userId, deletedAt: null },
+      where: {
+        id: parsed.userId,
+        deletedAt: null,
+        memberships: {
+          some: activeMembershipWhere(session.activeOrganizationId),
+        },
+      },
     })
     if (!existing) {
       throw new AppError({
@@ -319,7 +436,7 @@ export async function assignUserToLocation(
     const row = await prisma.user.update({
       where: { id: parsed.userId },
       data: { locationId },
-      include: userInclude,
+      include: userInclude(session.activeOrganizationId),
     })
 
     return toPublicUser(row)

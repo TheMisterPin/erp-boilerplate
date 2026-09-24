@@ -4,11 +4,11 @@ Organizations are the tenant boundary. A user may have memberships in many
 organizations, but each request resolves exactly one active organization from
 the signed session. Both the organization and membership must be active.
 
-This first migration deliberately leaves the existing global `User.role` and
-business records unchanged. Organization-scoped role assignments are added in
-issue #13, and business-record ownership plus scoped queries are added in issue
-#16. Until those migrations land, an active organization identifies request
-context but does not by itself authorize access to business data.
+The global `User.role` is reserved for platform-level operations.
+Organization-scoped role assignments authorize work inside this tenant.
+Business-record ownership plus scoped queries are added in issue #16; until
+that migration lands, the active organization and its role are authoritative
+for permissions but legacy business rows do not yet carry tenant ownership.
 
 ## Migration and recovery
 

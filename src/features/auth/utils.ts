@@ -22,7 +22,7 @@ export type SessionPayload = {
   userId: string
   activeOrganizationId: string
   email: string
-  role: Role
+  systemRole: Role
   fullName: string
   sessionVersion: number
   expires: string
@@ -33,7 +33,7 @@ type SessionJWTPayload = JWTPayload & {
   userId: string
   activeOrganizationId: string
   email: string
-  role: Role
+  systemRole: Role
   fullName: string
   sessionVersion: number
   expires: string
@@ -52,7 +52,7 @@ export async function encrypt(
     userId: payload.userId,
     activeOrganizationId: payload.activeOrganizationId,
     email: payload.email,
-    role: payload.role,
+    systemRole: payload.systemRole,
     fullName: payload.fullName,
     sessionVersion: payload.sessionVersion,
     expires: dates.idleExpires.toISOString(),
@@ -78,7 +78,7 @@ export async function decrypt(input: string): Promise<SessionPayload | null> {
       typeof data.userId !== "string" ||
       typeof data.activeOrganizationId !== "string" ||
       typeof data.email !== "string" ||
-      typeof data.role !== "string" ||
+      typeof data.systemRole !== "string" ||
       typeof data.fullName !== "string" ||
       typeof data.sessionVersion !== "number" ||
       !Number.isSafeInteger(data.sessionVersion) ||
@@ -98,7 +98,7 @@ export async function decrypt(input: string): Promise<SessionPayload | null> {
       userId: data.userId,
       activeOrganizationId: data.activeOrganizationId,
       email: data.email,
-      role: data.role,
+      systemRole: data.systemRole,
       fullName: data.fullName,
       sessionVersion: data.sessionVersion,
       expires: data.expires,
@@ -127,7 +127,7 @@ export async function createSession(user: {
       userId: user.id,
       activeOrganizationId: user.activeOrganizationId,
       email: user.email,
-      role: user.role,
+      systemRole: user.role,
       fullName: user.fullName,
       sessionVersion: user.sessionVersion,
     },
@@ -185,7 +185,7 @@ export async function updateSession(request: NextRequest) {
         userId: parsed.userId,
         activeOrganizationId: parsed.activeOrganizationId,
         email: parsed.email,
-        role: parsed.role,
+        systemRole: parsed.systemRole,
         fullName: parsed.fullName,
         sessionVersion: parsed.sessionVersion,
       },

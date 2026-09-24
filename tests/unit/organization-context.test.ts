@@ -16,7 +16,20 @@ describe("organization request context", () => {
       name: "Example Organization",
       slug: "example",
     }
-    const findFirst = vi.fn().mockResolvedValue({ organization })
+    const findFirst = vi.fn().mockResolvedValue({
+      id: "membership-1",
+      organization,
+      roleAssignment: {
+        deletedAt: null,
+        role: {
+          key: "OPERATOR",
+          permissions: ["users:read", "unknown:grant"],
+          isActive: true,
+          deletedAt: null,
+          organizationId: organization.id,
+        },
+      },
+    })
 
     await expect(
       findActiveOrganization(
@@ -24,7 +37,11 @@ describe("organization request context", () => {
         "user-1",
         organization.id,
       ),
-    ).resolves.toEqual(organization)
+    ).resolves.toEqual({
+      ...organization,
+      membershipId: "membership-1",
+      role: { key: "OPERATOR", permissions: ["users:read"] },
+    })
     expect(findFirst).toHaveBeenCalledWith(
       expect.objectContaining({
         where: {
@@ -38,6 +55,31 @@ describe("organization request context", () => {
 
   it("returns null when no active membership is available", async () => {
     const findFirst = vi.fn().mockResolvedValue(null)
+
+    await expect(
+      findActiveOrganization(reader(findFirst), "user-1"),
+    ).resolves.toBeNull()
+  })
+
+  it("returns null for a deleted role assignment", async () => {
+    const findFirst = vi.fn().mockResolvedValue({
+      id: "membership-1",
+      organization: {
+        id: "organization-1",
+        name: "Example",
+        slug: "example",
+      },
+      roleAssignment: {
+        deletedAt: new Date(),
+        role: {
+          key: "ADMIN",
+          permissions: ["users:write"],
+          isActive: true,
+          deletedAt: null,
+          organizationId: "organization-1",
+        },
+      },
+    })
 
     await expect(
       findActiveOrganization(reader(findFirst), "user-1"),

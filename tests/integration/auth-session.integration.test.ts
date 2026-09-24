@@ -30,7 +30,7 @@ function sessionFor(userId: string, activeOrganizationId: string) {
     userId,
     activeOrganizationId,
     email: "stale@example.test",
-    role: "ADMIN" as const,
+    systemRole: "ADMIN" as const,
     fullName: "Stale Identity",
     sessionVersion: 0,
     expires: "2030-01-01T00:00:00.000Z",
@@ -55,7 +55,7 @@ afterAll(async () => {
 
 describe("database-backed sessions", () => {
   it("uses the current database identity and role", async () => {
-    const user = await createTestUser(prisma, { role: "USER" })
+    const user = await createTestUser(prisma, { role: "OPERATOR" })
     mocks.getSession.mockResolvedValue(
       sessionFor(user.id, user.activeOrganizationId),
     )
@@ -64,7 +64,7 @@ describe("database-backed sessions", () => {
       userId: user.id,
       email: user.email,
       fullName: user.fullName,
-      role: "USER",
+      role: "OPERATOR",
     })
   })
 
@@ -133,6 +133,60 @@ describe("database-backed sessions", () => {
       dto: { code: "ORGANIZATION_ACCESS_REVOKED", kind: "auth" },
     })
   })
+
+  it("resolves different roles for the same user in two organizations", async () => {
+    const user = await createTestUser(prisma, { role: "ADMIN" })
+    const secondOrganization = await prisma.organization.create({
+      data: { name: "Second Organization", slug: "second-organization" },
+    })
+    const viewer = await prisma.organizationRole.create({
+      data: {
+        organizationId: secondOrganization.id,
+        key: "VIEWER",
+        name: "Viewer",
+        permissions: ["users:read", "shifts:read"],
+      },
+    })
+    await prisma.membership.create({
+      data: {
+        organizationId: secondOrganization.id,
+        userId: user.id,
+        roleAssignment: { create: { roleId: viewer.id } },
+      },
+    })
+    mocks.getSession.mockResolvedValue(
+      sessionFor(user.id, secondOrganization.id),
+    )
+
+    await expect(requireSession()).resolves.toMatchObject({
+      role: "VIEWER",
+      permissions: ["users:read", "shifts:read"],
+      organization: { id: secondOrganization.id },
+    })
+  })
+
+  it("grants nothing for a deleted role assignment", async () => {
+    const user = await createTestUser(prisma, { role: "ADMIN" })
+    const membership = await prisma.membership.findUniqueOrThrow({
+      where: {
+        organizationId_userId: {
+          organizationId: user.activeOrganizationId,
+          userId: user.id,
+        },
+      },
+    })
+    await prisma.roleAssignment.update({
+      where: { membershipId: membership.id },
+      data: { deletedAt: new Date() },
+    })
+    mocks.getSession.mockResolvedValue(
+      sessionFor(user.id, user.activeOrganizationId),
+    )
+
+    await expect(requireSession()).rejects.toMatchObject({
+      dto: { code: "ORGANIZATION_ACCESS_REVOKED", kind: "auth" },
+    })
+  })
 })
 
 describe("permission matrix", () => {
@@ -150,7 +204,7 @@ describe("permission matrix", () => {
     Actions.timeOff.write,
   ]
 
-  it.each(["ADMIN", "USER"] as const)(
+  it.each(["ADMIN", "OPERATOR"] as const)(
     "matches every action for %s",
     async (role) => {
       const user = await createTestUser(prisma, { role })
