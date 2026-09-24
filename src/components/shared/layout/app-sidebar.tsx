@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation"
 import { ChevronRight, Hexagon } from "lucide-react"
 
 import { SidebarEdgeToggle } from "./sidebar-edge-toggle"
+import { SidebarOrganizationSwitcher } from "./sidebar-organization-switcher"
 import { SidebarThemeToggle } from "./sidebar-theme-toggle"
 import { SidebarUser } from "./sidebar-user"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
@@ -25,10 +26,16 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import { isNavItemActive, navigationItems } from "@/lib/navigation"
+import { Actions, can } from "@/features/auth/permissions"
+import { useAuth } from "@/features/auth/hooks/use-auth"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname()
   const { state, setOpen } = useSidebar()
+  const { me } = useAuth()
+  const canReadMemberships = me
+    ? can(me.role, Actions.memberships.read)
+    : false
 
   return (
     <Sidebar collapsible="icon" className="overflow-visible" {...props}>
@@ -58,33 +65,43 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarMenu>
         </div>
       </SidebarHeader>
+      <SidebarOrganizationSwitcher />
       <SidebarContent>
         <SidebarGroup>
           <SidebarMenu>
-            {navigationItems.map((item) =>
-              item.items ? (
+            {navigationItems.map((item) => {
+              const visibleSubItems = item.items?.filter(
+                (subItem) =>
+                  subItem.url !== "/organization/memberships" ||
+                  canReadMemberships,
+              )
+              const visibleItem = visibleSubItems
+                ? { ...item, items: visibleSubItems }
+                : item
+
+              return visibleItem.items ? (
                 <Collapsible
-                  key={item.title}
+                  key={visibleItem.title}
                   asChild
-                  defaultOpen={isNavItemActive(pathname, item.url)}
+                  defaultOpen={isNavItemActive(pathname, visibleItem.url)}
                   className="group/collapsible"
                 >
                   <SidebarMenuItem>
                     <CollapsibleTrigger asChild>
                       <SidebarMenuButton
-                        tooltip={item.title}
+                        tooltip={visibleItem.title}
                         onClick={() => {
                           if (state === "collapsed") setOpen(true)
                         }}
                       >
-                        {item.icon && <item.icon className="h-4 w-4" />}
-                        <span>{item.title}</span>
+                        {visibleItem.icon && <visibleItem.icon className="h-4 w-4" />}
+                        <span>{visibleItem.title}</span>
                         <ChevronRight className="ml-auto h-4 w-4 transition-transform group-data-[collapsible=icon]:hidden group-data-[state=open]/collapsible:rotate-90" />
                       </SidebarMenuButton>
                     </CollapsibleTrigger>
                     <CollapsibleContent>
                       <SidebarMenuSub>
-                        {item.items.map((subItem) => (
+                        {visibleItem.items.map((subItem) => (
                           <SidebarMenuSubItem key={subItem.title}>
                             <SidebarMenuSubButton
                               asChild
@@ -101,20 +118,20 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   </SidebarMenuItem>
                 </Collapsible>
               ) : (
-                <SidebarMenuItem key={item.title}>
+                <SidebarMenuItem key={visibleItem.title}>
                   <SidebarMenuButton
                     asChild
-                    isActive={isNavItemActive(pathname, item.url)}
-                    tooltip={item.title}
+                    isActive={isNavItemActive(pathname, visibleItem.url)}
+                    tooltip={visibleItem.title}
                   >
-                    <Link href={item.url}>
-                      {item.icon && <item.icon className="h-4 w-4" />}
-                      <span>{item.title}</span>
+                    <Link href={visibleItem.url}>
+                      {visibleItem.icon && <visibleItem.icon className="h-4 w-4" />}
+                      <span>{visibleItem.title}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
-              ),
-            )}
+              )
+            })}
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>

@@ -108,7 +108,7 @@ Defined in `ROLE_PERMISSIONS`:
 
 | Role | Permissions |
 |------|-------------|
-| `ADMIN` | `*:read` + `*:write` for users, departments, locations, shifts; plus `logging:read` |
+| `ADMIN` | `*:read` + `*:write` for users, departments, locations, shifts, time off, and memberships; plus `logging:read` |
 | `USER` | `*:read` for users, departments, locations, shifts (no logging / no `shifts:write`) |
 
 Location managers (users with `Location.managerId`) get shift **write** via resource checks in shift actions — not a separate Role.
@@ -121,6 +121,20 @@ Location managers (users with `Location.managerId`) get shift **write** via reso
 2. Update `ROLE_PERMISSIONS` for each role
 3. Add `Actions.<feature>.read` / `.write`
 4. Call `authorize` / `can` with those actions
+
+## Organization switching and membership administration
+
+The active organization is stored in the signed session cookie, but every
+request still validates the current membership and role from the database.
+`switchOrganization` accepts only an active membership with an active role and
+reissues that cookie for the selected organization.
+
+Organization administrators use `memberships:read` / `memberships:write` to
+manage existing accounts in their current organization. They can add a
+membership, assign a role, activate or deactivate it, and remove it without
+deleting the underlying user account. Every mutation is tenant-scoped and
+audited. The server prevents the last active administrator from being demoted,
+deactivated, or removed; the rule is checked inside a serializable transaction.
 
 ---
 

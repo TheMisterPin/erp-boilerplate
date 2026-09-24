@@ -40,3 +40,15 @@ tables after organization-scoped data or roles have been written. A destructive
 rollback is safe only before tenant-owned data has been written. After that,
 restore the pre-migration snapshot; rolling back the columns would discard the
 organization boundary and membership-specific assignments.
+
+## Membership administration
+
+Membership administration is available at `/organization/memberships` to
+organization administrators. It is scoped to the selected organization and
+supports adding an existing account, changing the organization role, activating
+or deactivating access, and removing the membership without deleting the user.
+
+The final active administrator is protected server-side. A role change,
+deactivation, or removal that would leave the organization without an active
+administrator fails atomically. Changes, including organization switches, are
+recorded in the organization audit trail.

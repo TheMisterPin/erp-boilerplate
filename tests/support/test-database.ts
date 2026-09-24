@@ -90,6 +90,8 @@ export async function createTestUser(
               "logging:read",
               "timeOff:read",
               "timeOff:write",
+              "memberships:read",
+              "memberships:write",
             ]
           : [
               "users:read",

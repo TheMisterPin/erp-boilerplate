@@ -38,6 +38,7 @@ export const navigationItems: NavigationItem[] = [
     items: [
       { title: "Departments", url: "/organization/departments" },
       { title: "Locations", url: "/organization/locations" },
+      { title: "Memberships", url: "/organization/memberships" },
     ],
   },
 ]

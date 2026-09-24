@@ -1,0 +1,12 @@
+ALTER TYPE "Activity" ADD VALUE IF NOT EXISTS 'ORGANIZATION_SWITCH';
+ALTER TYPE "Activity" ADD VALUE IF NOT EXISTS 'MEMBERSHIP_ADD';
+ALTER TYPE "Activity" ADD VALUE IF NOT EXISTS 'MEMBERSHIP_ACTIVATE';
+ALTER TYPE "Activity" ADD VALUE IF NOT EXISTS 'MEMBERSHIP_DEACTIVATE';
+ALTER TYPE "Activity" ADD VALUE IF NOT EXISTS 'MEMBERSHIP_REMOVE';
+ALTER TYPE "Activity" ADD VALUE IF NOT EXISTS 'MEMBERSHIP_ROLE_CHANGE';
+
+UPDATE "OrganizationRole"
+SET "permissions" = "permissions" || ARRAY['memberships:read', 'memberships:write']::TEXT[]
+WHERE "key" = 'ADMIN'
+  AND "deletedAt" IS NULL
+  AND NOT ("permissions" @> ARRAY['memberships:read', 'memberships:write']::TEXT[]);
