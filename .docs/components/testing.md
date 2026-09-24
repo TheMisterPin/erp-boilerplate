@@ -36,3 +36,17 @@ action directly and assert its stable error DTO.
 
 Integration tests must use the supplied test client and factories. Do not import
 `src/lib/db.ts`, which intentionally uses the application database connection.
+
+## Tenant-isolation matrix
+
+`tests/integration/tenant-isolation.integration.test.ts` is the regression
+matrix for organization boundaries. It creates two active organizations with the
+same human-readable name, then invokes server actions with one active session.
+The matrix verifies that lists cannot enumerate the other organization, foreign
+record mutations return their stable not-found errors, and relation identifiers
+from the other organization are rejected.
+
+When adding a tenant-owned vertical, extend this matrix in the same pull
+request. Cover the vertical's list/enumeration action, one foreign record
+mutation, and every form or action identifier that references another tenant's
+record. Include audit or operational data when the vertical creates it.
