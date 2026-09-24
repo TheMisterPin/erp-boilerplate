@@ -23,6 +23,7 @@ test("round-trips a session with issuer and audience validation", async () => {
       email: "user@example.com",
       role: "USER",
       fullName: "Example User",
+      sessionVersion: 1,
     },
     {
       idleExpires: new Date(Date.now() + 60_000),
@@ -43,6 +44,7 @@ test("rejects a token issued for a different audience", async () => {
       email: "user@example.com",
       role: "USER",
       fullName: "Example User",
+      sessionVersion: 1,
     },
     {
       idleExpires: new Date(Date.now() + 60_000),
@@ -62,6 +64,7 @@ test("rejects a token issued by a different issuer", async () => {
       email: "user@example.com",
       role: "USER",
       fullName: "Example User",
+      sessionVersion: 1,
     },
     {
       idleExpires: new Date(Date.now() + 60_000),
@@ -81,6 +84,7 @@ test("rejects a token whose signature was modified", async () => {
       email: "user@example.com",
       role: "USER",
       fullName: "Example User",
+      sessionVersion: 1,
     },
     {
       idleExpires: new Date(Date.now() + 60_000),
@@ -107,6 +111,7 @@ test("rejects a token beyond its absolute lifetime", async () => {
       email: "user@example.com",
       role: "USER",
       fullName: "Example User",
+      sessionVersion: 1,
     },
     {
       idleExpires: new Date(Date.now() + 60_000),

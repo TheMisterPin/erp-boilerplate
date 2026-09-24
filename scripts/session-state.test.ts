@@ -9,6 +9,7 @@ const tokenSession: SessionPayload = {
   email: "old@example.com",
   role: "ADMIN",
   fullName: "Old Name",
+  sessionVersion: 1,
   expires: "2026-01-01T00:01:00.000Z",
   absoluteExpires: "2026-01-01T00:05:00.000Z",
 }
@@ -21,6 +22,7 @@ test("uses current database identity and role instead of JWT claims", () => {
     fullName: "Current Name",
     isActive: true,
     deletedAt: null,
+    sessionVersion: 1,
   })
 
   assert.equal(session?.role, "USER")
@@ -37,6 +39,7 @@ test("rejects a deactivated account", () => {
     fullName: "Example User",
     isActive: false,
     deletedAt: null,
+    sessionVersion: 1,
   })
 
   assert.equal(session, null)
@@ -50,6 +53,7 @@ test("rejects a soft-deleted account", () => {
     fullName: "Example User",
     isActive: true,
     deletedAt: new Date("2026-01-01T00:00:00.000Z"),
+    sessionVersion: 1,
   })
 
   assert.equal(session, null)
