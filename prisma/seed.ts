@@ -17,7 +17,15 @@ const prisma = new PrismaClient({
   adapter: new PrismaPg({ connectionString }),
 })
 
-const DEFAULT_PASSWORD = "password123"
+function getSeedPassword(): string {
+  const password = process.env.SEED_PASSWORD
+  if (!password || password.length < 12) {
+    throw new Error(
+      "SEED_PASSWORD must be set to at least 12 characters before seeding demo users.",
+    )
+  }
+  return password
+}
 
 async function ensureOrganization(input: { name: string; slug: string }) {
   return prisma.organization.upsert({
@@ -32,6 +40,8 @@ async function ensureMemberships(input: {
   members: Array<{
     userId: string
     role: "ADMIN" | "MANAGER" | "OPERATOR" | "VIEWER"
+    departmentId?: string | null
+    locationId?: string | null
   }>
 }) {
   for (const member of input.members) {
@@ -42,11 +52,13 @@ async function ensureMemberships(input: {
           userId: member.userId,
         },
       },
-      update: { status: "ACTIVE" },
+      update: { status: "ACTIVE", departmentId: member.departmentId, locationId: member.locationId },
       create: {
         organizationId: input.organizationId,
         userId: member.userId,
         status: "ACTIVE",
+        departmentId: member.departmentId,
+        locationId: member.locationId,
       },
     })
     const role = await prisma.organizationRole.findUniqueOrThrow({
@@ -184,8 +196,6 @@ async function upsertUser(input: {
       password,
       isActive: true,
       deletedAt: null,
-      departmentId: input.departmentId ?? null,
-      locationId: input.locationId ?? null,
     },
     create: {
       email: input.email,
@@ -195,18 +205,17 @@ async function upsertUser(input: {
       role: input.role,
       password,
       isActive: true,
-      departmentId: input.departmentId ?? null,
-      locationId: input.locationId ?? null,
     },
   })
 }
 
 async function ensureDepartment(input: {
+  organizationId: string
   name: string
   description: string
 }) {
   const existing = await prisma.department.findFirst({
-    where: { name: input.name, deletedAt: null },
+    where: { organizationId: input.organizationId, name: input.name, deletedAt: null },
   })
   if (existing) {
     return prisma.department.update({
@@ -220,6 +229,7 @@ async function ensureDepartment(input: {
   }
   return prisma.department.create({
     data: {
+      organizationId: input.organizationId,
       name: input.name,
       description: input.description,
       isActive: true,
@@ -228,13 +238,14 @@ async function ensureDepartment(input: {
 }
 
 async function ensureLocation(input: {
+  organizationId: string
   name: string
   description: string
   managerId?: string | null
   minimumStaff?: number
 }) {
   const existing = await prisma.location.findFirst({
-    where: { name: input.name, deletedAt: null },
+    where: { organizationId: input.organizationId, name: input.name, deletedAt: null },
   })
   if (existing) {
     return prisma.location.update({
@@ -250,6 +261,7 @@ async function ensureLocation(input: {
   }
   return prisma.location.create({
     data: {
+      organizationId: input.organizationId,
       name: input.name,
       description: input.description,
       managerId: input.managerId ?? null,
@@ -295,6 +307,7 @@ function buildUserSpecs(): SeedUserSpec[] {
 }
 
 async function seedUsers(input: {
+  password: string
   departmentIds: string[]
   locationIds: string[]
 }) {
@@ -318,7 +331,7 @@ async function seedUsers(input: {
       firstName,
       lastName,
       role: spec.role,
-      password: DEFAULT_PASSWORD,
+      password: input.password,
       departmentId,
       locationId,
     })
@@ -342,6 +355,7 @@ async function seedShiftsFromLocations() {
 
   const users = await prisma.user.findMany({
     where: { deletedAt: null, isActive: true, role: "USER" },
+    include: { memberships: { where: { status: "ACTIVE" }, select: { organizationId: true, locationId: true } } },
     orderBy: { createdAt: "asc" },
   })
 
@@ -355,31 +369,14 @@ async function seedShiftsFromLocations() {
   let templatesCreated = 0
   let instancesCreated = 0
 
-  for (const [locationIndex, location] of locations.entries()) {
-    let assignees = users.filter((user) => user.locationId === location.id)
-
-    if (assignees.length === 0) {
-      const fallback = users[locationIndex % users.length]
-      await prisma.user.update({
-        where: { id: fallback.id },
-        data: { locationId: location.id },
-      })
-      assignees = [{ ...fallback, locationId: location.id }]
-    }
-
-    // Aim for 2–3 people per location for realistic coverage
-    const targetCount = Math.min(3, users.length)
-    while (assignees.length < targetCount) {
-      const candidate = users.find(
-        (user) => !assignees.some((a) => a.id === user.id),
-      )
-      if (!candidate) break
-      await prisma.user.update({
-        where: { id: candidate.id },
-        data: { locationId: location.id },
-      })
-      assignees.push({ ...candidate, locationId: location.id })
-    }
+  for (const location of locations) {
+    const assignees = users.filter((user) =>
+      user.memberships.some(
+        (membership) =>
+          membership.organizationId === location.organizationId &&
+          membership.locationId === location.id,
+      ),
+    )
 
     for (const [assigneeIndex, assignee] of assignees.entries()) {
       const preset = SHIFT_PRESETS[assigneeIndex % SHIFT_PRESETS.length]
@@ -387,6 +384,7 @@ async function seedShiftsFromLocations() {
       let template = await prisma.shiftTemplate.findFirst({
         where: {
           deletedAt: null,
+          organizationId: location.organizationId,
           locationId: location.id,
           userId: assignee.id,
           type: preset.type,
@@ -398,6 +396,7 @@ async function seedShiftsFromLocations() {
       if (!template) {
         template = await prisma.shiftTemplate.create({
           data: {
+            organizationId: location.organizationId,
             locationId: location.id,
             userId: assignee.id,
             type: preset.type,
@@ -417,6 +416,7 @@ async function seedShiftsFromLocations() {
             notes: `Seeded ${preset.type.toLowerCase()} at ${location.name}`,
             isActive: true,
             deletedAt: null,
+            organizationId: location.organizationId,
           },
         })
       }
@@ -454,6 +454,7 @@ async function seedShiftsFromLocations() {
 
         await prisma.shiftInstance.create({
           data: {
+            organizationId: location.organizationId,
             templateId: template.id,
             locationId: location.id,
             userId: assignee.id,
@@ -537,6 +538,7 @@ async function seedAttendanceLog() {
     const checkInActivity = await prisma.userActivity.create({
       data: {
         userId: shift.userId,
+        organizationId: shift.organizationId,
         timestamp: checkInAt,
         activity: "SHIFT_CHECK_IN",
         activityData: {
@@ -552,6 +554,7 @@ async function seedAttendanceLog() {
     const checkOutActivity = await prisma.userActivity.create({
       data: {
         userId: shift.userId,
+        organizationId: shift.organizationId,
         timestamp: checkOutAt,
         activity: "SHIFT_CHECK_OUT",
         activityData: {
@@ -568,6 +571,7 @@ async function seedAttendanceLog() {
     await prisma.shiftAttendance.create({
       data: {
         userId: shift.userId,
+        organizationId: shift.organizationId,
         shiftInstanceId: shift.id,
         locationId: shift.locationId,
         checkInAt,
@@ -606,6 +610,9 @@ type ActivitySeedRow = {
  * and admin shift-management events over the same month window.
  */
 async function seedActivityLog() {
+  const organization = await prisma.organization.findUniqueOrThrow({
+    where: { slug: "default" },
+  })
   const already = await prisma.userActivity.count({
     where: {
       activityData: {
@@ -773,6 +780,7 @@ async function seedActivityLog() {
     const chunk = rows.slice(i, i + chunkSize)
     const result = await prisma.userActivity.createMany({
       data: chunk.map((row) => ({
+        organizationId: organization.id,
         userId: row.userId,
         timestamp: row.timestamp,
         activity: row.activity,
@@ -786,6 +794,7 @@ async function seedActivityLog() {
 }
 
 async function main() {
+  const seedPassword = getSeedPassword()
   const primaryOrganization = await ensureOrganization({
     name: "Acme Operations",
     slug: "default",
@@ -798,36 +807,43 @@ async function main() {
   await ensureOrganizationRoles(secondaryOrganization.id)
 
   const engineering = await ensureDepartment({
+    organizationId: primaryOrganization.id,
     name: "Engineering",
     description: "Product engineering and platform",
   })
   const operations = await ensureDepartment({
+    organizationId: primaryOrganization.id,
     name: "Operations",
     description: "Business operations and support",
   })
   const people = await ensureDepartment({
+    organizationId: primaryOrganization.id,
     name: "People",
     description: "HR and workplace experience",
   })
 
   // Bootstrap locations (managers assigned after users exist)
   const hq = await ensureLocation({
+    organizationId: primaryOrganization.id,
     name: "Headquarters",
     description: "Main office",
     minimumStaff: 3,
   })
   const warehouse = await ensureLocation({
+    organizationId: primaryOrganization.id,
     name: "Warehouse",
     description: "Fulfillment and inventory",
     minimumStaff: 2,
   })
   const remote = await ensureLocation({
+    organizationId: primaryOrganization.id,
     name: "Remote",
     description: "Distributed / remote workforce",
     minimumStaff: 1,
   })
 
   const users = await seedUsers({
+    password: seedPassword,
     departmentIds: [engineering.id, operations.id, people.id],
     locationIds: [hq.id, warehouse.id, remote.id],
   })
@@ -837,8 +853,15 @@ async function main() {
 
   await ensureMemberships({
     organizationId: primaryOrganization.id,
-    members: users.map((user) => ({
+    members: users.map((user, index) => ({
       userId: user.id,
+      departmentId: [engineering.id, operations.id, people.id][index % 3],
+      locationId:
+        user.email === "admin@example.com" || user.email === "user@example.com"
+          ? hq.id
+          : user.email === "manager@example.com"
+            ? warehouse.id
+            : [hq.id, warehouse.id, remote.id][index % 3],
       role:
         user.email === "admin@example.com"
           ? "ADMIN"
@@ -870,7 +893,7 @@ async function main() {
   const activities = await seedActivityLog()
 
   console.log("Seed complete")
-  console.log(`  users: ${users.length} (password: ${DEFAULT_PASSWORD})`)
+  console.log(`  users: ${users.length}`)
   console.log("  organizations: 2 (admin and manager belong to both)")
   console.log(
     `  demo logins: admin@example.com, user@example.com, manager@example.com`,

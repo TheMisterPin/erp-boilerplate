@@ -33,10 +33,17 @@ describe("location-manager shift access", () => {
   it("allows a manager only at their managed location", async () => {
     const manager = await createTestUser(prisma)
     const ownLocation = await prisma.location.create({
-      data: { name: "Managed location", managerId: manager.id },
+      data: {
+        name: "Managed location",
+        managerId: manager.id,
+        organizationId: manager.activeOrganizationId,
+      },
     })
     const otherLocation = await prisma.location.create({
-      data: { name: "Unmanaged location" },
+      data: {
+        name: "Unmanaged location",
+        organizationId: manager.activeOrganizationId,
+      },
     })
     const session: AppSession = {
       ...manager,
@@ -59,6 +66,36 @@ describe("location-manager shift access", () => {
     ).resolves.toBeUndefined()
     await expect(
       assertCanWriteShiftsAtLocation(session, otherLocation.id),
+    ).rejects.toMatchObject({ dto: { code: "FORBIDDEN" } })
+  })
+
+  it("rejects a location owned by another organization, including for admins", async () => {
+    const admin = await createTestUser(prisma, { role: "ADMIN" })
+    const otherOrganizationUser = await createTestUser(prisma)
+    const foreignLocation = await prisma.location.create({
+      data: {
+        name: "Foreign location",
+        organizationId: otherOrganizationUser.activeOrganizationId,
+      },
+    })
+    const session: AppSession = {
+      ...admin,
+      userId: admin.id,
+      systemRole: admin.role,
+      role: admin.organizationRole,
+      permissions: ["shifts:read", "shifts:write"],
+      activeOrganizationId: admin.activeOrganizationId,
+      organization: {
+        id: admin.activeOrganizationId,
+        name: "Test Organization",
+        slug: "test-organization",
+      },
+      expires: "2030-01-01T00:00:00.000Z",
+      absoluteExpires: "2030-02-01T00:00:00.000Z",
+    }
+
+    await expect(
+      assertCanWriteShiftsAtLocation(session, foreignLocation.id),
     ).rejects.toMatchObject({ dto: { code: "FORBIDDEN" } })
   })
 })

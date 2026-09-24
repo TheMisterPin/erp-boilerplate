@@ -59,9 +59,9 @@ function toPublicInstance(row: InstanceRow): ShiftInstance {
   }
 }
 
-async function assertUserExists(userId: string): Promise<void> {
+async function assertUserExists(userId: string, organizationId: string): Promise<void> {
   const user = await prisma.user.findFirst({
-    where: { id: userId, deletedAt: null },
+    where: { id: userId, deletedAt: null, memberships: { some: { organizationId, status: "ACTIVE" } } },
     select: { id: true },
   })
   if (!user) {
@@ -73,9 +73,9 @@ async function assertUserExists(userId: string): Promise<void> {
   }
 }
 
-async function assertLocationExists(locationId: string): Promise<void> {
+async function assertLocationExists(locationId: string, organizationId: string): Promise<void> {
   const location = await prisma.location.findFirst({
-    where: { id: locationId, deletedAt: null },
+    where: { id: locationId, organizationId, deletedAt: null },
     select: { id: true },
   })
   if (!location) {
@@ -83,6 +83,24 @@ async function assertLocationExists(locationId: string): Promise<void> {
       kind: "not_found",
       code: "LOCATION_NOT_FOUND",
       message: "That location could not be found.",
+    })
+  }
+}
+
+async function assertTemplateExists(
+  templateId: string | null | undefined,
+  organizationId: string,
+): Promise<void> {
+  if (!templateId) return
+  const template = await prisma.shiftTemplate.findFirst({
+    where: { id: templateId, organizationId, deletedAt: null },
+    select: { id: true },
+  })
+  if (!template) {
+    throw new AppError({
+      kind: "not_found",
+      code: "SHIFT_TEMPLATE_NOT_FOUND",
+      message: "That shift template could not be found.",
     })
   }
 }
@@ -95,17 +113,18 @@ export async function listShiftInstances(): Promise<
     const managedIds = await listManagedLocationIds(session)
 
     let where: {
+      organizationId: string
       deletedAt: null
       userId?: string
       locationId?: { in: string[] }
-    } = { deletedAt: null }
+    } = { organizationId: session.activeOrganizationId, deletedAt: null }
 
     if (session.role === "ADMIN") {
-      where = { deletedAt: null }
+      where = { organizationId: session.activeOrganizationId, deletedAt: null }
     } else if (managedIds.length > 0) {
-      where = { deletedAt: null, locationId: { in: managedIds } }
+      where = { organizationId: session.activeOrganizationId, deletedAt: null, locationId: { in: managedIds } }
     } else {
-      where = { deletedAt: null, userId: session.userId }
+      where = { organizationId: session.activeOrganizationId, deletedAt: null, userId: session.userId }
     }
 
     const rows = await prisma.shiftInstance.findMany({
@@ -124,13 +143,15 @@ export async function createShiftInstance(
     const session = await requireSession()
     const parsed = createShiftInstanceSchema.parse(input)
     await assertCanWriteShiftsAtLocation(session, parsed.locationId)
-    await assertLocationExists(parsed.locationId)
-    await assertUserExists(parsed.userId)
+    await assertLocationExists(parsed.locationId, session.activeOrganizationId)
+    await assertUserExists(parsed.userId, session.activeOrganizationId)
+    await assertTemplateExists(parsed.templateId, session.activeOrganizationId)
 
     const date = parseDateOnly(parsed.date)
     const duplicate = await prisma.shiftInstance.findFirst({
       where: {
         deletedAt: null,
+        organizationId: session.activeOrganizationId,
         userId: parsed.userId,
         date,
         startTime: parsed.startTime,
@@ -148,6 +169,7 @@ export async function createShiftInstance(
 
     const row = await prisma.shiftInstance.create({
       data: {
+        organizationId: session.activeOrganizationId,
         templateId: parsed.templateId || null,
         locationId: parsed.locationId,
         userId: parsed.userId,
@@ -163,6 +185,7 @@ export async function createShiftInstance(
 
     await logActivity({
       userId: session.userId,
+      organizationId: session.activeOrganizationId,
       activity: "SHIFT_INSTANCE_CREATE",
       activityData: { instanceId: row.id },
     })
@@ -179,7 +202,7 @@ export async function updateShiftInstance(
     const parsed = updateShiftInstanceSchema.parse(input)
 
     const existing = await prisma.shiftInstance.findFirst({
-      where: { id: parsed.id, deletedAt: null },
+      where: { id: parsed.id, organizationId: session.activeOrganizationId, deletedAt: null },
     })
     if (!existing) {
       throw new AppError({
@@ -191,13 +214,15 @@ export async function updateShiftInstance(
 
     await assertCanWriteShiftsAtLocation(session, existing.locationId)
     await assertCanWriteShiftsAtLocation(session, parsed.locationId)
-    await assertLocationExists(parsed.locationId)
-    await assertUserExists(parsed.userId)
+    await assertLocationExists(parsed.locationId, session.activeOrganizationId)
+    await assertUserExists(parsed.userId, session.activeOrganizationId)
+    await assertTemplateExists(parsed.templateId, session.activeOrganizationId)
 
     const date = parseDateOnly(parsed.date)
     const duplicate = await prisma.shiftInstance.findFirst({
       where: {
         deletedAt: null,
+        organizationId: session.activeOrganizationId,
         id: { not: parsed.id },
         userId: parsed.userId,
         date,
@@ -232,6 +257,7 @@ export async function updateShiftInstance(
 
     await logActivity({
       userId: session.userId,
+      organizationId: session.activeOrganizationId,
       activity: "SHIFT_INSTANCE_UPDATE",
       activityData: { instanceId: row.id },
     })
@@ -246,7 +272,7 @@ export async function deleteShiftInstance(
   return withErrorBoundary(async () => {
     const session = await requireSession()
     const existing = await prisma.shiftInstance.findFirst({
-      where: { id, deletedAt: null },
+      where: { id, organizationId: session.activeOrganizationId, deletedAt: null },
     })
     if (!existing) {
       throw new AppError({
@@ -265,6 +291,7 @@ export async function deleteShiftInstance(
 
     await logActivity({
       userId: session.userId,
+      organizationId: session.activeOrganizationId,
       activity: "SHIFT_INSTANCE_DELETE",
       activityData: { instanceId: id },
     })

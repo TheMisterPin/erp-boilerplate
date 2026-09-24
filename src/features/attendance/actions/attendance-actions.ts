@@ -85,7 +85,6 @@ export async function getClockStatus(): Promise<ActionResult<ClockStatus>> {
         id: true,
         fullName: true,
         email: true,
-        locationId: true,
       },
     })
     if (!user) {
@@ -97,7 +96,7 @@ export async function getClockStatus(): Promise<ActionResult<ClockStatus>> {
     }
 
     const open = await prisma.shiftAttendance.findFirst({
-      where: { userId: user.id, checkOutAt: null },
+      where: { organizationId: session.activeOrganizationId, userId: user.id, checkOutAt: null },
       include: attendanceInclude,
       orderBy: { checkInAt: "desc" },
     })
@@ -106,6 +105,7 @@ export async function getClockStatus(): Promise<ActionResult<ClockStatus>> {
     const todayShift = await prisma.shiftInstance.findFirst({
       where: {
         userId: user.id,
+        organizationId: session.activeOrganizationId,
         deletedAt: null,
         date: today,
         status: { not: "CANCELLED" },
@@ -144,6 +144,7 @@ export async function listAttendances(): Promise<
 
     const rows = await prisma.shiftAttendance.findMany({
       where: {
+        organizationId: session.activeOrganizationId,
         ...scope,
       },
       include: attendanceInclude,
@@ -160,7 +161,7 @@ export async function checkIn(): Promise<ActionResult<ShiftAttendance>> {
     const session = await requireSession()
 
     const open = await prisma.shiftAttendance.findFirst({
-      where: { userId: session.userId, checkOutAt: null },
+      where: { organizationId: session.activeOrganizationId, userId: session.userId, checkOutAt: null },
       select: { id: true },
     })
     if (open) {
@@ -187,6 +188,7 @@ export async function checkIn(): Promise<ActionResult<ShiftAttendance>> {
     const todayShift = await prisma.shiftInstance.findFirst({
       where: {
         userId: user.id,
+        organizationId: session.activeOrganizationId,
         deletedAt: null,
         date: today,
         status: { not: "CANCELLED" },
@@ -206,6 +208,7 @@ export async function checkIn(): Promise<ActionResult<ShiftAttendance>> {
     const checkInAt = new Date()
     const attendance = await prisma.shiftAttendance.create({
       data: {
+        organizationId: session.activeOrganizationId,
         userId: user.id,
         shiftInstanceId: todayShift.id,
         locationId: todayShift.locationId,
@@ -216,6 +219,7 @@ export async function checkIn(): Promise<ActionResult<ShiftAttendance>> {
 
     const activityId = await logActivity({
       userId: user.id,
+      organizationId: session.activeOrganizationId,
       activity: "SHIFT_CHECK_IN",
       activityData: {
         attendanceId: attendance.id,
@@ -241,7 +245,7 @@ export async function checkOut(): Promise<ActionResult<ShiftAttendance>> {
     const session = await requireSession()
 
     const open = await prisma.shiftAttendance.findFirst({
-      where: { userId: session.userId, checkOutAt: null },
+      where: { organizationId: session.activeOrganizationId, userId: session.userId, checkOutAt: null },
       include: attendanceInclude,
       orderBy: { checkInAt: "desc" },
     })
@@ -258,6 +262,7 @@ export async function checkOut(): Promise<ActionResult<ShiftAttendance>> {
 
     const activityId = await logActivity({
       userId: session.userId,
+      organizationId: session.activeOrganizationId,
       activity: "SHIFT_CHECK_OUT",
       activityData: {
         attendanceId: open.id,

@@ -21,7 +21,7 @@ type LocationRow = {
   createdAt: Date
   updatedAt: Date
   manager?: { fullName: string } | null
-  _count?: { users: number }
+  _count?: { memberships: number }
 }
 
 function toPublicLocation(row: LocationRow): Location {
@@ -32,17 +32,17 @@ function toPublicLocation(row: LocationRow): Location {
     managerId: row.managerId,
     managerName: row.manager?.fullName ?? null,
     minimumStaff: row.minimumStaff,
-    staffCount: row._count?.users ?? 0,
+    staffCount: row._count?.memberships ?? 0,
     isActive: row.isActive,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   }
 }
 
-async function assertManagerExists(managerId: string | null): Promise<void> {
+async function assertManagerExists(managerId: string | null, organizationId: string): Promise<void> {
   if (!managerId) return
   const manager = await prisma.user.findFirst({
-    where: { id: managerId, deletedAt: null },
+    where: { id: managerId, deletedAt: null, memberships: { some: { organizationId, status: "ACTIVE" } } },
     select: { id: true },
   })
   if (!manager) {
@@ -54,14 +54,18 @@ async function assertManagerExists(managerId: string | null): Promise<void> {
   }
 }
 
-const locationInclude = {
-  manager: { select: { fullName: true } },
-  _count: {
-    select: {
-      users: { where: { deletedAt: null } },
+function locationInclude(organizationId: string) {
+  return {
+    manager: { select: { fullName: true } },
+    _count: {
+      select: {
+        memberships: {
+          where: { organizationId, status: "ACTIVE" as const },
+        },
+      },
     },
-  },
-} as const
+  }
+}
 
 export type ManagedLocationOption = {
   id: string
@@ -77,7 +81,7 @@ export async function listManagedLocations(): Promise<
 
     if (session.role === "ADMIN") {
       const rows = await prisma.location.findMany({
-        where: { deletedAt: null },
+        where: { organizationId: session.activeOrganizationId, deletedAt: null },
         select: { id: true, name: true },
         orderBy: { name: "asc" },
       })
@@ -85,7 +89,7 @@ export async function listManagedLocations(): Promise<
     }
 
     const rows = await prisma.location.findMany({
-      where: { deletedAt: null, managerId: session.userId },
+      where: { organizationId: session.activeOrganizationId, deletedAt: null, managerId: session.userId },
       select: { id: true, name: true },
       orderBy: { name: "asc" },
     })
@@ -95,10 +99,10 @@ export async function listManagedLocations(): Promise<
 
 export async function listLocations(): Promise<ActionResult<Location[]>> {
   return withErrorBoundary(async () => {
-    await authorize(Actions.locations.read)
+    const session = await authorize(Actions.locations.read)
     const rows = await prisma.location.findMany({
-      where: { deletedAt: null },
-      include: locationInclude,
+      where: { organizationId: session.activeOrganizationId, deletedAt: null },
+      include: locationInclude(session.activeOrganizationId),
       orderBy: { name: "asc" },
     })
     return rows.map(toPublicLocation)
@@ -109,20 +113,21 @@ export async function createLocation(
   input: unknown,
 ): Promise<ActionResult<Location>> {
   return withErrorBoundary(async () => {
-    await authorize(Actions.locations.write)
+    const session = await authorize(Actions.locations.write)
     const parsed = createLocationSchema.parse(input)
     const managerId = parsed.managerId || null
-    await assertManagerExists(managerId)
+    await assertManagerExists(managerId, session.activeOrganizationId)
 
     const row = await prisma.location.create({
       data: {
+        organizationId: session.activeOrganizationId,
         name: parsed.name,
         description: parsed.description || null,
         managerId,
         minimumStaff: parsed.minimumStaff ?? 0,
         isActive: parsed.isActive ?? true,
       },
-      include: locationInclude,
+      include: locationInclude(session.activeOrganizationId),
     })
 
     return toPublicLocation(row)
@@ -133,11 +138,11 @@ export async function updateLocation(
   input: unknown,
 ): Promise<ActionResult<Location>> {
   return withErrorBoundary(async () => {
-    await authorize(Actions.locations.write)
+    const session = await authorize(Actions.locations.write)
     const parsed = updateLocationSchema.parse(input)
 
     const existing = await prisma.location.findFirst({
-      where: { id: parsed.id, deletedAt: null },
+      where: { id: parsed.id, organizationId: session.activeOrganizationId, deletedAt: null },
     })
     if (!existing) {
       throw new AppError({
@@ -148,7 +153,7 @@ export async function updateLocation(
     }
 
     const managerId = parsed.managerId || null
-    await assertManagerExists(managerId)
+    await assertManagerExists(managerId, session.activeOrganizationId)
 
     const row = await prisma.location.update({
       where: { id: parsed.id },
@@ -159,7 +164,7 @@ export async function updateLocation(
         minimumStaff: parsed.minimumStaff ?? existing.minimumStaff,
         isActive: parsed.isActive ?? existing.isActive,
       },
-      include: locationInclude,
+      include: locationInclude(session.activeOrganizationId),
     })
 
     return toPublicLocation(row)
@@ -168,9 +173,9 @@ export async function updateLocation(
 
 export async function deleteLocation(id: string): Promise<ActionResult<true>> {
   return withErrorBoundary(async () => {
-    await authorize(Actions.locations.write)
+    const session = await authorize(Actions.locations.write)
     const existing = await prisma.location.findFirst({
-      where: { id, deletedAt: null },
+      where: { id, organizationId: session.activeOrganizationId, deletedAt: null },
     })
     if (!existing) {
       throw new AppError({

@@ -21,7 +21,7 @@ Prerequisite: [Docker Desktop](https://www.docker.com/products/docker-desktop/).
 ```bash
 git clone https://github.com/TheMisterPin/erp-boilerplate.git
 cd erp-boilerplate
-docker compose up --build
+SEED_PASSWORD='choose-a-local-demo-password' docker compose up --build
 ```
 
 Open [http://localhost:3000](http://localhost:3000). The first run applies
@@ -45,8 +45,9 @@ pnpm db:seed
 pnpm dev
 ```
 
-Set `DATABASE_URL` and a strong `JWT_SECRET` in `.env` before starting. If you
-use the Compose database from local Node, its connection string is:
+Set `DATABASE_URL`, a strong `JWT_SECRET`, and a `SEED_PASSWORD` of at least 12
+characters in `.env` before starting. If you use the Compose database from
+local Node, its connection string is:
 
 ```bash
 DATABASE_URL="postgresql://erp:erp@localhost:5432/components_playground"
@@ -59,9 +60,9 @@ not safe credentials and must never be used in a public deployment.
 
 | Account | Password | What to try |
 |---|---|---|
-| `admin@example.com` | `password123` | Full CRUD, organization, activity trail |
-| `user@example.com` | `password123` | Read-only access and self-service routes |
-| `manager@example.com` | `password123` | Location-scoped shift-management rules |
+| `admin@example.com` | Your `SEED_PASSWORD` | Full CRUD, organization, activity trail |
+| `user@example.com` | Your `SEED_PASSWORD` | Read-only access and self-service routes |
+| `manager@example.com` | Your `SEED_PASSWORD` | Location-scoped shift-management rules |
 
 ## What is included
 

@@ -18,6 +18,8 @@ describe("organization request context", () => {
     }
     const findFirst = vi.fn().mockResolvedValue({
       id: "membership-1",
+      departmentId: null,
+      locationId: null,
       organization,
       roleAssignment: {
         deletedAt: null,
@@ -40,6 +42,8 @@ describe("organization request context", () => {
     ).resolves.toEqual({
       ...organization,
       membershipId: "membership-1",
+      departmentId: null,
+      locationId: null,
       role: { key: "OPERATOR", permissions: ["users:read"] },
     })
     expect(findFirst).toHaveBeenCalledWith(
@@ -64,6 +68,8 @@ describe("organization request context", () => {
   it("returns null for a deleted role assignment", async () => {
     const findFirst = vi.fn().mockResolvedValue({
       id: "membership-1",
+      departmentId: null,
+      locationId: null,
       organization: {
         id: "organization-1",
         name: "Example",

@@ -62,9 +62,9 @@ function toPublicTemplate(row: TemplateRow): ShiftTemplate {
   }
 }
 
-async function assertUserExists(userId: string): Promise<void> {
+async function assertUserExists(userId: string, organizationId: string): Promise<void> {
   const user = await prisma.user.findFirst({
-    where: { id: userId, deletedAt: null },
+    where: { id: userId, deletedAt: null, memberships: { some: { organizationId, status: "ACTIVE" } } },
     select: { id: true },
   })
   if (!user) {
@@ -76,9 +76,9 @@ async function assertUserExists(userId: string): Promise<void> {
   }
 }
 
-async function assertLocationExists(locationId: string): Promise<void> {
+async function assertLocationExists(locationId: string, organizationId: string): Promise<void> {
   const location = await prisma.location.findFirst({
-    where: { id: locationId, deletedAt: null },
+    where: { id: locationId, organizationId, deletedAt: null },
     select: { id: true },
   })
   if (!location) {
@@ -99,7 +99,7 @@ export async function listManagedLocations(): Promise<
 
     if (session.role === "ADMIN") {
       const rows = await prisma.location.findMany({
-        where: { deletedAt: null },
+        where: { organizationId: session.activeOrganizationId, deletedAt: null },
         select: { id: true, name: true },
         orderBy: { name: "asc" },
       })
@@ -107,7 +107,7 @@ export async function listManagedLocations(): Promise<
     }
 
     const rows = await prisma.location.findMany({
-      where: { deletedAt: null, managerId: session.userId },
+      where: { organizationId: session.activeOrganizationId, deletedAt: null, managerId: session.userId },
       select: { id: true, name: true },
       orderBy: { name: "asc" },
     })
@@ -129,8 +129,8 @@ export async function listShiftTemplates(): Promise<
     const rows = await prisma.shiftTemplate.findMany({
       where:
         session.role === "ADMIN"
-          ? { deletedAt: null }
-          : { deletedAt: null, locationId: { in: managedIds } },
+          ? { organizationId: session.activeOrganizationId, deletedAt: null }
+          : { organizationId: session.activeOrganizationId, deletedAt: null, locationId: { in: managedIds } },
       include: templateInclude,
       orderBy: { createdAt: "desc" },
     })
@@ -145,12 +145,13 @@ export async function createShiftTemplate(
     const session = await requireSession()
     const parsed = createShiftTemplateSchema.parse(input)
     await assertCanWriteShiftsAtLocation(session, parsed.locationId)
-    await assertLocationExists(parsed.locationId)
-    await assertUserExists(parsed.userId)
+    await assertLocationExists(parsed.locationId, session.activeOrganizationId)
+    await assertUserExists(parsed.userId, session.activeOrganizationId)
 
     const weekdays = weekdaysFromForm(parsed.weekdays)
     const row = await prisma.shiftTemplate.create({
       data: {
+        organizationId: session.activeOrganizationId,
         locationId: parsed.locationId,
         userId: parsed.userId,
         type: parsed.type,
@@ -165,6 +166,7 @@ export async function createShiftTemplate(
 
     await logActivity({
       userId: session.userId,
+      organizationId: session.activeOrganizationId,
       activity: "SHIFT_TEMPLATE_CREATE",
       activityData: { templateId: row.id },
     })
@@ -181,7 +183,7 @@ export async function updateShiftTemplate(
     const parsed = updateShiftTemplateSchema.parse(input)
 
     const existing = await prisma.shiftTemplate.findFirst({
-      where: { id: parsed.id, deletedAt: null },
+      where: { id: parsed.id, organizationId: session.activeOrganizationId, deletedAt: null },
     })
     if (!existing) {
       throw new AppError({
@@ -193,8 +195,8 @@ export async function updateShiftTemplate(
 
     await assertCanWriteShiftsAtLocation(session, existing.locationId)
     await assertCanWriteShiftsAtLocation(session, parsed.locationId)
-    await assertLocationExists(parsed.locationId)
-    await assertUserExists(parsed.userId)
+    await assertLocationExists(parsed.locationId, session.activeOrganizationId)
+    await assertUserExists(parsed.userId, session.activeOrganizationId)
 
     const weekdays = weekdaysFromForm(parsed.weekdays)
     const row = await prisma.shiftTemplate.update({
@@ -214,6 +216,7 @@ export async function updateShiftTemplate(
 
     await logActivity({
       userId: session.userId,
+      organizationId: session.activeOrganizationId,
       activity: "SHIFT_TEMPLATE_UPDATE",
       activityData: { templateId: row.id },
     })
@@ -228,7 +231,7 @@ export async function deleteShiftTemplate(
   return withErrorBoundary(async () => {
     const session = await requireSession()
     const existing = await prisma.shiftTemplate.findFirst({
-      where: { id, deletedAt: null },
+      where: { id, organizationId: session.activeOrganizationId, deletedAt: null },
     })
     if (!existing) {
       throw new AppError({
@@ -247,6 +250,7 @@ export async function deleteShiftTemplate(
 
     await logActivity({
       userId: session.userId,
+      organizationId: session.activeOrganizationId,
       activity: "SHIFT_TEMPLATE_DELETE",
       activityData: { templateId: id },
     })
@@ -263,7 +267,7 @@ export async function generateShiftInstances(
     const parsed = generateShiftInstancesSchema.parse(input)
 
     const template = await prisma.shiftTemplate.findFirst({
-      where: { id: parsed.templateId, deletedAt: null },
+      where: { id: parsed.templateId, organizationId: session.activeOrganizationId, deletedAt: null },
     })
     if (!template) {
       throw new AppError({
@@ -292,6 +296,7 @@ export async function generateShiftInstances(
       const existing = await prisma.shiftInstance.findFirst({
         where: {
           deletedAt: null,
+          organizationId: session.activeOrganizationId,
           userId: template.userId,
           date,
           startTime: template.startTime,
@@ -303,6 +308,7 @@ export async function generateShiftInstances(
 
       await prisma.shiftInstance.create({
         data: {
+          organizationId: session.activeOrganizationId,
           templateId: template.id,
           locationId: template.locationId,
           userId: template.userId,
@@ -319,6 +325,7 @@ export async function generateShiftInstances(
 
     await logActivity({
       userId: session.userId,
+      organizationId: session.activeOrganizationId,
       activity: "SHIFT_TEMPLATE_GENERATE",
       activityData: {
         templateId: template.id,

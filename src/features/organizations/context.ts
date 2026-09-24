@@ -9,6 +9,8 @@ export type ActiveOrganization = {
   name: string
   slug: string
   membershipId: string
+  departmentId: string | null
+  locationId: string | null
   role: {
     key: OrganizationRoleKey
     permissions: Permission[]
@@ -32,6 +34,8 @@ export async function findActiveOrganization(
     orderBy: [{ joinedAt: "asc" }, { organizationId: "asc" }],
     select: {
       id: true,
+      departmentId: true,
+      locationId: true,
       organization: {
         select: { id: true, name: true, slug: true },
       },
@@ -69,6 +73,8 @@ export async function findActiveOrganization(
   return {
     ...membership.organization,
     membershipId: membership.id,
+    departmentId: membership.departmentId,
+    locationId: membership.locationId,
     role: {
       key: role.key,
       permissions: validStoredPermissions(role.permissions),

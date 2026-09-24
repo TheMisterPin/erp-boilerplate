@@ -28,8 +28,6 @@ export type AuthUser = {
   pictureUrl: string | null
   isActive: boolean
   isVerified: boolean
-  departmentId: string | null
-  locationId: string | null
   password: string
   sessionVersion: number
 }

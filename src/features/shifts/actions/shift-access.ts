@@ -7,13 +7,11 @@ export async function assertCanWriteShiftsAtLocation(
   session: AppSession,
   locationId: string,
 ): Promise<void> {
-  if (session.role === "ADMIN") return
-
   const location = await prisma.location.findFirst({
-    where: { id: locationId, deletedAt: null },
+    where: { id: locationId, organizationId: session.activeOrganizationId, deletedAt: null },
     select: { managerId: true },
   })
-  if (!location || location.managerId !== session.userId) {
+  if (!location || (session.role !== "ADMIN" && location.managerId !== session.userId)) {
     throw new AppError({
       kind: "permission",
       code: "FORBIDDEN",
@@ -27,14 +25,14 @@ export async function listManagedLocationIds(
 ): Promise<string[]> {
   if (session.role === "ADMIN") {
     const rows = await prisma.location.findMany({
-      where: { deletedAt: null },
+      where: { organizationId: session.activeOrganizationId, deletedAt: null },
       select: { id: true },
     })
     return rows.map((row) => row.id)
   }
 
   const rows = await prisma.location.findMany({
-    where: { deletedAt: null, managerId: session.userId },
+    where: { organizationId: session.activeOrganizationId, deletedAt: null, managerId: session.userId },
     select: { id: true },
   })
   return rows.map((row) => row.id)

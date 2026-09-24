@@ -22,15 +22,15 @@ type UserRow = {
   lastName: string
   fullName: string
   pictureUrl: string | null
-  departmentId: string | null
-  locationId: string | null
   isActive: boolean
   isVerified: boolean
   createdAt: Date
   updatedAt: Date
-  department?: { name: string } | null
-  location?: { name: string } | null
   memberships: Array<{
+    departmentId: string | null
+    department: { name: string } | null
+    locationId: string | null
+    location: { name: string } | null
     roleAssignment: {
       role: { key: User["role"] }
     } | null
@@ -39,12 +39,14 @@ type UserRow = {
 
 function userInclude(organizationId: string) {
   return {
-    department: { select: { name: true } },
-    location: { select: { name: true } },
     memberships: {
       where: { organizationId, status: "ACTIVE" as const },
       take: 1,
       select: {
+        departmentId: true,
+        department: { select: { name: true } },
+        locationId: true,
+        location: { select: { name: true } },
         roleAssignment: {
           select: { role: { select: { key: true } } },
         },
@@ -70,6 +72,7 @@ function activeMembershipWhere(organizationId: string) {
 
 function toPublicUser(row: UserRow): User {
   const role = row.memberships[0]?.roleAssignment?.role.key
+  const membership = row.memberships[0]
   if (!role) {
     throw new AppError({
       kind: "permission",
@@ -85,10 +88,10 @@ function toPublicUser(row: UserRow): User {
     fullName: row.fullName,
     role,
     pictureUrl: row.pictureUrl,
-    departmentId: row.departmentId,
-    departmentName: row.department?.name ?? null,
-    locationId: row.locationId,
-    locationName: row.location?.name ?? null,
+    departmentId: membership?.departmentId ?? null,
+    departmentName: membership?.department?.name ?? null,
+    locationId: membership?.locationId ?? null,
+    locationName: membership?.location?.name ?? null,
     isActive: row.isActive,
     isVerified: row.isVerified,
     createdAt: row.createdAt,
@@ -102,10 +105,11 @@ function fullNameFrom(firstName: string, lastName: string): string {
 
 async function assertDepartmentExists(
   departmentId: string | null,
+  organizationId: string,
 ): Promise<void> {
   if (!departmentId) return
   const department = await prisma.department.findFirst({
-    where: { id: departmentId, deletedAt: null },
+    where: { id: departmentId, organizationId, deletedAt: null },
     select: { id: true },
   })
   if (!department) {
@@ -117,10 +121,13 @@ async function assertDepartmentExists(
   }
 }
 
-async function assertLocationExists(locationId: string | null): Promise<void> {
+async function assertLocationExists(
+  locationId: string | null,
+  organizationId: string,
+): Promise<void> {
   if (!locationId) return
   const location = await prisma.location.findFirst({
-    where: { id: locationId, deletedAt: null },
+    where: { id: locationId, organizationId, deletedAt: null },
     select: { id: true },
   })
   if (!location) {
@@ -158,8 +165,8 @@ export async function createUser(
 
     const departmentId = parsed.departmentId || null
     const locationId = parsed.locationId || null
-    await assertDepartmentExists(departmentId)
-    await assertLocationExists(locationId)
+    await assertDepartmentExists(departmentId, session.activeOrganizationId)
+    await assertLocationExists(locationId, session.activeOrganizationId)
 
     const passwordHash = await hashPassword(parsed.password)
     const fullName = fullNameFrom(parsed.firstName, parsed.lastName)
@@ -191,13 +198,13 @@ export async function createUser(
             fullName,
             password: passwordHash,
             role: "USER",
-            departmentId,
-            locationId,
             pictureUrl: parsed.pictureUrl || null,
             isActive: parsed.isActive ?? true,
             memberships: {
               create: {
                 organizationId: session.activeOrganizationId,
+                departmentId,
+                locationId,
                 roleAssignment: { create: { roleId: role.id } },
               },
             },
@@ -208,6 +215,7 @@ export async function createUser(
 
       await logActivity({
         userId: row.id,
+        organizationId: session.activeOrganizationId,
         activity: "REGISTER",
       })
 
@@ -254,8 +262,8 @@ export async function updateUser(
 
     const departmentId = parsed.departmentId || null
     const locationId = parsed.locationId || null
-    await assertDepartmentExists(departmentId)
-    await assertLocationExists(locationId)
+    await assertDepartmentExists(departmentId, session.activeOrganizationId)
+    await assertLocationExists(locationId, session.activeOrganizationId)
 
     const fullName = fullNameFrom(parsed.firstName, parsed.lastName)
     const data: Prisma.UserUncheckedUpdateInput = {
@@ -263,8 +271,6 @@ export async function updateUser(
       firstName: parsed.firstName,
       lastName: parsed.lastName,
       fullName,
-      departmentId,
-      locationId,
       pictureUrl: parsed.pictureUrl || null,
       isActive: parsed.isActive ?? existing.isActive,
     }
@@ -306,6 +312,10 @@ export async function updateUser(
           where: { membershipId: membership.id },
           update: { roleId: role.id, deletedAt: null },
           create: { membershipId: membership.id, roleId: role.id },
+        })
+        await tx.membership.update({
+          where: { id: membership.id },
+          data: { departmentId, locationId },
         })
         return tx.user.update({
           where: { id: parsed.id },
@@ -391,7 +401,7 @@ export async function assignUserToLocation(
 
     if (locationId) {
       const location = await prisma.location.findFirst({
-        where: { id: locationId, deletedAt: null },
+        where: { id: locationId, organizationId: session.activeOrganizationId, deletedAt: null },
         select: { id: true, managerId: true },
       })
       if (!location) {
@@ -413,7 +423,16 @@ export async function assignUserToLocation(
       }
     } else if (session.role !== "ADMIN") {
       // Managers may clear assignment only if the user is currently at their location
-      if (!existing.locationId) {
+      const existingMembership = await prisma.membership.findUnique({
+        where: {
+          organizationId_userId: {
+            organizationId: session.activeOrganizationId,
+            userId: parsed.userId,
+          },
+        },
+        select: { locationId: true },
+      })
+      if (!existingMembership?.locationId) {
         throw new AppError({
           kind: "permission",
           code: "FORBIDDEN",
@@ -421,7 +440,11 @@ export async function assignUserToLocation(
         })
       }
       const currentLocation = await prisma.location.findFirst({
-        where: { id: existing.locationId, deletedAt: null },
+        where: {
+          id: existingMembership.locationId,
+          organizationId: session.activeOrganizationId,
+          deletedAt: null,
+        },
         select: { managerId: true },
       })
       if (currentLocation?.managerId !== session.userId) {
@@ -433,9 +456,17 @@ export async function assignUserToLocation(
       }
     }
 
-    const row = await prisma.user.update({
-      where: { id: parsed.userId },
+    await prisma.membership.update({
+      where: {
+        organizationId_userId: {
+          organizationId: session.activeOrganizationId,
+          userId: parsed.userId,
+        },
+      },
       data: { locationId },
+    })
+    const row = await prisma.user.findUniqueOrThrow({
+      where: { id: parsed.userId },
       include: userInclude(session.activeOrganizationId),
     })
 
