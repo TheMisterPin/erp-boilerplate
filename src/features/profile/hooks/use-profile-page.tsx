@@ -1,14 +1,16 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useState } from "react"
 import type { UseFormReturn } from "react-hook-form"
 import { toast } from "sonner"
 
 import { useModal } from "@/components/shared/modals"
 import { useAuth } from "@/features/auth/hooks/use-auth"
 import { useError } from "@/features/errors"
+import { useSharedPageLoad } from "@/hooks/use-shared-page-load"
 import {
-  getProfile,
+  listOwnTimeOffRequests,
+  loadProfilePage,
   updateOwnProfile,
 } from "@/features/profile/actions/profile-actions"
 import type { ProfilePageProps } from "@/features/profile/components/pages/profile-page"
@@ -16,12 +18,10 @@ import type {
   Profile,
   ProfileFormValues,
 } from "@/features/profile/types/profile-types"
-import { listShiftInstances } from "@/features/shifts/actions/shift-instance-actions"
 import type { ShiftInstance } from "@/features/shifts/types/shift-types"
 import {
   cancelTimeOffRequest,
   createTimeOffRequest,
-  listTimeOffRequests,
 } from "@/features/time-off/actions/time-off-actions"
 import { TimeOffRequestForm } from "@/features/time-off/components/forms"
 import type {
@@ -30,13 +30,6 @@ import type {
   TimeOffType,
 } from "@/features/time-off/types/time-off-types"
 
-function formatLocalDateOnly(value: Date): string {
-  const year = value.getFullYear()
-  const month = String(value.getMonth() + 1).padStart(2, "0")
-  const day = String(value.getDate()).padStart(2, "0")
-  return `${year}-${month}-${day}`
-}
-
 /** Page orchestration for the current user's profile hub. */
 export function useProfilePage(): ProfilePageProps {
   const { me, refreshMe } = useAuth()
@@ -44,39 +37,27 @@ export function useProfilePage(): ProfilePageProps {
   const { openModal, closeModal, setDirty, confirm } = useModal()
   const [tab, setTab] = useState("profile")
   const [profile, setProfile] = useState<Profile | null>(null)
-  const [shifts, setShifts] = useState<ShiftInstance[]>([])
+  const [upcomingShifts, setUpcomingShifts] = useState<ShiftInstance[]>([])
   const [requests, setRequests] = useState<TimeOffRequest[]>([])
   const [loaded, setLoaded] = useState(false)
+  const userId = me?.id
 
-  useEffect(() => {
-    if (!me) return
+  const load = useCallback(async () => {
+    const data = await run(loadProfilePage())
+    if (!data) return
+    setProfile(data.profile)
+    setUpcomingShifts(data.upcomingShifts)
+    setRequests(data.ownRequests)
+    setLoaded(true)
+  }, [run])
 
-    let cancelled = false
-    void (async () => {
-      const [profileData, shiftData, requestData] = await Promise.all([
-        run(getProfile()),
-        run(listShiftInstances()),
-        run(listTimeOffRequests()),
-      ])
-      if (cancelled) return
-      setProfile(profileData)
-      setShifts((shiftData ?? []).filter((shift) => shift.userId === me.id))
-      setRequests(
-        (requestData ?? []).filter((request) => request.userId === me.id),
-      )
-      setLoaded(true)
-    })()
-
-    return () => {
-      cancelled = true
-    }
-  }, [me, run])
+  useSharedPageLoad(userId ? `profile:${userId}` : false, load)
 
   const loadRequests = useCallback(async () => {
-    if (!me) return
-    const data = await run(listTimeOffRequests())
-    setRequests((data ?? []).filter((request) => request.userId === me.id))
-  }, [me, run])
+    const data = await run(listOwnTimeOffRequests())
+    if (!data) return
+    setRequests(data)
+  }, [run])
 
   const onSaveProfile = useCallback(
     async (
@@ -88,13 +69,11 @@ export function useProfilePage(): ProfilePageProps {
 
       toast.success("Profile saved")
       await refreshMe()
-      const reloaded = await run(getProfile())
-      const updated = reloaded ?? saved
-      setProfile(updated)
+      setProfile(saved)
       form.reset({
-        firstName: updated.firstName,
-        lastName: updated.lastName,
-        pictureUrl: updated.pictureUrl ?? "",
+        firstName: saved.firstName,
+        lastName: saved.lastName,
+        pictureUrl: saved.pictureUrl ?? "",
         password: "",
       })
     },
@@ -166,18 +145,6 @@ export function useProfilePage(): ProfilePageProps {
     },
     [confirm, loadRequests, run],
   )
-
-  const upcomingShifts = useMemo(() => {
-    const today = formatLocalDateOnly(new Date())
-    return shifts
-      .filter((shift) => shift.status === "SCHEDULED" && shift.date >= today)
-      .sort(
-        (left, right) =>
-          left.date.localeCompare(right.date) ||
-          left.startTime.localeCompare(right.startTime),
-      )
-      .slice(0, 10)
-  }, [shifts])
 
   return {
     loaded,

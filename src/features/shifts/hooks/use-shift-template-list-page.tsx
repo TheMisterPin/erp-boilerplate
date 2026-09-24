@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { toast } from "sonner"
 import type { UseFormReturn } from "react-hook-form"
 
@@ -8,6 +8,7 @@ import { useModal } from "@/components/shared/modals"
 import { Actions, can } from "@/features/auth/permissions"
 import { useAuth } from "@/features/auth/hooks/use-auth"
 import { useError } from "@/features/errors"
+import { useSharedPageLoad } from "@/hooks/use-shared-page-load"
 import {
   createShiftTemplate,
   deleteShiftTemplate,
@@ -64,22 +65,7 @@ export function useShiftTemplateListPage(): ShiftTemplateListPageProps {
     setLoaded(true)
   }, [run])
 
-  useEffect(() => {
-    let cancelled = false
-    void (async () => {
-      const [data, managed] = await Promise.all([
-        run(listShiftTemplates()),
-        run(listManagedLocations()),
-      ])
-      if (cancelled) return
-      setTemplates(data ?? [])
-      setManagedCount((managed ?? []).length)
-      setLoaded(true)
-    })()
-    return () => {
-      cancelled = true
-    }
-  }, [run])
+  useSharedPageLoad("shift-templates", load)
 
   const rows = useMemo(
     () => templates.map(toShiftTemplateTableRow),

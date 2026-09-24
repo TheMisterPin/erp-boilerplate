@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { toast } from "sonner"
 import type { UseFormReturn } from "react-hook-form"
 
@@ -9,6 +9,7 @@ import { Actions, can } from "@/features/auth/permissions"
 import { useAuth } from "@/features/auth/hooks/use-auth"
 import { useError } from "@/features/errors"
 import { listManagedLocations } from "@/features/locations/actions/location-actions"
+import { useSharedPageLoad } from "@/hooks/use-shared-page-load"
 import {
   assignUserToLocation,
   createUser,
@@ -62,22 +63,7 @@ export function useUserListPage(): UserListPageProps {
     setLoaded(true)
   }, [run])
 
-  useEffect(() => {
-    let cancelled = false
-    void (async () => {
-      const [data, managed] = await Promise.all([
-        run(listUsers()),
-        run(listManagedLocations()),
-      ])
-      if (cancelled) return
-      setUsers(data ?? [])
-      setManagedCount((managed ?? []).length)
-      setLoaded(true)
-    })()
-    return () => {
-      cancelled = true
-    }
-  }, [run])
+  useSharedPageLoad("users", load)
 
   const rows = useMemo(() => users.map(toUserTableRow), [users])
 

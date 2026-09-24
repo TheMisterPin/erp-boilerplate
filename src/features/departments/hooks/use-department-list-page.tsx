@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { toast } from "sonner"
 import type { UseFormReturn } from "react-hook-form"
 
@@ -9,6 +9,7 @@ import { useModal } from "@/components/shared/modals"
 import { Actions, can } from "@/features/auth/permissions"
 import { useAuth } from "@/features/auth/hooks/use-auth"
 import { useError } from "@/features/errors"
+import { useSharedPageLoad } from "@/hooks/use-shared-page-load"
 import {
   createDepartment,
   deleteDepartment,
@@ -49,19 +50,7 @@ export function useDepartmentListPage(): DepartmentListPageProps {
     setLoaded(true)
   }, [run])
 
-  useEffect(() => {
-    let cancelled = false
-    void (async () => {
-      const data = await run(listDepartments())
-      if (!cancelled) {
-        setDepartments(data ?? [])
-        setLoaded(true)
-      }
-    })()
-    return () => {
-      cancelled = true
-    }
-  }, [run])
+  useSharedPageLoad("departments", load)
 
   const rows = useMemo(
     () => departments.map(toDepartmentTableRow),

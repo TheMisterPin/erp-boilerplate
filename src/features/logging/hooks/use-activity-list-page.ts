@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 
 import { Actions, can } from "@/features/auth/permissions"
 import { useAuth } from "@/features/auth/hooks/use-auth"
@@ -9,6 +9,7 @@ import { listActivities } from "@/features/logging/actions/activity-actions"
 import type { ActivityListPageProps } from "@/features/logging/components/pages/activity-list-page"
 import { toActivityTableRow } from "@/features/logging/components/tables/activity-table-columns"
 import type { UserActivityItem } from "@/features/logging/types/activity-types"
+import { useSharedPageLoad } from "@/hooks/use-shared-page-load"
 
 /** Page logic for activity list — inject into `ActivityListPage`. */
 export function useActivityListPage(): ActivityListPageProps {
@@ -19,21 +20,14 @@ export function useActivityListPage(): ActivityListPageProps {
 
   const canRead = me ? can(me.role, Actions.logging.read) : false
 
-  useEffect(() => {
-    if (status !== "authenticated" || !canRead) return
-
-    let cancelled = false
-    void (async () => {
+  useSharedPageLoad(
+    status === "authenticated" && canRead ? "activity" : false,
+    async () => {
       const data = await run(listActivities())
-      if (!cancelled) {
-        setItems(data ?? [])
-        setLoaded(true)
-      }
-    })()
-    return () => {
-      cancelled = true
-    }
-  }, [canRead, run, status])
+      setItems(data ?? [])
+      setLoaded(true)
+    },
+  )
 
   const rows = useMemo(() => items.map(toActivityTableRow), [items])
 

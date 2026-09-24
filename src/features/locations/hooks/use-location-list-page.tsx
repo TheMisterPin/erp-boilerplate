@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { toast } from "sonner"
 import type { UseFormReturn } from "react-hook-form"
 
@@ -9,6 +9,7 @@ import { useModal } from "@/components/shared/modals"
 import { Actions, can } from "@/features/auth/permissions"
 import { useAuth } from "@/features/auth/hooks/use-auth"
 import { useError } from "@/features/errors"
+import { useSharedPageLoad } from "@/hooks/use-shared-page-load"
 import {
   createLocation,
   deleteLocation,
@@ -49,19 +50,7 @@ export function useLocationListPage(): LocationListPageProps {
     setLoaded(true)
   }, [run])
 
-  useEffect(() => {
-    let cancelled = false
-    void (async () => {
-      const data = await run(listLocations())
-      if (!cancelled) {
-        setLocations(data ?? [])
-        setLoaded(true)
-      }
-    })()
-    return () => {
-      cancelled = true
-    }
-  }, [run])
+  useSharedPageLoad("locations", load)
 
   const rows = useMemo(() => locations.map(toLocationTableRow), [locations])
 

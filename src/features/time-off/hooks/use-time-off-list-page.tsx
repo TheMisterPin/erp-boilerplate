@@ -1,10 +1,11 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { toast } from "sonner"
 
 import { useModal } from "@/components/shared/modals"
 import { useError } from "@/features/errors"
+import { useSharedPageLoad } from "@/hooks/use-shared-page-load"
 import {
   approveTimeOffRequest,
   listTimeOffRequests,
@@ -30,19 +31,7 @@ export function useTimeOffListPage(): TimeOffListPageProps {
     setLoaded(true)
   }, [run])
 
-  useEffect(() => {
-    let cancelled = false
-    void (async () => {
-      const data = await run(listTimeOffRequests())
-      if (!cancelled) {
-        setRequests(data ?? [])
-        setLoaded(true)
-      }
-    })()
-    return () => {
-      cancelled = true
-    }
-  }, [run])
+  useSharedPageLoad("time-off", load)
 
   const rows = useMemo(() => requests.map(toTimeOffTableRow), [requests])
 
