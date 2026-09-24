@@ -202,6 +202,8 @@ describe("permission matrix", () => {
     Actions.logging.read,
     Actions.timeOff.read,
     Actions.timeOff.write,
+    Actions.memberships.read,
+    Actions.memberships.write,
   ]
 
   it.each(["ADMIN", "OPERATOR"] as const)(

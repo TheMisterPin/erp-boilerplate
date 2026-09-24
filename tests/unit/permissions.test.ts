@@ -7,12 +7,14 @@ describe("permission matrix", () => {
     expect(can("ADMIN", Actions.users.write)).toBe(true)
     expect(can("ADMIN", Actions.logging.read)).toBe(true)
     expect(can("ADMIN", Actions.timeOff.write)).toBe(true)
+    expect(can("ADMIN", Actions.memberships.write)).toBe(true)
   })
 
   it("gives managers operational write access without administration", () => {
     expect(can("MANAGER", Actions.users.write)).toBe(false)
     expect(can("MANAGER", Actions.shifts.write)).toBe(true)
     expect(can("MANAGER", Actions.logging.read)).toBe(false)
+    expect(can("MANAGER", Actions.memberships.write)).toBe(false)
   })
 
   it("preserves legacy user access in the operator role", () => {

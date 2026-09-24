@@ -13,6 +13,8 @@ export type Permission =
   | "logging:read"
   | "timeOff:read"
   | "timeOff:write"
+  | "memberships:read"
+  | "memberships:write"
 
 export const PERMISSIONS = [
   "users:read",
@@ -26,6 +28,8 @@ export const PERMISSIONS = [
   "logging:read",
   "timeOff:read",
   "timeOff:write",
+  "memberships:read",
+  "memberships:write",
 ] as const satisfies readonly Permission[]
 
 /** Typed action object — maps a stable id to a matrix permission. */
@@ -48,6 +52,8 @@ export const ROLE_PERMISSIONS: Record<OrganizationRoleKey, readonly Permission[]
     "logging:read",
     "timeOff:read",
     "timeOff:write",
+    "memberships:read",
+    "memberships:write",
   ],
   MANAGER: [
     "users:read",
@@ -106,6 +112,10 @@ export const Actions = {
   timeOff: {
     read: { id: "timeOff.read", permission: "timeOff:read" },
     write: { id: "timeOff.write", permission: "timeOff:write" },
+  },
+  memberships: {
+    read: { id: "memberships.read", permission: "memberships:read" },
+    write: { id: "memberships.write", permission: "memberships:write" },
   },
 } as const satisfies Record<string, Record<string, AppAction>>
 

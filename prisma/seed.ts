@@ -78,7 +78,7 @@ async function ensureMemberships(input: {
 }
 
 const ORGANIZATION_ROLES = {
-  ADMIN: ["users:read", "users:write", "departments:read", "departments:write", "locations:read", "locations:write", "shifts:read", "shifts:write", "logging:read", "timeOff:read", "timeOff:write"],
+  ADMIN: ["users:read", "users:write", "departments:read", "departments:write", "locations:read", "locations:write", "shifts:read", "shifts:write", "logging:read", "timeOff:read", "timeOff:write", "memberships:read", "memberships:write"],
   MANAGER: ["users:read", "departments:read", "locations:read", "shifts:read", "shifts:write", "timeOff:read", "timeOff:write"],
   OPERATOR: ["users:read", "departments:read", "locations:read", "shifts:read", "timeOff:read", "timeOff:write"],
   VIEWER: ["users:read", "departments:read", "locations:read", "shifts:read", "timeOff:read"],
