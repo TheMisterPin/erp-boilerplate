@@ -1,5 +1,7 @@
 # ERP Boilerplate
 
+[![Quality](https://github.com/TheMisterPin/erp-boilerplate/actions/workflows/quality.yml/badge.svg)](https://github.com/TheMisterPin/erp-boilerplate/actions/workflows/quality.yml)
+
 Next.js (App Router) ERP boilerplate / component playground. Shared UI systems live under `src/components/shared`; feature verticals under `src/features`. Auth uses jose cookie sessions + Prisma; middleware requires login for all app routes.
 
 ## Stack
@@ -85,6 +87,12 @@ Seeded on first empty database (`pnpm db:seed` or Docker first run):
 | Docker up | `pnpm docker:up` |
 | Docker stop | `pnpm docker:down` |
 | Docker reset (deletes volume) | `pnpm docker:reset` |
+
+### Quality gate
+
+Pull requests and pushes to `main` run the `Quality / quality` GitHub Actions check. It installs dependencies with the pinned pnpm version, starts PostgreSQL, generates the Prisma client, applies migrations, and runs lint, typecheck, tests, and a production build.
+
+Configure `Quality / quality` as a required status check in the `main` branch protection rules before requiring pull requests to merge.
 
 ## What’s implemented
 
