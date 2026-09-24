@@ -29,21 +29,69 @@ async function ensureOrganization(input: { name: string; slug: string }) {
 
 async function ensureMemberships(input: {
   organizationId: string
-  userIds: string[]
+  members: Array<{
+    userId: string
+    role: "ADMIN" | "MANAGER" | "OPERATOR" | "VIEWER"
+  }>
 }) {
-  for (const userId of input.userIds) {
-    await prisma.membership.upsert({
+  for (const member of input.members) {
+    const membership = await prisma.membership.upsert({
       where: {
         organizationId_userId: {
           organizationId: input.organizationId,
-          userId,
+          userId: member.userId,
         },
       },
       update: { status: "ACTIVE" },
       create: {
         organizationId: input.organizationId,
-        userId,
+        userId: member.userId,
         status: "ACTIVE",
+      },
+    })
+    const role = await prisma.organizationRole.findUniqueOrThrow({
+      where: {
+        organizationId_key: {
+          organizationId: input.organizationId,
+          key: member.role,
+        },
+      },
+    })
+    await prisma.roleAssignment.upsert({
+      where: { membershipId: membership.id },
+      update: { roleId: role.id, deletedAt: null },
+      create: { membershipId: membership.id, roleId: role.id },
+    })
+  }
+}
+
+const ORGANIZATION_ROLES = {
+  ADMIN: ["users:read", "users:write", "departments:read", "departments:write", "locations:read", "locations:write", "shifts:read", "shifts:write", "logging:read", "timeOff:read", "timeOff:write"],
+  MANAGER: ["users:read", "departments:read", "locations:read", "shifts:read", "shifts:write", "timeOff:read", "timeOff:write"],
+  OPERATOR: ["users:read", "departments:read", "locations:read", "shifts:read", "timeOff:read", "timeOff:write"],
+  VIEWER: ["users:read", "departments:read", "locations:read", "shifts:read", "timeOff:read"],
+} as const
+
+async function ensureOrganizationRoles(organizationId: string) {
+  for (const [key, permissions] of Object.entries(ORGANIZATION_ROLES)) {
+    await prisma.organizationRole.upsert({
+      where: {
+        organizationId_key: {
+          organizationId,
+          key: key as keyof typeof ORGANIZATION_ROLES,
+        },
+      },
+      update: {
+        name: key.charAt(0) + key.slice(1).toLowerCase(),
+        permissions: [...permissions],
+        isActive: true,
+        deletedAt: null,
+      },
+      create: {
+        organizationId,
+        key: key as keyof typeof ORGANIZATION_ROLES,
+        name: key.charAt(0) + key.slice(1).toLowerCase(),
+        permissions: [...permissions],
       },
     })
   }
@@ -746,6 +794,8 @@ async function main() {
     name: "Northwind Sandbox",
     slug: "northwind-sandbox",
   })
+  await ensureOrganizationRoles(primaryOrganization.id)
+  await ensureOrganizationRoles(secondaryOrganization.id)
 
   const engineering = await ensureDepartment({
     name: "Engineering",
@@ -787,13 +837,22 @@ async function main() {
 
   await ensureMemberships({
     organizationId: primaryOrganization.id,
-    userIds: users.map((user) => user.id),
+    members: users.map((user) => ({
+      userId: user.id,
+      role:
+        user.email === "admin@example.com"
+          ? "ADMIN"
+          : user.email === "manager@example.com"
+            ? "MANAGER"
+            : "OPERATOR",
+    })),
   })
   await ensureMemberships({
     organizationId: secondaryOrganization.id,
-    userIds: [admin?.id, manager?.id].filter(
-      (id): id is string => typeof id === "string",
-    ),
+    members: [
+      ...(admin ? [{ userId: admin.id, role: "ADMIN" as const }] : []),
+      ...(manager ? [{ userId: manager.id, role: "MANAGER" as const }] : []),
+    ],
   })
 
   await prisma.location.update({

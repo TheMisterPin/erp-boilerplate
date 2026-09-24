@@ -11,7 +11,7 @@ export const userFirstNameSchema = z.string().min(1, "Required")
 
 export const userLastNameSchema = z.string().min(1, "Required")
 
-export const userRoleSchema = z.enum(["ADMIN", "USER"], {
+export const userRoleSchema = z.enum(["ADMIN", "MANAGER", "OPERATOR", "VIEWER"], {
   required_error: "Required",
 })
 

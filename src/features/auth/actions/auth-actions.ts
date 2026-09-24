@@ -110,7 +110,7 @@ export async function loginAction(
       activity: "LOGIN",
     })
 
-    return toMe(user)
+    return toMe(user, organization.role.key)
   })
 }
 
@@ -159,6 +159,6 @@ export async function getMeAction(): Promise<ActionResult<Me | null>> {
       return null
     }
 
-    return toMe(user)
+    return toMe(user, organization.role.key)
   })
 }

@@ -85,7 +85,6 @@ export async function getClockStatus(): Promise<ActionResult<ClockStatus>> {
         id: true,
         fullName: true,
         email: true,
-        role: true,
         locationId: true,
       },
     })
@@ -120,7 +119,7 @@ export async function getClockStatus(): Promise<ActionResult<ClockStatus>> {
         id: user.id,
         fullName: user.fullName,
         email: user.email,
-        role: user.role,
+        role: session.role,
       },
       openAttendance: open ? toPublicAttendance(open) : null,
       todayShift: todayShift

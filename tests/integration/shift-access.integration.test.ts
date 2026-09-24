@@ -5,6 +5,7 @@ import {
   createTestUser,
   resetTestDatabase,
 } from "../support/test-database"
+import type { AppSession } from "@/features/auth/session"
 
 const mocks = vi.hoisted(() => ({ findLocation: vi.fn() }))
 
@@ -37,9 +38,12 @@ describe("location-manager shift access", () => {
     const otherLocation = await prisma.location.create({
       data: { name: "Unmanaged location" },
     })
-    const session = {
+    const session: AppSession = {
       ...manager,
       userId: manager.id,
+      systemRole: manager.role,
+      role: manager.organizationRole,
+      permissions: ["shifts:read", "timeOff:read", "timeOff:write"],
       activeOrganizationId: manager.activeOrganizationId,
       organization: {
         id: manager.activeOrganizationId,

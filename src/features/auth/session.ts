@@ -11,6 +11,8 @@ import { prisma } from "@/lib/db"
 import { findActiveOrganization } from "@/features/organizations/context"
 
 export type AppSession = SessionPayload & {
+  role: import("@/generated/prisma/client").OrganizationRoleKey
+  permissions: Permission[]
   organization: {
     id: string
     name: string
@@ -65,13 +67,22 @@ export async function requireSession(): Promise<AppSession> {
     })
   }
 
-  return { ...session, organization }
+  return {
+    ...session,
+    role: organization.role.key,
+    permissions: organization.role.permissions,
+    organization: {
+      id: organization.id,
+      name: organization.name,
+      slug: organization.slug,
+    },
+  }
 }
 
 /** Universal RBAC gate — the current database role must hold the permission. */
 export async function authorize(action: AppAction): Promise<AppSession> {
   const session = await requireSession()
-  if (!hasPermission(session.role, action.permission)) {
+  if (!session.permissions.includes(action.permission)) {
     throw new AppError({
       kind: "permission",
       code: "FORBIDDEN",

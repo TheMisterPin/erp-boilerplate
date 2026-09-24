@@ -21,7 +21,7 @@ export function resolveCurrentSession(
     ...session,
     userId: account.id,
     email: account.email,
-    role: account.role,
+    systemRole: account.role,
     fullName: account.fullName,
   }
 }

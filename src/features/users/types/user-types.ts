@@ -1,6 +1,6 @@
-import type { Role } from "@/generated/prisma/client"
+import type { OrganizationRoleKey } from "@/generated/prisma/client"
 
-export type UserRole = Role
+export type UserRole = OrganizationRoleKey
 
 /** Public user shape returned by server actions (no password). */
 export type User = {

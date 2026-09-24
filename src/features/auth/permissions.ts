@@ -1,4 +1,4 @@
-import type { Role } from "@/generated/prisma/client"
+import type { OrganizationRoleKey, Role } from "@/generated/prisma/client"
 
 /** Permission strings granted by the role matrix. */
 export type Permission =
@@ -14,6 +14,20 @@ export type Permission =
   | "timeOff:read"
   | "timeOff:write"
 
+export const PERMISSIONS = [
+  "users:read",
+  "users:write",
+  "departments:read",
+  "departments:write",
+  "locations:read",
+  "locations:write",
+  "shifts:read",
+  "shifts:write",
+  "logging:read",
+  "timeOff:read",
+  "timeOff:write",
+] as const satisfies readonly Permission[]
+
 /** Typed action object — maps a stable id to a matrix permission. */
 export type AppAction = {
   readonly id: string
@@ -21,7 +35,7 @@ export type AppAction = {
 }
 
 /** Role → permission strings. Safe for client and server. */
-export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
+export const ROLE_PERMISSIONS: Record<OrganizationRoleKey, readonly Permission[]> = {
   ADMIN: [
     "users:read",
     "users:write",
@@ -35,7 +49,16 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "timeOff:read",
     "timeOff:write",
   ],
-  USER: [
+  MANAGER: [
+    "users:read",
+    "departments:read",
+    "locations:read",
+    "shifts:read",
+    "shifts:write",
+    "timeOff:read",
+    "timeOff:write",
+  ],
+  OPERATOR: [
     "users:read",
     "departments:read",
     "locations:read",
@@ -43,6 +66,20 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "timeOff:read",
     "timeOff:write",
   ],
+  VIEWER: [
+    "users:read",
+    "departments:read",
+    "locations:read",
+    "shifts:read",
+    "timeOff:read",
+  ],
+}
+
+export type SystemPermission = "system:organizations:write"
+
+export const SYSTEM_ROLE_PERMISSIONS: Record<Role, readonly SystemPermission[]> = {
+  ADMIN: ["system:organizations:write"],
+  USER: [],
 }
 
 /** Catalog of app actions. Prefer these over raw permission strings. */
@@ -72,15 +109,27 @@ export const Actions = {
   },
 } as const satisfies Record<string, Record<string, AppAction>>
 
-export function permissionsForRole(role: Role): readonly Permission[] {
+export function permissionsForRole(role: OrganizationRoleKey): readonly Permission[] {
   return ROLE_PERMISSIONS[role] ?? []
 }
 
-export function hasPermission(role: Role, permission: Permission): boolean {
+export function hasPermission(role: OrganizationRoleKey, permission: Permission): boolean {
   return permissionsForRole(role).includes(permission)
 }
 
 /** Client/UI gate — same matrix as `authorize` on the server. */
-export function can(role: Role, action: AppAction): boolean {
+export function can(role: OrganizationRoleKey, action: AppAction): boolean {
   return hasPermission(role, action.permission)
+}
+
+export function validStoredPermissions(values: readonly string[]): Permission[] {
+  const allowed = new Set<string>(PERMISSIONS)
+  return [...new Set(values.filter((value): value is Permission => allowed.has(value)))]
+}
+
+export function hasSystemPermission(
+  role: Role,
+  permission: SystemPermission,
+): boolean {
+  return SYSTEM_ROLE_PERMISSIONS[role].includes(permission)
 }

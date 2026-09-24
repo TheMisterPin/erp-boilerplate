@@ -51,7 +51,7 @@ export function useUserListPage(): UserListPageProps {
 
   const canWrite = me ? can(me.role, Actions.users.write) : false
   const canAssignLocation =
-    canWrite || (!!me && me.role === "USER" && managedCount > 0)
+    canWrite || (!!me && me.role !== "ADMIN" && managedCount > 0)
 
   const load = useCallback(async () => {
     const [data, managed] = await Promise.all([

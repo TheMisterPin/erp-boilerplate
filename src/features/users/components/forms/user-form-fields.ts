@@ -57,7 +57,9 @@ function buildBaseFields(
       validation: userRoleSchema,
       options: [
         { label: "Admin", value: "ADMIN" },
-        { label: "User", value: "USER" },
+        { label: "Manager", value: "MANAGER" },
+        { label: "Operator", value: "OPERATOR" },
+        { label: "Viewer", value: "VIEWER" },
       ],
     },
     {
