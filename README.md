@@ -141,6 +141,8 @@ should feel repetitive, not like a fresh architectural debate.
 |---|---|
 | Start development | `pnpm dev` |
 | Run all checks | `pnpm lint && pnpm typecheck && pnpm test && pnpm build` |
+| Unit and component tests | `pnpm test:unit` |
+| Prisma integration tests | `pnpm test:integration` |
 | Generate Prisma client | `pnpm db:generate` |
 | Create a development migration | `pnpm db:migrate` |
 | Seed a local demo database | `pnpm db:seed` |
