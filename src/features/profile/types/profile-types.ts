@@ -20,7 +20,6 @@ export type ProfileFormValues = {
   firstName: string
   lastName: string
   pictureUrl?: string
-  password?: string
 }
 
 /** Single round-trip payload for the profile hub. */

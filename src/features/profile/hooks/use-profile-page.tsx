@@ -74,7 +74,6 @@ export function useProfilePage(): ProfilePageProps {
         firstName: saved.firstName,
         lastName: saved.lastName,
         pictureUrl: saved.pictureUrl ?? "",
-        password: "",
       })
     },
     [refreshMe, run],

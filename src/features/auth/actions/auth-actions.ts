@@ -133,6 +133,10 @@ export async function getMeAction(): Promise<ActionResult<Me | null>> {
       await clearSession()
       return null
     }
+    if (session.sessionVersion !== user.sessionVersion) {
+      await clearSession()
+      return null
+    }
 
     return toMe(user)
   })

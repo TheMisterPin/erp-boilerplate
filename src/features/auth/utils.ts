@@ -23,6 +23,7 @@ export type SessionPayload = {
   email: string
   role: Role
   fullName: string
+  sessionVersion: number
   expires: string
   absoluteExpires: string
 }
@@ -32,6 +33,7 @@ type SessionJWTPayload = JWTPayload & {
   email: string
   role: Role
   fullName: string
+  sessionVersion: number
   expires: string
   absoluteExpires: string
 }
@@ -49,6 +51,7 @@ export async function encrypt(
     email: payload.email,
     role: payload.role,
     fullName: payload.fullName,
+    sessionVersion: payload.sessionVersion,
     expires: dates.idleExpires.toISOString(),
     absoluteExpires: dates.absoluteExpires.toISOString(),
   } satisfies Omit<SessionJWTPayload, keyof JWTPayload>)
@@ -73,6 +76,8 @@ export async function decrypt(input: string): Promise<SessionPayload | null> {
       typeof data.email !== "string" ||
       typeof data.role !== "string" ||
       typeof data.fullName !== "string" ||
+      typeof data.sessionVersion !== "number" ||
+      !Number.isSafeInteger(data.sessionVersion) ||
       typeof data.expires !== "string" ||
       typeof data.absoluteExpires !== "string"
     ) {
@@ -90,6 +95,7 @@ export async function decrypt(input: string): Promise<SessionPayload | null> {
       email: data.email,
       role: data.role,
       fullName: data.fullName,
+      sessionVersion: data.sessionVersion,
       expires: data.expires,
       absoluteExpires: data.absoluteExpires,
     }
@@ -103,6 +109,7 @@ export async function createSession(user: {
   email: string
   role: Role
   fullName: string
+  sessionVersion: number
 }): Promise<void> {
   const dates = createSessionDates(
     new Date(),
@@ -115,6 +122,7 @@ export async function createSession(user: {
       email: user.email,
       role: user.role,
       fullName: user.fullName,
+      sessionVersion: user.sessionVersion,
     },
     dates,
   )
@@ -171,6 +179,7 @@ export async function updateSession(request: NextRequest) {
         email: parsed.email,
         role: parsed.role,
         fullName: parsed.fullName,
+        sessionVersion: parsed.sessionVersion,
       },
       { idleExpires, absoluteExpires },
     ),

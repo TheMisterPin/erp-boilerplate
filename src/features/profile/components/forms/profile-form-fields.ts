@@ -3,7 +3,6 @@ import type { ProfileFormValues } from "@/features/profile/types/profile-types"
 import {
   userFirstNameSchema,
   userLastNameSchema,
-  userPasswordOptionalSchema,
   userPictureUrlSchema,
 } from "@/lib/schemas/user"
 
@@ -28,15 +27,6 @@ export const profileFormFields: FieldDef<ProfileFormValues>[] = [
     label: "Picture URL",
     placeholder: "https://…",
     validation: userPictureUrlSchema,
-    colSpan: 2,
-  },
-  {
-    name: "password",
-    type: "password",
-    label: "New password",
-    placeholder: "Leave blank to keep current",
-    description: "Use at least 8 characters.",
-    validation: userPasswordOptionalSchema,
     colSpan: 2,
   },
 ]
