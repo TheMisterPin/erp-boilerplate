@@ -1,4 +1,6 @@
 import type { Role } from "@/generated/prisma/client"
+import type { ShiftInstance } from "@/features/shifts/types/shift-types"
+import type { TimeOffRequest } from "@/features/time-off/types/time-off-types"
 
 export type Profile = {
   id: string
@@ -19,4 +21,11 @@ export type ProfileFormValues = {
   lastName: string
   pictureUrl?: string
   password?: string
+}
+
+/** Single round-trip payload for the profile hub. */
+export type ProfilePageData = {
+  profile: Profile
+  upcomingShifts: ShiftInstance[]
+  ownRequests: TimeOffRequest[]
 }

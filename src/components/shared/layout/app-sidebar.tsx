@@ -5,6 +5,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { ChevronRight, Hexagon } from "lucide-react"
 
+import { SidebarEdgeToggle } from "./sidebar-edge-toggle"
 import { SidebarUser } from "./sidebar-user"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import {
@@ -21,31 +22,32 @@ import {
   SidebarMenuSubItem,
   SidebarRail,
   SidebarSeparator,
-  SidebarTrigger,
+  useSidebar,
 } from "@/components/ui/sidebar"
 import { isNavItemActive, navigationItems } from "@/lib/navigation"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname()
+  const { state, setOpen } = useSidebar()
 
   return (
-    <Sidebar collapsible="icon" {...props}>
+    <Sidebar collapsible="icon" className="overflow-visible" {...props}>
       <SidebarHeader className="shrink-0 gap-0 border-b border-sidebar-border p-0">
-        <div className="flex h-16 items-center gap-1 px-2">
+        <div className="flex h-16 items-center px-2">
           <SidebarMenu className="min-w-0 flex-1">
             <SidebarMenuItem>
               <SidebarMenuButton
                 size="lg"
                 asChild
                 className="data-[slot=sidebar-menu-button]:p-2"
-                tooltip="Components Playground"
+                tooltip="ERP Boilerplate"
               >
                 <Link href="/">
                   <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-accent-muted text-primary">
                     <Hexagon className="size-4" />
                   </div>
-                  <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-semibold">Playground</span>
+                  <div className="grid min-w-0 flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
+                    <span className="truncate font-semibold">ERP Boilerplate</span>
                     <span className="truncate text-xs text-muted-foreground">
                       ERP UI
                     </span>
@@ -54,7 +56,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
-          <SidebarTrigger className="shrink-0 group-data-[collapsible=icon]:hidden" />
         </div>
       </SidebarHeader>
       <SidebarContent>
@@ -70,10 +71,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 >
                   <SidebarMenuItem>
                     <CollapsibleTrigger asChild>
-                      <SidebarMenuButton tooltip={item.title}>
+                      <SidebarMenuButton
+                        tooltip={item.title}
+                        onClick={() => {
+                          if (state === "collapsed") setOpen(true)
+                        }}
+                      >
                         {item.icon && <item.icon className="h-4 w-4" />}
                         <span>{item.title}</span>
-                        <ChevronRight className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
+                        <ChevronRight className="ml-auto h-4 w-4 transition-transform group-data-[collapsible=icon]:hidden group-data-[state=open]/collapsible:rotate-90" />
                       </SidebarMenuButton>
                     </CollapsibleTrigger>
                     <CollapsibleContent>
@@ -116,6 +122,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarSeparator className="mx-0" />
         <SidebarUser />
       </SidebarFooter>
+      <SidebarEdgeToggle />
       <SidebarRail />
     </Sidebar>
   )

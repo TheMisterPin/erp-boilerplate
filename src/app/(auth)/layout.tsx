@@ -8,7 +8,10 @@ export default function AuthLayout({
 }>) {
   return (
     <div className="flex h-svh min-h-0 flex-col overflow-y-auto bg-background">
-      <ErrorBoundary>{children}</ErrorBoundary>
+
+      <div className="flex min-h-0 flex-1 items-center justify-center px-4 py-8">
+        <ErrorBoundary>{children}</ErrorBoundary>
+      </div>
     </div>
   )
 }

@@ -18,6 +18,7 @@ import {
   getCheckInTiming,
 } from "@/features/attendance/lib/check-in-timing"
 import type { ClockStatus } from "@/features/attendance/types/attendance-types"
+import { useSharedPageLoad } from "@/hooks/use-shared-page-load"
 
 /** Kiosk clock page logic — login, punch, shift timing warnings. */
 export function useClockPage(): ClockPageProps {
@@ -45,26 +46,7 @@ export function useClockPage(): ClockPageProps {
     setLoaded(true)
   }, [isAuthenticated, run])
 
-  useEffect(() => {
-    if (status === "loading") return
-    let cancelled = false
-    void (async () => {
-      if (status !== "authenticated") {
-        if (!cancelled) {
-          setClock(null)
-          setLoaded(true)
-        }
-        return
-      }
-      const statusData = await run(getClockStatus())
-      if (cancelled) return
-      setClock(statusData ?? null)
-      setLoaded(true)
-    })()
-    return () => {
-      cancelled = true
-    }
-  }, [run, status])
+  useSharedPageLoad(status === "loading" ? false : status, load)
 
   // Refresh live elapsed duration while checked in
   useEffect(() => {

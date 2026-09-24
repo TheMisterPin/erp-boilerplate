@@ -87,7 +87,7 @@ export function TableSkeleton({
             </div>
           ))}
         </div>
-        <div className="divide-y divide-[var(--table-border)]">
+        <div className="divide-y divide-(--table-border)">
           {Array.from({ length: rowCount }, (_, rowIndex) => (
             <div
               key={rowIndex}

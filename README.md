@@ -1,5 +1,7 @@
 # ERP Boilerplate
 
+[![Quality](https://github.com/TheMisterPin/erp-boilerplate/actions/workflows/quality.yml/badge.svg)](https://github.com/TheMisterPin/erp-boilerplate/actions/workflows/quality.yml)
+
 A production-minded foundation for internal operations software: start with a
 working Next.js application, PostgreSQL data model, server-side authorization,
 reusable CRUD systems, and operational demos—instead of losing a week to auth,
@@ -75,7 +77,7 @@ not safe credentials and must never be used in a public deployment.
 | Inventory, purchasing, accounting, CRM, multi-tenancy | Not included | Build as domain verticals |
 | Password reset, MFA, durable session revocation | Planned | Security roadmap |
 | Distributed rate limiting, email delivery, production observability | Planned | Replace the local adapters |
-| GitHub Actions quality gate | Planned | CI roadmap |
+| GitHub Actions quality gate | Implemented | [Quality workflow](.github/workflows/quality.yml) |
 
 ## Take the demo tour
 
@@ -148,6 +150,16 @@ should feel repetitive, not like a fresh architectural debate.
 
 `pnpm docker:reset` deletes the local Docker volume. It is intentionally
 destructive.
+
+## Quality gate
+
+Pull requests and pushes to `main` run the `Quality / quality` GitHub Actions
+check. It uses the pinned pnpm version, starts PostgreSQL, generates the Prisma
+client, applies migrations, and runs lint, typecheck, tests, and a production
+build.
+
+Configure `Quality / quality` as a required status check in the `main` branch
+protection rules before requiring pull requests to merge.
 
 ## Production caveats
 
