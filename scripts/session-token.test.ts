@@ -96,6 +96,10 @@ test("rejects a token whose signature was modified", async () => {
   assert.equal(await decrypt(forgedToken), null)
 })
 
+test("rejects a malformed token", async () => {
+  assert.equal(await decrypt("not.a.jwt"), null)
+})
+
 test("rejects a token beyond its absolute lifetime", async () => {
   const token = await encrypt(
     {

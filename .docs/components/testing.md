@@ -29,5 +29,10 @@ database name not ending in `_test`, and outside CI refuses a URL equal to
 - `tests/integration/`: Prisma-backed behavior; use factories and
   `resetTestDatabase` from `tests/support/test-database.ts`.
 
+Authentication and scope checks belong in integration tests whenever the current
+database account state or a resource relationship is part of the decision. Mock
+only framework boundaries such as cookie access; invoke the auth gate or server
+action directly and assert its stable error DTO.
+
 Integration tests must use the supplied test client and factories. Do not import
 `src/lib/db.ts`, which intentionally uses the application database connection.
