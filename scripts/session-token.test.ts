@@ -88,7 +88,10 @@ test("rejects a token whose signature was modified", async () => {
     },
   )
 
-  const forgedToken = `${token.slice(0, -1)}${token.endsWith("a") ? "b" : "a"}`
+  const tokenParts = token.split(".")
+  const signature = tokenParts[2]
+  const forgedSignature = `${signature.startsWith("a") ? "b" : "a"}${signature.slice(1)}`
+  const forgedToken = [...tokenParts.slice(0, 2), forgedSignature].join(".")
 
   assert.equal(await decrypt(forgedToken), null)
 })
