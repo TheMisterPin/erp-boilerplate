@@ -20,6 +20,7 @@ export const SESSION_COOKIE = "session"
 
 export type SessionPayload = {
   userId: string
+  activeOrganizationId: string
   email: string
   role: Role
   fullName: string
@@ -30,6 +31,7 @@ export type SessionPayload = {
 
 type SessionJWTPayload = JWTPayload & {
   userId: string
+  activeOrganizationId: string
   email: string
   role: Role
   fullName: string
@@ -48,6 +50,7 @@ export async function encrypt(
 ): Promise<string> {
   return await new SignJWT({
     userId: payload.userId,
+    activeOrganizationId: payload.activeOrganizationId,
     email: payload.email,
     role: payload.role,
     fullName: payload.fullName,
@@ -73,6 +76,7 @@ export async function decrypt(input: string): Promise<SessionPayload | null> {
     const data = payload as SessionJWTPayload
     if (
       typeof data.userId !== "string" ||
+      typeof data.activeOrganizationId !== "string" ||
       typeof data.email !== "string" ||
       typeof data.role !== "string" ||
       typeof data.fullName !== "string" ||
@@ -92,6 +96,7 @@ export async function decrypt(input: string): Promise<SessionPayload | null> {
     }
     return {
       userId: data.userId,
+      activeOrganizationId: data.activeOrganizationId,
       email: data.email,
       role: data.role,
       fullName: data.fullName,
@@ -106,6 +111,7 @@ export async function decrypt(input: string): Promise<SessionPayload | null> {
 
 export async function createSession(user: {
   id: string
+  activeOrganizationId: string
   email: string
   role: Role
   fullName: string
@@ -119,6 +125,7 @@ export async function createSession(user: {
   const session = await encrypt(
     {
       userId: user.id,
+      activeOrganizationId: user.activeOrganizationId,
       email: user.email,
       role: user.role,
       fullName: user.fullName,
@@ -176,6 +183,7 @@ export async function updateSession(request: NextRequest) {
     value: await encrypt(
       {
         userId: parsed.userId,
+        activeOrganizationId: parsed.activeOrganizationId,
         email: parsed.email,
         role: parsed.role,
         fullName: parsed.fullName,

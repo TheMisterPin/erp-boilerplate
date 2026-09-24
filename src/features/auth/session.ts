@@ -8,8 +8,15 @@ import {
 import { getSession, type SessionPayload } from "@/features/auth/utils"
 import { resolveCurrentSession } from "@/features/auth/session-state"
 import { prisma } from "@/lib/db"
+import { findActiveOrganization } from "@/features/organizations/context"
 
-export type AppSession = SessionPayload
+export type AppSession = SessionPayload & {
+  organization: {
+    id: string
+    name: string
+    slug: string
+  }
+}
 
 export { hasPermission, permissionsForRole }
 
@@ -45,7 +52,20 @@ export async function requireSession(): Promise<AppSession> {
     })
   }
 
-  return session
+  const organization = await findActiveOrganization(
+    prisma,
+    session.userId,
+    session.activeOrganizationId,
+  )
+  if (!organization) {
+    throw new AppError({
+      kind: "auth",
+      code: "ORGANIZATION_ACCESS_REVOKED",
+      message: "Your organization access is no longer active.",
+    })
+  }
+
+  return { ...session, organization }
 }
 
 /** Universal RBAC gate — the current database role must hold the permission. */

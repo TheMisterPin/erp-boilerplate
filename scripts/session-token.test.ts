@@ -20,6 +20,7 @@ test("round-trips a session with issuer and audience validation", async () => {
   const token = await encrypt(
     {
       userId: "user-1",
+      activeOrganizationId: "organization-1",
       email: "user@example.com",
       role: "USER",
       fullName: "Example User",
@@ -41,6 +42,7 @@ test("rejects a token issued for a different audience", async () => {
   const token = await encrypt(
     {
       userId: "user-1",
+      activeOrganizationId: "organization-1",
       email: "user@example.com",
       role: "USER",
       fullName: "Example User",
@@ -61,6 +63,7 @@ test("rejects a token issued by a different issuer", async () => {
   const token = await encrypt(
     {
       userId: "user-1",
+      activeOrganizationId: "organization-1",
       email: "user@example.com",
       role: "USER",
       fullName: "Example User",
@@ -81,6 +84,7 @@ test("rejects a token whose signature was modified", async () => {
   const token = await encrypt(
     {
       userId: "user-1",
+      activeOrganizationId: "organization-1",
       email: "user@example.com",
       role: "USER",
       fullName: "Example User",
@@ -108,6 +112,7 @@ test("rejects a token beyond its absolute lifetime", async () => {
   const token = await encrypt(
     {
       userId: "user-1",
+      activeOrganizationId: "organization-1",
       email: "user@example.com",
       role: "USER",
       fullName: "Example User",

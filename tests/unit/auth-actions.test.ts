@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   logActivity: vi.fn(),
   check: vi.fn(),
   resetIdentifier: vi.fn(),
+  findMembership: vi.fn(),
 }))
 
 vi.mock("next/headers", () => ({ headers: mocks.headers }))
@@ -31,7 +32,12 @@ vi.mock("@/features/auth/login-rate-limit", () => ({
   },
 }))
 vi.mock("@/features/logging/server", () => ({ logActivity: mocks.logActivity }))
-vi.mock("@/lib/db", () => ({ prisma: { user: { findFirst: vi.fn() } } }))
+vi.mock("@/lib/db", () => ({
+  prisma: {
+    user: { findFirst: vi.fn() },
+    membership: { findFirst: mocks.findMembership },
+  },
+}))
 
 import { loginAction, logoutAction } from "@/features/auth/actions/auth-actions"
 
@@ -53,6 +59,7 @@ const user = {
   password: "hashed",
   departmentId: null,
   locationId: null,
+  sessionVersion: 0,
 }
 
 describe("auth server actions", () => {
@@ -60,6 +67,13 @@ describe("auth server actions", () => {
     mocks.headers.mockResolvedValue(new Headers())
     mocks.check.mockResolvedValue({ allowed: true, retryAfterSeconds: 0 })
     mocks.authenticateUser.mockResolvedValue(user)
+    mocks.findMembership.mockResolvedValue({
+      organization: {
+        id: "organization-1",
+        name: "Test Organization",
+        slug: "test-organization",
+      },
+    })
 
     await expect(
       loginAction({ email: "USER@example.test", password: "password123" }),
@@ -79,7 +93,10 @@ describe("auth server actions", () => {
         locationId: null,
       },
     })
-    expect(mocks.createSession).toHaveBeenCalledWith(user)
+    expect(mocks.createSession).toHaveBeenCalledWith({
+      ...user,
+      activeOrganizationId: "organization-1",
+    })
     expect(mocks.logActivity).toHaveBeenCalledWith({
       userId: user.id,
       activity: "LOGIN",

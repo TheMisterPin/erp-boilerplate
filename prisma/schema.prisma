@@ -12,6 +12,43 @@ enum Role {
   USER
 }
 
+enum OrganizationStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum MembershipStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model Organization {
+  id          String             @id @default(uuid())
+  name        String
+  slug        String             @unique
+  status      OrganizationStatus @default(ACTIVE)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  memberships Membership[]
+
+  @@index([status])
+}
+
+model Membership {
+  id             String           @id @default(uuid())
+  organizationId String
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status         MembershipStatus @default(ACTIVE)
+  joinedAt       DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  @@unique([organizationId, userId])
+  @@index([userId, status])
+  @@index([organizationId, status])
+}
+
 model User {
   id           String         @id @default(uuid())
   email        String         @unique
@@ -31,6 +68,7 @@ model User {
   verifiedBy   String?
   activities   UserActivity[]
   passwordResetTokens PasswordResetToken[]
+  memberships Membership[]
   department   Department?    @relation("UserDepartment", fields: [departmentId], references: [id])
   departmentId String?
   location     Location?      @relation("UserLocation", fields: [locationId], references: [id])

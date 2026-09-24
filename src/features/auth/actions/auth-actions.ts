@@ -21,6 +21,7 @@ import {
 } from "@/features/auth/utils"
 import { toMe, type Me } from "@/features/auth/types"
 import { logActivity } from "@/features/logging/server"
+import { findActiveOrganization } from "@/features/organizations/context"
 
 function throwLoginRateLimited(
   subject: LoginRateLimitSubject,
@@ -91,7 +92,18 @@ export async function loginAction(
     }
 
     await loginRateLimiter.resetIdentifier(subject)
-    await createSession(user)
+    const organization = await findActiveOrganization(prisma, user.id)
+    if (!organization) {
+      throw new AppError({
+        kind: "auth",
+        code: "NO_ACTIVE_ORGANIZATION",
+        message: "Your account does not have access to an active organization.",
+      })
+    }
+    await createSession({
+      ...user,
+      activeOrganizationId: organization.id,
+    })
 
     await logActivity({
       userId: user.id,
@@ -134,6 +146,15 @@ export async function getMeAction(): Promise<ActionResult<Me | null>> {
       return null
     }
     if (session.sessionVersion !== user.sessionVersion) {
+      await clearSession()
+      return null
+    }
+    const organization = await findActiveOrganization(
+      prisma,
+      user.id,
+      session.activeOrganizationId,
+    )
+    if (!organization) {
       await clearSession()
       return null
     }
