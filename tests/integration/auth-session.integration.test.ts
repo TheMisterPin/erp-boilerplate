@@ -27,6 +27,7 @@ function sessionFor(userId: string) {
     email: "stale@example.test",
     role: "ADMIN" as const,
     fullName: "Stale Identity",
+    sessionVersion: 0,
     expires: "2030-01-01T00:00:00.000Z",
     absoluteExpires: "2030-02-01T00:00:00.000Z",
   }
