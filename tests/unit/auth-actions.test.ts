@@ -57,8 +57,6 @@ const user = {
   verifiedAt: null,
   verifiedBy: null,
   password: "hashed",
-  departmentId: null,
-  locationId: null,
   sessionVersion: 0,
 }
 
@@ -68,6 +66,8 @@ describe("auth server actions", () => {
     mocks.check.mockResolvedValue({ allowed: true, retryAfterSeconds: 0 })
     mocks.authenticateUser.mockResolvedValue(user)
     mocks.findMembership.mockResolvedValue({
+      departmentId: null,
+      locationId: null,
       organization: {
         id: "organization-1",
         name: "Test Organization",
@@ -87,7 +87,10 @@ describe("auth server actions", () => {
     })
 
     await expect(
-      loginAction({ email: "USER@example.test", password: "password123" }),
+      loginAction({
+        email: "USER@example.test",
+        password: "valid-test-password",
+      }),
     ).resolves.toEqual({
       ok: true,
       data: {
@@ -110,16 +113,21 @@ describe("auth server actions", () => {
     })
     expect(mocks.logActivity).toHaveBeenCalledWith({
       userId: user.id,
+      organizationId: "organization-1",
       activity: "LOGIN",
     })
   })
 
   it("records logout activity before clearing a valid session", async () => {
-    mocks.getSession.mockResolvedValue({ userId: user.id })
+    mocks.getSession.mockResolvedValue({
+      userId: user.id,
+      activeOrganizationId: "organization-1",
+    })
 
     await expect(logoutAction()).resolves.toEqual({ ok: true, data: true })
     expect(mocks.logActivity).toHaveBeenCalledWith({
       userId: user.id,
+      organizationId: "organization-1",
       activity: "LOGOUT",
     })
     expect(mocks.clearSession).toHaveBeenCalledOnce()

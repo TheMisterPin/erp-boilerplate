@@ -34,6 +34,7 @@ This repository uses **pnpm**, **Next.js**, **Prisma**, and **PostgreSQL**.
 4. Seed demo data:
 
    ```bash
+   # Set SEED_PASSWORD (minimum 12 characters) in .env first.
    pnpm db:seed
    ```
 

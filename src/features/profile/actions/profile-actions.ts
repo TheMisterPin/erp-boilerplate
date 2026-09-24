@@ -17,20 +17,41 @@ import type { TimeOffRequest } from "@/features/time-off/types/time-off-types"
 import { prisma } from "@/lib/db"
 import { updateOwnProfileSchema } from "@/lib/schemas/profile"
 
-const profileInclude = {
-  department: { select: { name: true } },
-  location: { select: { name: true } },
-} as const
+function profileInclude(organizationId: string) {
+  return {
+    memberships: {
+      where: { organizationId, status: "ACTIVE" as const },
+      take: 1,
+      select: {
+        departmentId: true,
+        department: { select: { name: true } },
+        locationId: true,
+        location: { select: { name: true } },
+      },
+    },
+  }
+}
 
 const ownShiftInclude = {
   location: { select: { name: true } },
   user: { select: { fullName: true } },
 } as const
 
-const ownTimeOffInclude = {
-  user: { select: { fullName: true, locationId: true } },
-  reviewedBy: { select: { fullName: true } },
-} as const
+function ownTimeOffInclude(organizationId: string) {
+  return {
+    user: {
+      select: {
+        fullName: true,
+        memberships: {
+          where: { organizationId, status: "ACTIVE" as const },
+          take: 1,
+          select: { locationId: true },
+        },
+      },
+    },
+    reviewedBy: { select: { fullName: true } },
+  }
+}
 
 function toProfile(row: {
   id: string
@@ -39,11 +60,14 @@ function toProfile(row: {
   lastName: string
   fullName: string
   pictureUrl: string | null
-  departmentId: string | null
-  locationId: string | null
-  department?: { name: string } | null
-  location?: { name: string } | null
+  memberships: Array<{
+    departmentId: string | null
+    department: { name: string } | null
+    locationId: string | null
+    location: { name: string } | null
+  }>
 }, role: Profile["role"]): Profile {
+  const membership = row.memberships[0]
   return {
     id: row.id,
     email: row.email,
@@ -52,10 +76,10 @@ function toProfile(row: {
     fullName: row.fullName,
     role,
     pictureUrl: row.pictureUrl,
-    departmentId: row.departmentId,
-    departmentName: row.department?.name ?? null,
-    locationId: row.locationId,
-    locationName: row.location?.name ?? null,
+    departmentId: membership?.departmentId ?? null,
+    departmentName: membership?.department?.name ?? null,
+    locationId: membership?.locationId ?? null,
+    locationName: membership?.location?.name ?? null,
   }
 }
 
@@ -106,14 +130,14 @@ function toOwnTimeOffRequest(row: {
   reviewNote: string | null
   createdAt: Date
   updatedAt: Date
-  user: { fullName: string; locationId: string | null }
+  user: { fullName: string; memberships: Array<{ locationId: string | null }> }
   reviewedBy: { fullName: string } | null
 }): TimeOffRequest {
   return {
     id: row.id,
     userId: row.userId,
     userName: row.user.fullName,
-    userLocationId: row.user.locationId,
+    userLocationId: row.user.memberships[0]?.locationId ?? null,
     type: row.type,
     status: row.status,
     startDate: formatDateOnly(row.startDate),
@@ -141,11 +165,12 @@ function userNotFound(): AppError {
   })
 }
 
-async function loadOwnUpcomingShifts(userId: string): Promise<ShiftInstance[]> {
+async function loadOwnUpcomingShifts(userId: string, organizationId: string): Promise<ShiftInstance[]> {
   const rows = await prisma.shiftInstance.findMany({
     where: {
       deletedAt: null,
       userId,
+      organizationId,
       status: "SCHEDULED",
       date: { gte: parseDateOnly(new Date()) },
     },
@@ -158,10 +183,11 @@ async function loadOwnUpcomingShifts(userId: string): Promise<ShiftInstance[]> {
 
 async function loadOwnTimeOffRequests(
   userId: string,
+  organizationId: string,
 ): Promise<TimeOffRequest[]> {
   const rows = await prisma.timeOffRequest.findMany({
-    where: { deletedAt: null, userId },
-    include: ownTimeOffInclude,
+    where: { organizationId, deletedAt: null, userId },
+    include: ownTimeOffInclude(organizationId),
     orderBy: { createdAt: "desc" },
   })
   return rows.map(toOwnTimeOffRequest)
@@ -172,13 +198,13 @@ export async function loadProfilePage(): Promise<ActionResult<ProfilePageData>> 
     const session = await requireSession()
     const row = await prisma.user.findFirst({
       where: { id: session.userId, deletedAt: null },
-      include: profileInclude,
+      include: profileInclude(session.activeOrganizationId),
     })
     if (!row) throw userNotFound()
 
     const [upcomingShifts, ownRequests] = await Promise.all([
-      loadOwnUpcomingShifts(session.userId),
-      loadOwnTimeOffRequests(session.userId),
+      loadOwnUpcomingShifts(session.userId, session.activeOrganizationId),
+      loadOwnTimeOffRequests(session.userId, session.activeOrganizationId),
     ])
 
     return {
@@ -194,7 +220,7 @@ export async function getProfile(): Promise<ActionResult<Profile>> {
     const session = await requireSession()
     const row = await prisma.user.findFirst({
       where: { id: session.userId, deletedAt: null },
-      include: profileInclude,
+      include: profileInclude(session.activeOrganizationId),
     })
     if (!row) throw userNotFound()
     return toProfile(row, session.role)
@@ -206,7 +232,7 @@ export async function listOwnTimeOffRequests(): Promise<
 > {
   return withErrorBoundary(async () => {
     const session = await requireSession()
-    return loadOwnTimeOffRequests(session.userId)
+    return loadOwnTimeOffRequests(session.userId, session.activeOrganizationId)
   })
 }
 
@@ -237,12 +263,13 @@ export async function updateOwnProfile(
 
     const row = await prisma.user.findFirst({
       where: { id: session.userId, deletedAt: null },
-      include: profileInclude,
+      include: profileInclude(session.activeOrganizationId),
     })
     if (!row) throw userNotFound()
 
     await logActivity({
       userId: session.userId,
+      organizationId: session.activeOrganizationId,
       activity: "PROFILE_UPDATE",
       activityData: {
         fields: Object.keys(data),

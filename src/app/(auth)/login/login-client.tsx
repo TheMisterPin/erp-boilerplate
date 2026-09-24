@@ -30,7 +30,7 @@ export default function LoginPage() {
   const { run } = useError()
   const { refreshMe } = useAuth()
   const [email, setEmail] = useState("admin@example.com")
-  const [password, setPassword] = useState("password123")
+  const [password, setPassword] = useState("")
 
   return (
     <Card className="mx-auto w-full max-w-md rounded-xl border-border-subtle bg-card shadow-none">

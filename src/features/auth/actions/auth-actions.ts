@@ -107,10 +107,11 @@ export async function loginAction(
 
     await logActivity({
       userId: user.id,
+      organizationId: organization.id,
       activity: "LOGIN",
     })
 
-    return toMe(user, organization.role.key)
+    return toMe(user, organization.role.key, organization)
   })
 }
 
@@ -120,6 +121,7 @@ export async function logoutAction(): Promise<ActionResult<true>> {
     if (session) {
       await logActivity({
         userId: session.userId,
+        organizationId: session.activeOrganizationId,
         activity: "LOGOUT",
       })
     }
@@ -159,6 +161,6 @@ export async function getMeAction(): Promise<ActionResult<Me | null>> {
       return null
     }
 
-    return toMe(user, organization.role.key)
+    return toMe(user, organization.role.key, organization)
   })
 }

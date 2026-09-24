@@ -9,6 +9,7 @@ import { prisma } from "@/lib/db"
 export async function logActivity(
   input: {
     userId: string
+    organizationId: string
     activity: Activity
     activityData?: Prisma.InputJsonValue
   },
@@ -17,6 +18,7 @@ export async function logActivity(
   const row = await db.userActivity.create({
     data: {
       userId: input.userId,
+      organizationId: input.organizationId,
       activity: input.activity,
       activityData: input.activityData ?? undefined,
     },

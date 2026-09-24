@@ -25,6 +25,7 @@ services:
     environment:
       DATABASE_URL: postgresql://erp:erp@db:5432/components_playground
       JWT_SECRET: erp-boilerplate-docker-demo-jwt-secret-not-for-production
+      SEED_PASSWORD: ${SEED_PASSWORD:?Set SEED_PASSWORD to at least 12 characters}
     depends_on:
       db:
         condition: service_healthy

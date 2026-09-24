@@ -11,9 +11,10 @@ export async function listActivities(): Promise<
   ActionResult<UserActivityItem[]>
 > {
   return withErrorBoundary(async () => {
-    await authorize(Actions.logging.read)
+    const session = await authorize(Actions.logging.read)
 
     const rows = await prisma.userActivity.findMany({
+      where: { organizationId: session.activeOrganizationId },
       include: {
         user: { select: { fullName: true, email: true } },
       },

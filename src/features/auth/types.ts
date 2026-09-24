@@ -11,8 +11,8 @@ export type Me = {
   pictureUrl: string | null
   isActive: boolean
   isVerified: boolean
-  departmentId: string | null
-  locationId: string | null
+  departmentId?: string | null
+  locationId?: string | null
 }
 
 export function toMe(user: {
@@ -24,9 +24,10 @@ export function toMe(user: {
   pictureUrl: string | null
   isActive: boolean
   isVerified: boolean
+}, role: OrganizationRoleKey, membership?: {
   departmentId: string | null
   locationId: string | null
-}, role: OrganizationRoleKey): Me {
+}): Me {
   return {
     id: user.id,
     email: user.email,
@@ -37,7 +38,7 @@ export function toMe(user: {
     pictureUrl: user.pictureUrl,
     isActive: user.isActive,
     isVerified: user.isVerified,
-    departmentId: user.departmentId,
-    locationId: user.locationId,
+    departmentId: membership?.departmentId ?? null,
+    locationId: membership?.locationId ?? null,
   }
 }

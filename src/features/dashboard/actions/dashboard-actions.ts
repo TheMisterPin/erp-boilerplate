@@ -106,16 +106,16 @@ export async function getCommandCenterData(): Promise<ActionResult<CommandCenter
 
     const scopedWhere: Prisma.ShiftAttendanceWhereInput =
       scope === "org"
-        ? {}
+        ? { organizationId: session.activeOrganizationId }
         : scope === "team"
-          ? { locationId: { in: managedIds } }
-          : { userId: session.userId }
+          ? { organizationId: session.activeOrganizationId, locationId: { in: managedIds } }
+          : { organizationId: session.activeOrganizationId, userId: session.userId }
     const instanceWhere: Prisma.ShiftInstanceWhereInput =
       scope === "org"
-        ? {}
+        ? { organizationId: session.activeOrganizationId }
         : scope === "team"
-          ? { locationId: { in: managedIds } }
-          : { userId: session.userId }
+          ? { organizationId: session.activeOrganizationId, locationId: { in: managedIds } }
+          : { organizationId: session.activeOrganizationId, userId: session.userId }
 
     const now = new Date()
     const today = startOfDay(now)
@@ -152,16 +152,18 @@ export async function getCommandCenterData(): Promise<ActionResult<CommandCenter
             where: {
               deletedAt: null,
               isActive: true,
+              organizationId: session.activeOrganizationId,
               ...(scope === "team" ? { id: { in: managedIds } } : {}),
             },
             select: { minimumStaff: true },
           }),
       scope === "self"
         ? Promise.resolve(1)
-        : prisma.user.count({
+        : prisma.membership.count({
             where: {
-              deletedAt: null,
-              isActive: true,
+              organizationId: session.activeOrganizationId,
+              status: "ACTIVE",
+              user: { deletedAt: null, isActive: true },
               ...(scope === "team" ? { locationId: { in: managedIds } } : {}),
             },
           }),
