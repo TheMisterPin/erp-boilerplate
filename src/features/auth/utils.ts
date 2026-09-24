@@ -162,12 +162,21 @@ export async function getSession(): Promise<SessionPayload | null> {
   return await decrypt(session)
 }
 
-export async function updateSession(request: NextRequest) {
+function nextResponse(requestHeaders?: Headers): NextResponse {
+  return requestHeaders
+    ? NextResponse.next({ request: { headers: requestHeaders } })
+    : NextResponse.next()
+}
+
+export async function updateSession(
+  request: NextRequest,
+  requestHeaders?: Headers,
+) {
   const session = request.cookies.get(SESSION_COOKIE)?.value
-  if (!session) return NextResponse.next()
+  if (!session) return nextResponse(requestHeaders)
 
   const parsed = await decrypt(session)
-  if (!parsed) return NextResponse.next()
+  if (!parsed) return nextResponse(requestHeaders)
 
   const absoluteExpires = new Date(parsed.absoluteExpires)
   const idleExpires = refreshSessionIdleExpiry(
@@ -175,9 +184,9 @@ export async function updateSession(request: NextRequest) {
     getSessionIdleMaxAgeSeconds(),
     absoluteExpires,
   )
-  if (!idleExpires) return NextResponse.next()
+  if (!idleExpires) return nextResponse(requestHeaders)
 
-  const res = NextResponse.next()
+  const res = nextResponse(requestHeaders)
   res.cookies.set({
     name: SESSION_COOKIE,
     value: await encrypt(

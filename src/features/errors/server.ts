@@ -1,5 +1,9 @@
 import type { ErrorDTO } from "@/features/errors/dto"
 import type { ActionResult } from "@/features/errors/dto"
+import {
+  currentRequestLogContext,
+  reportServerError,
+} from "@/lib/observability/server"
 import { ZodError } from "zod"
 
 /**
@@ -40,7 +44,10 @@ export async function withErrorBoundary<T>(
       return { ok: false, error: e.dto }
     }
 
-    console.error("[withErrorBoundary]", e)
+    await reportServerError(e, {
+      ...(await currentRequestLogContext()),
+      operation: "server_action",
+    })
     return {
       ok: false,
       error: {

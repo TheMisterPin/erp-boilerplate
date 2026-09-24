@@ -74,10 +74,12 @@ not safe credentials and must never be used in a public deployment.
 | Shift templates, schedule calendar, clock in/out | Implemented | `/team/shift-templates`, `/team/my-shifts`, `/clock` |
 | Profile and time-off workflow | Implemented | `/profile`, `/team/time-off` |
 | Audit trail | Implemented | `/team/activity` |
+| Security headers, dependency review and CodeQL | Implemented | [`operations`](docs/operations.md) |
+| Health/readiness and structured operational logs | Implemented | [`operations`](docs/operations.md) |
 | Feature-folder architecture and typed server-action errors | Implemented | [`architecture`](.docs/components/architecture.md), [`errors`](.docs/components/error-handling.md) |
 | Inventory, purchasing, accounting, CRM, multi-tenancy | Not included | Build as domain verticals |
 | Password reset, MFA, durable session revocation | Planned | Security roadmap |
-| Distributed rate limiting, email delivery, production observability | Planned | Replace the local adapters |
+| Distributed rate limiting, email delivery | Planned | Replace the local adapters |
 | GitHub Actions quality gate | Implemented | [Quality workflow](.github/workflows/quality.yml) |
 
 ## Take the demo tour
@@ -172,6 +174,8 @@ protection rules before requiring pull requests to merge.
   Redis/KV adapter for multi-instance or serverless deployments.
 - Client source limiting relies on proxy headers. Only trust those headers
   behind infrastructure that overwrites them.
+- Use `/api/health/live` for liveness and `/api/health/ready` for readiness;
+  see the [operations guide](docs/operations.md) for logging, CSP, and supply-chain defaults.
 - Authorization is server-side and reloads the current database account state;
   client-side visibility is not a security boundary.
 - This is not yet a complete business product. It does not include tenancy,
@@ -188,6 +192,7 @@ protection rules before requiring pull requests to merge.
 | [List pages](.docs/components/list-pages.md) | CRUD table pages |
 | [Error handling](.docs/components/error-handling.md) | `ActionResult` and client error UX |
 | [Logging](.docs/components/logging.md) | audit events |
+| [Operations](docs/operations.md) | health checks, structured logs, security headers, and CI scanning |
 | [Contributing](CONTRIBUTING.md) | local workflow and pull requests |
 | [Security policy](SECURITY.md) | responsible vulnerability reporting |
 
