@@ -22,4 +22,12 @@ Include:
 - Impact assessment
 - Suggested remediation (if known)
 
+## Automated safeguards
+
+The repository uses Dependabot, pull-request dependency review, and CodeQL.
+These reduce the chance of introducing known dependency or source-code issues,
+but they do not replace private vulnerability reporting or a deployment-specific
+security review. See [operations documentation](docs/operations.md) for the
+runtime header and observability defaults.
+
 We will acknowledge reports as quickly as possible and coordinate disclosure after a fix is available.

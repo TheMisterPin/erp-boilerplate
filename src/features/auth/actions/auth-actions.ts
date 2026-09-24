@@ -22,12 +22,13 @@ import {
 import { toMe, type Me } from "@/features/auth/types"
 import { logActivity } from "@/features/logging/server"
 import { findActiveOrganization } from "@/features/organizations/context"
+import { logServerEvent } from "@/lib/observability/server"
 
 function throwLoginRateLimited(
   subject: LoginRateLimitSubject,
   decision: LoginRateLimitDecision,
 ): never {
-  console.warn("[auth.login_throttled]", {
+  logServerEvent("warn", "auth.login_throttled", {
     identifierFingerprint: subject.identifierFingerprint,
     sourceFingerprint: subject.sourceFingerprint,
     retryAfterSeconds: decision.retryAfterSeconds,

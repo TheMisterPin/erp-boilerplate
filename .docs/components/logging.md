@@ -12,6 +12,14 @@ Call `logActivity` from **server** code whenever an operation should leave an au
 
 Do **not** invent parallel `prisma.userActivity.create` call sites. Do **not** log from client components.
 
+## Operational logging is separate
+
+`UserActivity` is a business audit trail, not a replacement for deployment
+observability. JSON operational logs, request IDs, redaction, error reporting,
+and health endpoints are documented in [Operations](../../docs/operations.md).
+Do not write operational events into `UserActivity`, and do not store audit
+events only in process logs.
+
 ---
 
 ## Folder map
