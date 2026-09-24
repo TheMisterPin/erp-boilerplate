@@ -35,6 +35,7 @@ export function createTestPrismaClient(): PrismaClient {
 export async function resetTestDatabase(prisma: PrismaClient): Promise<void> {
   await prisma.$transaction(async (tx) => {
     await tx.shiftAttendance.deleteMany()
+    await tx.membership.deleteMany()
     await tx.userActivity.deleteMany()
     await tx.timeOffRequest.deleteMany()
     await tx.shiftInstance.deleteMany()
@@ -43,6 +44,7 @@ export async function resetTestDatabase(prisma: PrismaClient): Promise<void> {
     await tx.user.deleteMany()
     await tx.location.deleteMany()
     await tx.department.deleteMany()
+    await tx.organization.deleteMany()
   })
   factorySequence = 0
 }
@@ -60,7 +62,13 @@ export async function createTestUser(
   const firstName = input.firstName ?? "Test"
   const lastName = input.lastName ?? `User ${factorySequence}`
 
-  return prisma.user.create({
+  const organization = await prisma.organization.create({
+    data: {
+      name: `Test Organization ${factorySequence}`,
+      slug: `test-organization-${factorySequence}`,
+    },
+  })
+  const user = await prisma.user.create({
     data: {
       email: input.email ?? `test-user-${factorySequence}@example.test`,
       firstName,
@@ -70,4 +78,9 @@ export async function createTestUser(
       role: input.role ?? "USER",
     },
   })
+  await prisma.membership.create({
+    data: { organizationId: organization.id, userId: user.id },
+  })
+
+  return { ...user, activeOrganizationId: organization.id }
 }

@@ -19,6 +19,36 @@ const prisma = new PrismaClient({
 
 const DEFAULT_PASSWORD = "password123"
 
+async function ensureOrganization(input: { name: string; slug: string }) {
+  return prisma.organization.upsert({
+    where: { slug: input.slug },
+    update: { name: input.name, status: "ACTIVE" },
+    create: { ...input, status: "ACTIVE" },
+  })
+}
+
+async function ensureMemberships(input: {
+  organizationId: string
+  userIds: string[]
+}) {
+  for (const userId of input.userIds) {
+    await prisma.membership.upsert({
+      where: {
+        organizationId_userId: {
+          organizationId: input.organizationId,
+          userId,
+        },
+      },
+      update: { status: "ACTIVE" },
+      create: {
+        organizationId: input.organizationId,
+        userId,
+        status: "ACTIVE",
+      },
+    })
+  }
+}
+
 type ShiftPreset = {
   type: "MORNING" | "AFTERNOON" | "NIGHT" | "FULL_DAY"
   startTime: string
@@ -708,6 +738,15 @@ async function seedActivityLog() {
 }
 
 async function main() {
+  const primaryOrganization = await ensureOrganization({
+    name: "Acme Operations",
+    slug: "default",
+  })
+  const secondaryOrganization = await ensureOrganization({
+    name: "Northwind Sandbox",
+    slug: "northwind-sandbox",
+  })
+
   const engineering = await ensureDepartment({
     name: "Engineering",
     description: "Product engineering and platform",
@@ -746,6 +785,17 @@ async function main() {
   const admin = users.find((user) => user.email === "admin@example.com")
   const manager = users.find((user) => user.email === "manager@example.com")
 
+  await ensureMemberships({
+    organizationId: primaryOrganization.id,
+    userIds: users.map((user) => user.id),
+  })
+  await ensureMemberships({
+    organizationId: secondaryOrganization.id,
+    userIds: [admin?.id, manager?.id].filter(
+      (id): id is string => typeof id === "string",
+    ),
+  })
+
   await prisma.location.update({
     where: { id: hq.id },
     data: { managerId: admin?.id ?? null },
@@ -762,6 +812,7 @@ async function main() {
 
   console.log("Seed complete")
   console.log(`  users: ${users.length} (password: ${DEFAULT_PASSWORD})`)
+  console.log("  organizations: 2 (admin and manager belong to both)")
   console.log(
     `  demo logins: admin@example.com, user@example.com, manager@example.com`,
   )

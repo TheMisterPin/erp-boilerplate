@@ -10,20 +10,25 @@ import {
 const mocks = vi.hoisted(() => ({
   getSession: vi.fn(),
   findUser: vi.fn(),
+  findMembership: vi.fn(),
 }))
 
 vi.mock("@/features/auth/utils", () => ({ getSession: mocks.getSession }))
 vi.mock("@/lib/db", () => ({
-  prisma: { user: { findUnique: mocks.findUser } },
+  prisma: {
+    user: { findUnique: mocks.findUser },
+    membership: { findFirst: mocks.findMembership },
+  },
 }))
 
 import { authorize, requireSession } from "@/features/auth/session"
 
 const prisma = createTestPrismaClient()
 
-function sessionFor(userId: string) {
+function sessionFor(userId: string, activeOrganizationId: string) {
   return {
     userId,
+    activeOrganizationId,
     email: "stale@example.test",
     role: "ADMIN" as const,
     fullName: "Stale Identity",
@@ -37,7 +42,11 @@ beforeEach(async () => {
   await resetTestDatabase(prisma)
   mocks.getSession.mockReset()
   mocks.findUser.mockReset()
+  mocks.findMembership.mockReset()
   mocks.findUser.mockImplementation((args) => prisma.user.findUnique(args))
+  mocks.findMembership.mockImplementation((args) =>
+    prisma.membership.findFirst(args),
+  )
 })
 
 afterAll(async () => {
@@ -47,7 +56,9 @@ afterAll(async () => {
 describe("database-backed sessions", () => {
   it("uses the current database identity and role", async () => {
     const user = await createTestUser(prisma, { role: "USER" })
-    mocks.getSession.mockResolvedValue(sessionFor(user.id))
+    mocks.getSession.mockResolvedValue(
+      sessionFor(user.id, user.activeOrganizationId),
+    )
 
     await expect(requireSession()).resolves.toMatchObject({
       userId: user.id,
@@ -66,7 +77,12 @@ describe("database-backed sessions", () => {
     if (change) {
       await prisma.user.update({ where: { id: user.id }, data: change })
     }
-    mocks.getSession.mockResolvedValue(sessionFor(change ? user.id : "missing"))
+    mocks.getSession.mockResolvedValue(
+      sessionFor(
+        change ? user.id : "missing",
+        user.activeOrganizationId,
+      ),
+    )
 
     await expect(requireSession()).rejects.toMatchObject({
       dto: { code: "SESSION_EXPIRED", kind: "auth" },
@@ -80,6 +96,41 @@ describe("database-backed sessions", () => {
 
     await expect(requireSession()).rejects.toMatchObject({
       dto: { code: "SESSION_EXPIRED", kind: "auth" },
+    })
+  })
+
+  it("rejects an inactive membership for the selected organization", async () => {
+    const user = await createTestUser(prisma)
+    await prisma.membership.update({
+      where: {
+        organizationId_userId: {
+          organizationId: user.activeOrganizationId,
+          userId: user.id,
+        },
+      },
+      data: { status: "INACTIVE" },
+    })
+    mocks.getSession.mockResolvedValue(
+      sessionFor(user.id, user.activeOrganizationId),
+    )
+
+    await expect(requireSession()).rejects.toMatchObject({
+      dto: { code: "ORGANIZATION_ACCESS_REVOKED", kind: "auth" },
+    })
+  })
+
+  it("rejects an inactive selected organization", async () => {
+    const user = await createTestUser(prisma)
+    await prisma.organization.update({
+      where: { id: user.activeOrganizationId },
+      data: { status: "INACTIVE" },
+    })
+    mocks.getSession.mockResolvedValue(
+      sessionFor(user.id, user.activeOrganizationId),
+    )
+
+    await expect(requireSession()).rejects.toMatchObject({
+      dto: { code: "ORGANIZATION_ACCESS_REVOKED", kind: "auth" },
     })
   })
 })
@@ -103,7 +154,9 @@ describe("permission matrix", () => {
     "matches every action for %s",
     async (role) => {
       const user = await createTestUser(prisma, { role })
-      mocks.getSession.mockResolvedValue(sessionFor(user.id))
+      mocks.getSession.mockResolvedValue(
+        sessionFor(user.id, user.activeOrganizationId),
+      )
 
       for (const action of actions) {
         if (can(role, action)) {

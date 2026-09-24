@@ -6,6 +6,7 @@ import type { SessionPayload } from "../src/features/auth/utils"
 
 const tokenSession: SessionPayload = {
   userId: "user-1",
+  activeOrganizationId: "organization-1",
   email: "old@example.com",
   role: "ADMIN",
   fullName: "Old Name",

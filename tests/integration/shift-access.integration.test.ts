@@ -40,6 +40,12 @@ describe("location-manager shift access", () => {
     const session = {
       ...manager,
       userId: manager.id,
+      activeOrganizationId: manager.activeOrganizationId,
+      organization: {
+        id: manager.activeOrganizationId,
+        name: "Test Organization",
+        slug: "test-organization",
+      },
       expires: "2030-01-01T00:00:00.000Z",
       absoluteExpires: "2030-02-01T00:00:00.000Z",
     }
