@@ -148,6 +148,18 @@ learn the shape before building a large workflow.
 That sounds structured because it is. The point is that the second feature
 should feel repetitive, not like a fresh architectural debate.
 
+### Generate the canonical shape
+
+Run `pnpm generate:feature vendors` to generate the canonical feature folders,
+schema, action skeleton, hook, stateless list page, form/table placeholders,
+route, barrel, and test skeleton. Use `--read-only` for a read-only vertical or
+`--dry-run` to see the plan without writing files. The generator refuses to
+overwrite files.
+
+It cannot make domain decisions for you: add the Prisma model and migration,
+define permissions and server authorization, connect real CRUD actions, add the
+navigation entry/module configuration, and replace the generated test skeleton.
+
 ## Product configuration
 
 The supported customization surface is [`src/lib/app-config.ts`](src/lib/app-config.ts). It supplies product copy, logo choice, support links, accent tokens, and the enabled-module registry. Defaults preserve the demo identity; use the documented `NEXT_PUBLIC_*` variables in `.env` to customize a generated project.
