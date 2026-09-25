@@ -89,15 +89,16 @@ Shared zod lives in `src/lib/schemas/<model>.ts` (FieldDefs + server parse), not
 ## Adding a new vertical (reproduce `users`)
 
 1. Copy the folder shape from `src/features/users/` (types → actions → hooks → components).
-2. Add shared zod in `src/lib/schemas/<model>.ts`.
+2. Add shared zod in `src/lib/schemas/<model>.ts`. Include `organizationId` on tenant-owned models.
 3. Extend RBAC in `permissions.ts` (`Permission`, `ROLE_PERMISSIONS`, `Actions.<feature>`).
-4. Implement `actions/*-actions.ts` (removal: soft-delete, membership status, or workflow status as appropriate).
+4. Implement `actions/*-actions.ts`: scope by `session.activeOrganizationId`; removal soft-delete / membership status / workflow status as appropriate.
 5. Implement form fields + `*Form`, table columns + `toXTableRow`.
 6. Implement `hooks/use-<feature>-list-page.tsx` (logic) and `components/pages/<feature>-list-page.tsx` (view).
 7. Add route: `src/app/(app)/…/page.tsx` that wraps `<TablePageViewport><XListPage {...page} /></TablePageViewport>`.
 8. Register nav in `src/lib/navigation.ts`.
 9. Audit events: `logActivity({ userId, organizationId, … })` + extend `Activity` enum when needed.
-10. Update `.docs` / rules only when the convention itself changes.
+10. Extend `tests/integration/tenant-isolation.integration.test.ts` for the new vertical (see [Testing](./testing.md)).
+11. Update `.docs` / rules only when the convention itself changes.
 
 Read-only lists (e.g. logging) skip forms/modals but still use **hook + stateless page**.
 
@@ -109,7 +110,8 @@ Read-only lists (e.g. logging) skip forms/modals but still use **hook + stateles
 - Route pages must not import `@/features/*/actions` directly for orchestration — go through the feature hook (views stay free of actions too).
 - Never import `@/features/errors/server` or `@/features/logging/server` from client hooks/views.
 - Self-service profile edits (`features/profile`, session-scoped actions) do not require `users:write`; admin member CRUD stays on `features/users`.
-- Do not invent a second layout or state library for feature pages.
+- Do not invent a second layout, state library, or tenancy context for feature pages — use the signed session’s `activeOrganizationId`.
+- Tenant ownership details: [organization ownership](../../docs/organization-ownership.md).
 
 ---
 
@@ -119,4 +121,6 @@ Read-only lists (e.g. logging) skip forms/modals but still use **hook + stateles
 |------|------|
 | `.cursor/rules/feature-architecture.mdc` | Agent rule |
 | `.docs/components/list-pages.md` | List CRUD details |
+| `.docs/components/testing.md` | Tenant-isolation matrix |
+| `docs/organization-ownership.md` | Tenant boundary |
 | `src/features/users/` | Canonical vertical |

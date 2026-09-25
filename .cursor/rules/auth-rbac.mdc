@@ -73,6 +73,18 @@ can(me.role, Actions.users.write)
 2. Grant them on roles in `ROLE_PERMISSIONS`
 3. Add `Actions.foo.read` / `Actions.foo.write`
 4. `await authorize(Actions.foo.*)` in server actions; `can(me.role, Actions.foo.write)` in list UI
+5. Scope tenant-owned actions by `session.activeOrganizationId`; extend the tenant-isolation matrix (`.docs/components/testing.md`)
+
+## Tenancy
+
+Organizations are the tenant boundary. Session carries `activeOrganizationId`; business models carry `organizationId`.
+
+- Derive org scope from the session on creates; include it in every list/lookup/update/relation check.
+- Treat cross-organization identifiers as not-found — never attach them to the active org.
+- Memberships admin: `/organization/memberships` (`memberships:read` / `memberships:write`).
+- Do not invent a parallel “current org” store outside the signed session.
+
+See `docs/organization-ownership.md` and `docs/organization-roles.md`.
 
 ## Import hygiene
 

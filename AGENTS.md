@@ -16,6 +16,7 @@ ERP UI boilerplate. Prefer existing shared systems over one-off patterns. Human 
 2. Mirror the **users** vertical for new features (`src/features/users/`) — see `.docs/components/architecture.md`.
 3. Do not invent parallel form, modal, or error pipelines.
 4. **Stateless views**: page logic lives in `features/<f>/hooks/`; `app/` routes only inject hook output into the view.
+5. For tenant-owned data: read [organization ownership](docs/organization-ownership.md) and plan tenant-isolation tests (`.docs/components/testing.md`).
 
 ## Systems (do not reinvent)
 
@@ -28,6 +29,7 @@ ERP UI boilerplate. Prefer existing shared systems over one-off patterns. Human 
 | Toasts | `sonner` (`toast`) | error-handling + modals docs | — |
 | Shared zod | `src/lib/schemas/<model>.ts` | forms + error-handling | — |
 | Auth / RBAC | `permissions.ts` (`Actions`, `can`) + `session.ts` (`authorize`) | `.docs/components/auth.md` | `auth-rbac.mdc` |
+| Tenancy / orgs | session `activeOrganizationId` + `organizationId` on models; memberships admin | `docs/organization-ownership.md`, `docs/organization-roles.md`, `.docs/components/testing.md` | `auth-rbac.mdc` |
 | DynamicTable | `@/components/shared/table` (`DynamicTable`, `DataTableFrame`, `TablePageViewport`, `TableSkeleton`) | `.docs/components/tables.md` | `dynamic-table.mdc` |
 | List-page CRUD | feature hook + `*list-page` view | `.docs/components/list-pages.md` | `list-page-crud.mdc` |
 | Feature architecture | `src/features/<f>/` layout | `.docs/components/architecture.md` | `feature-architecture.mdc` |
@@ -38,6 +40,7 @@ ERP UI boilerplate. Prefer existing shared systems over one-off patterns. Human 
 - **Server actions** always return `ActionResult<T>` via `withErrorBoundary`. Never throw across the wire. Known failures: `throw new AppError({ kind, code, message })`.
 - **Client actions** use only `useError().run()` — no try/catch UI in feature components. Form submits: `run(action, { form })` (maps Zod field errors via `applyServerErrors`).
 - **RBAC**: server `await authorize(Actions.<feature>.read|write)`; client `can(me.role, Actions.<feature>.write)`. Org-role matrix + catalog in `permissions.ts` (`OrganizationRoleKey`: ADMIN / MANAGER / OPERATOR / VIEWER). Never import `session.ts` from client.
+- **Tenancy**: Organizations are the tenant boundary. Scope every tenant-owned query/mutation with `session.activeOrganizationId` (require `organizationId` on models). Reject cross-org relation IDs as not-found. Do not invent a parallel tenant context. Demo: `/organization/memberships`. Details: `docs/organization-ownership.md` / `docs/organization-roles.md`.
 - **Auth**: jose cookie sessions + `loginAction` / `logoutAction` / `getMeAction` only. Do not add REST `/api/auth/*` or axios session clients.
 - **Forms**: FieldDef arrays + thin `*Form` wrappers around `DynamicForm`. `onSubmit(values, form)`. Shared validators from `src/lib/schemas/`.
 - **Modals**: `confirm` / `notify` / `openModal({ type: "form" })`. Transient feedback → toast, not `notify`. Modal package must not import form types.
@@ -53,6 +56,7 @@ ERP UI boilerplate. Prefer existing shared systems over one-off patterns. Human 
 ## Do not invent
 
 - Parallel form / modal / error / auth stacks
+- Parallel tenancy / “current org” contexts outside the signed session + `activeOrganizationId`
 - Detail/show pages or orphan `getX(id)` actions without a route that uses them
 - Server-paginated list endpoints “for scale” by default
 - Global sidebar search, alternate theme systems, or duplicate providers — extend the existing `ThemeProvider` / shell instead
@@ -96,16 +100,17 @@ if (data) toast.success("Saved")
 ## Adding a feature vertical
 
 1. Reproduce `src/features/users/` folder layout (see `.docs/components/architecture.md`)
-2. `types/` — model types
+2. `types/` — model types (include `organizationId` when the model is tenant-owned)
 3. `src/lib/schemas/<model>.ts` — shared zod
 4. Extend RBAC: `Permission`, `ROLE_PERMISSIONS`, `Actions.<feature>` in `permissions.ts`
-5. `actions/*-actions.ts` — `"use server"` + `withErrorBoundary` + `authorize` + the correct removal pattern for the domain (soft-delete, membership status, or workflow status)
+5. `actions/*-actions.ts` — `"use server"` + `withErrorBoundary` + `authorize` + scope all reads/writes by `session.activeOrganizationId` + the correct removal pattern for the domain (soft-delete, membership status, or workflow status)
 6. `components/forms/*-form-fields.ts` + thin `*Form`
 7. `components/tables/*-table-columns.tsx` + `toXTableRow`
 8. `hooks/use-*-list-page.tsx` — page state, modals, `run()`
 9. `components/pages/*-list-page.tsx` — **stateless** view + props type; `!loaded` → `TableSkeleton` (toolbar visible, actions disabled)
 10. Route `src/app/(app)/…/page.tsx` — `const page = useX…(); return <TablePageViewport><XListPage {...page} /></TablePageViewport>` + nav entry
 11. Call `logActivity` from privileged mutations when warranted (extend `Activity` enum first if needed; always pass `organizationId`)
-12. Update `.docs` / rules only when conventions change
+12. Extend `tests/integration/tenant-isolation.integration.test.ts` in the same PR (list/enumeration, one foreign mutation, every cross-org relation id) — see `.docs/components/testing.md`
+13. Update `.docs` / rules only when conventions change
 
 Auth uses jose cookie sessions (`src/features/auth/utils.ts`) + Prisma users. Guards live in `src/features/auth/session.ts` and throw `AppError` with stable kinds/codes so the client channel table stays stable.

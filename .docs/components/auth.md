@@ -140,6 +140,13 @@ deleting the underlying user account. Every mutation is tenant-scoped and
 audited. The server prevents the last active administrator from being demoted,
 deactivated, or removed; the rule is checked inside a serializable transaction.
 
+Tenant-owned Prisma models must carry `organizationId`. Server actions derive
+that value from the session for creates and include it in every list, lookup,
+update guard, and relationship validation. Foreign-org identifiers are
+not-found. Full rules: [organization ownership](../../docs/organization-ownership.md).
+When adding a tenant-owned vertical, extend the
+[tenant-isolation matrix](./testing.md) in the same PR.
+
 ---
 
 ## Providers
@@ -216,4 +223,7 @@ them. Identifier limiting remains active when no source is available.
 | `.cursor/rules/auth-rbac.mdc` | Agent rule |
 | `.docs/components/error-handling.md` | Channels for auth/permission errors |
 | `.docs/components/list-pages.md` | List CRUD write gating |
+| `.docs/components/testing.md` | Tenant-isolation matrix for new verticals |
+| `docs/organization-ownership.md` | Tenant boundary + `organizationId` scoping |
+| `docs/organization-roles.md` | System vs org roles |
 | `src/features/users/actions/user-actions.ts` | Reference `authorize` usage |
