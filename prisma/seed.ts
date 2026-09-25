@@ -17,6 +17,9 @@ const prisma = new PrismaClient({
   adapter: new PrismaPg({ connectionString }),
 })
 
+const adminEmail = process.env.SEED_ADMIN_EMAIL?.trim().toLowerCase() || "admin@example.com"
+const organizationName = process.env.SEED_ORGANIZATION_NAME?.trim() || "Acme Operations"
+
 function getSeedPassword(): string {
   const password = process.env.SEED_PASSWORD
   if (!password || password.length < 12) {
@@ -285,7 +288,7 @@ type SeedUserSpec = {
 function buildUserSpecs(): SeedUserSpec[] {
   const fixed: SeedUserSpec[] = [
     {
-      email: "admin@example.com",
+      email: adminEmail,
       role: "ADMIN",
       firstName: "Admin",
       lastName: "User",
@@ -320,7 +323,7 @@ async function seedUsers(input: {
     const departmentId =
       input.departmentIds[index % input.departmentIds.length] ?? null
     const locationId =
-      spec.email === "admin@example.com" || spec.email === "user@example.com"
+      spec.email === adminEmail || spec.email === "user@example.com"
         ? input.locationIds[0]
         : spec.email === "manager@example.com"
           ? input.locationIds[1]
@@ -796,7 +799,7 @@ async function seedActivityLog() {
 async function main() {
   const seedPassword = getSeedPassword()
   const primaryOrganization = await ensureOrganization({
-    name: "Acme Operations",
+    name: organizationName,
     slug: "default",
   })
   const secondaryOrganization = await ensureOrganization({
@@ -848,7 +851,7 @@ async function main() {
     locationIds: [hq.id, warehouse.id, remote.id],
   })
 
-  const admin = users.find((user) => user.email === "admin@example.com")
+  const admin = users.find((user) => user.email === adminEmail)
   const manager = users.find((user) => user.email === "manager@example.com")
 
   await ensureMemberships({
@@ -857,13 +860,13 @@ async function main() {
       userId: user.id,
       departmentId: [engineering.id, operations.id, people.id][index % 3],
       locationId:
-        user.email === "admin@example.com" || user.email === "user@example.com"
+        user.email === adminEmail || user.email === "user@example.com"
           ? hq.id
           : user.email === "manager@example.com"
             ? warehouse.id
             : [hq.id, warehouse.id, remote.id][index % 3],
       role:
-        user.email === "admin@example.com"
+        user.email === adminEmail
           ? "ADMIN"
           : user.email === "manager@example.com"
             ? "MANAGER"
@@ -896,7 +899,7 @@ async function main() {
   console.log(`  users: ${users.length}`)
   console.log("  organizations: 2 (admin and manager belong to both)")
   console.log(
-    `  demo logins: admin@example.com, user@example.com, manager@example.com`,
+    `  demo logins: ${adminEmail}, user@example.com, manager@example.com`,
   )
   console.log(`  shifts: +${shifts.templates} templates, +${shifts.instances} instances`)
   console.log(
