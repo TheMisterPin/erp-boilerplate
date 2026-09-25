@@ -53,6 +53,16 @@ local Node, its connection string is:
 DATABASE_URL="postgresql://erp:erp@localhost:5432/components_playground"
 ```
 
+### Guided setup
+
+From a clean clone, run `pnpm setup` to create `.env` with a branded product,
+initial organization and admin address, database choice, module selection, and
+generated secrets. Review the plan first with `pnpm setup -- --dry-run`.
+
+The command never overwrites `.env` implicitly. If a generated file needs to be
+recreated, copy it somewhere safe, then run `pnpm setup -- --force`; the old
+file is intentionally left for you to inspect before replacement.
+
 ## Demo accounts
 
 These accounts exist **only in a newly seeded local demo database**. They are
