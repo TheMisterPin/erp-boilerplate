@@ -23,6 +23,7 @@ jobs:
           fixture_dir="$(mktemp -d)"
           rsync -a --exclude .git --exclude node_modules --exclude .next ./ "$fixture_dir/"
           cd "$fixture_dir"
+          pnpm install --frozen-lockfile
           SETUP_APP_NAME="Northstar Operations" SETUP_ORGANIZATION_NAME="Northstar" SETUP_ADMIN_EMAIL="admin@northstar.test" SETUP_INCLUDE_DEMO_MODULES=false pnpm run setup -- --force --yes
           test -f .env
           grep -q 'NEXT_PUBLIC_APP_NAME="Northstar Operations"' .env
@@ -32,6 +33,7 @@ jobs:
             fixture_dir="$(mktemp -d)"
             rsync -a --exclude .git --exclude node_modules --exclude .next ./ "$fixture_dir/"
             cd "$fixture_dir"
+            pnpm install --frozen-lockfile
             if [ "$mode" = read-only ]; then pnpm generate:feature cost-centers -- --read-only; else pnpm generate:feature cost-centers; fi
             pnpm db:generate
             pnpm lint
