@@ -62,4 +62,4 @@ export default function Home() {
 
 | Route | Feature |
 |-------|---------|
-| `/` | `features/dashboard` (Command Center) |
+| `/home` | `features/dashboard` (Command Center) |

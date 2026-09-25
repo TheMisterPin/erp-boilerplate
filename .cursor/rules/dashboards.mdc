@@ -1,12 +1,12 @@
 ---
 description: Dashboard / Command Center — aggregate KPIs and charts, not list CRUD
-globs: src/features/dashboard/**/*,src/app/(app)/page.tsx
+globs: src/features/dashboard/**/*,src/app/(app)/home/**/*
 alwaysApply: false
 ---
 
 # Dashboards
 
-Role-scoped KPI / chart / queue surfaces. Mirror **`src/features/dashboard/`** (Command Center). Do not turn dashboards into list pages or settings hubs.
+Role-scoped KPI / chart / queue surfaces. Mirror **`src/features/dashboard/`** (`/home` Command Center). Do not turn dashboards into list pages or settings hubs.
 
 ## Rules
 
