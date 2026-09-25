@@ -55,12 +55,12 @@ DATABASE_URL="postgresql://erp:erp@localhost:5432/components_playground"
 
 ### Guided setup
 
-From a clean clone, run `pnpm setup` to create `.env` with a branded product,
+From a clean clone, run `pnpm run setup` to create `.env` with a branded product,
 initial organization and admin address, database choice, module selection, and
-generated secrets. Review the plan first with `pnpm setup -- --dry-run`.
+generated secrets. Review the plan first with `pnpm run setup -- --dry-run`.
 
 The command never overwrites `.env` implicitly. If a generated file needs to be
-recreated, copy it somewhere safe, then run `pnpm setup -- --force`; the old
+recreated, copy it somewhere safe, then run `pnpm run setup -- --force`; the old
 file is intentionally left for you to inspect before replacement.
 
 ## Demo accounts
@@ -196,6 +196,11 @@ build.
 
 Configure `Quality / quality` as a required status check in the `main` branch
 protection rules before requiring pull requests to merge.
+
+The `Scaffolding / verify-generated-workflows` check also creates disposable
+copies of the repository, runs the guided setup flow, and generates both CRUD
+and read-only feature fixtures. Update its expected setup values only when the
+documented prompts or configuration contract intentionally change.
 
 ## Production caveats
 
