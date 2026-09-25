@@ -9,6 +9,7 @@ import { SidebarEdgeToggle } from "./sidebar-edge-toggle"
 import { SidebarOrganizationSwitcher } from "./sidebar-organization-switcher"
 import { SidebarThemeToggle } from "./sidebar-theme-toggle"
 import { SidebarUser } from "./sidebar-user"
+import { ProductMark } from "./product-mark"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import {
   Sidebar,
@@ -37,11 +38,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const canReadMemberships = me
     ? can(me.role, Actions.memberships.read)
     : false
-  const ProductIcon = {
-    hexagon: Hexagon,
-    boxes: Boxes,
-    building: Building2,
-  }[publicAppConfig.branding.logo]
+  const ProductIcon =
+    publicAppConfig.branding.logo === "modules"
+      ? null
+      : {
+          hexagon: Hexagon,
+          boxes: Boxes,
+          building: Building2,
+        }[publicAppConfig.branding.logo]
 
   return (
     <Sidebar collapsible="icon" className="overflow-visible" {...props}>
@@ -57,7 +61,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               >
                 <Link href="/home">
                   <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-accent-muted text-primary">
-                    <ProductIcon className="size-4" />
+                    {ProductIcon === null ? (
+                      <ProductMark className="size-4" />
+                    ) : (
+                      <ProductIcon className="size-4" />
+                    )}
                   </div>
                   <div className="grid min-w-0 flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
                     <span className="truncate font-semibold">{publicAppConfig.product.name}</span>

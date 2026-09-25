@@ -7,6 +7,7 @@ describe("public application configuration", () => {
   it("uses the current demo defaults", () => {
     const config = createPublicAppConfig({})
     expect(config.product.name).toBe("ERP Boilerplate")
+    expect(config.siteUrl).toBe("https://erp-boilerplate.vercel.app/")
     expect(config.enabledModules).toContain("memberships")
   })
 
