@@ -18,6 +18,7 @@ import { useError } from "@/features/errors"
 import { loginAction } from "@/features/auth/actions/auth-actions"
 import { useAuth } from "@/features/auth/hooks/use-auth"
 import { Separator } from "@/components/ui/separator"
+import { publicAppConfig } from "@/lib/app-config"
 
 function safeNextPath(raw: string | null): string {
   if (!raw || !raw.startsWith("/") || raw.startsWith("//")) return "/"
@@ -36,7 +37,7 @@ export default function LoginPage() {
     <Card className="mx-auto w-full max-w-md rounded-xl border-border-subtle bg-card shadow-none">
       <header className="shrink-0 px-6 pt-8 pb-2 text-center">
         <p className="mx-auto w-fit bg-linear-to-r from-foreground to-primary bg-clip-text text-2xl font-semibold tracking-tight text-transparent">
-          ERP Boilerplate
+          {publicAppConfig.product.name}
         </p>
       </header>
       <Separator className="my-4" />
