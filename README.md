@@ -226,6 +226,7 @@ protection rules before requiring pull requests to merge.
 | [List pages](.docs/components/list-pages.md) | CRUD table pages |
 | [Error handling](.docs/components/error-handling.md) | `ActionResult` and client error UX |
 | [Logging](.docs/components/logging.md) | audit events |
+| [Testing](.docs/components/testing.md) | Vitest layout + tenant-isolation matrix |
 | [Operations](docs/operations.md) | health checks, structured logs, security headers, and CI scanning |
 | [Contributing](CONTRIBUTING.md) | local workflow and pull requests |
 | [Security policy](SECURITY.md) | responsible vulnerability reporting |

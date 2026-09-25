@@ -38,6 +38,7 @@ ERP UI boilerplate. Prefer existing shared systems over one-off patterns. Human 
 | Dashboards | Command Center / KPI + chart hubs | `.docs/components/dashboards.md` | `dashboards.mdc` |
 | Clock (kiosk) | `(auth)/clock` + attendance | `.docs/components/clock-pages.md` | `clock-pages.mdc` |
 | Calendar pages | schedule grids (e.g. my-shifts) | `.docs/components/calendar-pages.md` | `calendar-pages.mdc` |
+| Testing | `tests/` (+ legacy `scripts/*.test.ts`) | `.docs/components/testing.md` | `testing.mdc` |
 
 ## Hard conventions
 
