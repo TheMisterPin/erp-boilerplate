@@ -19,6 +19,7 @@
     "build": "prisma generate && next build",
     "dev": "next dev",
     "setup": "tsx scripts/setup.ts",
+    "generate:feature": "tsx scripts/generate-feature.ts",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "start": "next start",
