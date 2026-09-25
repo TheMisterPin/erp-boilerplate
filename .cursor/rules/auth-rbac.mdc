@@ -27,8 +27,8 @@ Use jose cookie sessions + the permission-matrix action catalog. Do not invent N
 ## Middleware
 
 - Unauthenticated non-public routes → redirect `/login?next=…`
-- Public: `/login`, `/clock`
-- Authenticated `/login` → `/`
+- Public: `/`, `/login`, `/clock` (landing + auth + clock)
+- Authenticated `/login` or `/` → `/home`
 - With session → refresh the idle expiry via `updateSession`, capped at the original absolute expiry
 - Production cookies are Secure; all session cookies are HTTP-only, SameSite=Lax, and path `/`
 - JWT verification pins the configured issuer, audience, and HS256 algorithm

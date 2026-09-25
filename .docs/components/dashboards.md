@@ -2,7 +2,7 @@
 
 Role-scoped operational reports: KPIs, charts, queues, feeds. **Not** list + modal CRUD and **not** settings hubs.
 
-Canonical reference: **`src/features/dashboard/`** → `/` (Command Center).
+Canonical reference: **`src/features/dashboard/`** → `/home` (Command Center).
 
 Related: [Architecture](./architecture.md), [Modals](./modals.md), [Auth](./auth.md).
 
