@@ -77,7 +77,8 @@ if (data) toast.success("Saved")
 
 | Route | What it proves |
 |-------|----------------|
-| `/` | Command Center — role-scoped ops dashboard (KPIs, coverage, approvals, activity) |
+| `/` | Public landing — product overview; signed-in visitors redirect to `/home` |
+| `/home` | Command Center — role-scoped ops dashboard (KPIs, coverage, approvals, activity) |
 | `/login` | Auth gate entry + `SESSION_EXPIRED` acknowledge target |
 | `/clock` | Kiosk time clock — on-page login, check-in/out, attendance ↔ `UserActivity` |
 | `/team/members` | List-page CRUD (forms + modals + `run()`) |

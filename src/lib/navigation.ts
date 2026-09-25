@@ -21,7 +21,7 @@ export const navigationItems: NavigationItem[] = [
   {
     title: "Home",
     icon: Home,
-    url: "/",
+    url: "/home",
     module: "dashboard",
   },
   {

@@ -21,7 +21,7 @@ import { Separator } from "@/components/ui/separator"
 import { publicAppConfig } from "@/lib/app-config"
 
 function safeNextPath(raw: string | null): string {
-  if (!raw || !raw.startsWith("/") || raw.startsWith("//")) return "/"
+  if (!raw || !raw.startsWith("/") || raw.startsWith("//") || raw === "/") return "/home"
   return raw
 }
 

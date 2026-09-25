@@ -34,10 +34,10 @@ function formatDuration(minutes: number | null | undefined): string {
   return `${hours}h ${mins}m`
 }
 
-function HomeLink() {
+function HomeLink({ href }: { href: string }) {
   return (
     <Button asChild variant="ghost" size="sm" className="self-start">
-      <Link href="/">
+      <Link href={href}>
         <ArrowLeft className="mr-2 h-4 w-4" />
         Back to home
       </Link>
@@ -69,7 +69,7 @@ export function ClockPage({
         aria-busy="true"
         aria-label="Loading…"
       >
-        <HomeLink />
+        <HomeLink href={isAuthenticated ? "/home" : "/"} />
         <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-2">
             <Skeleton className="h-9 w-40" />
@@ -95,7 +95,7 @@ export function ClockPage({
   if (!isAuthenticated) {
     return (
       <div className="mx-auto flex w-full max-w-md flex-col gap-8 px-4 py-16">
-        <HomeLink />
+        <HomeLink href={isAuthenticated ? "/home" : "/"} />
         <div className="space-y-2 text-center">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
             <Timer className="h-6 w-6" />
@@ -146,7 +146,7 @@ export function ClockPage({
 
   return (
     <div className="mx-auto flex w-full max-w-lg flex-col gap-6 px-4 py-6">
-      <HomeLink />
+      <HomeLink href={isAuthenticated ? "/home" : "/"} />
 
       <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-1">

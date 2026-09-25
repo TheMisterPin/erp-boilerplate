@@ -67,9 +67,9 @@ new secret and expect users to authenticate again; multi-key overlap is not impl
 | Case | Behavior |
 |------|----------|
 | No session, not public | Redirect `/login?next=<pathname>` |
-| Session on `/login` | Redirect `/` |
+| Session on `/login` or `/` | Redirect `/home` |
 | Session elsewhere | Refresh idle expiry up to the absolute expiry, then continue |
-| Public | `/login`, `/clock` |
+| Public | `/`, `/login`, `/clock` |
 
 Login client should honor `next` (safe same-origin path only) after successful sign-in.
 

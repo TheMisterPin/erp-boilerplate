@@ -7,188 +7,167 @@ datasource db {
   provider = "postgresql"
 }
 
-enum Role {
-  ADMIN
-  USER
-}
-
-enum OrganizationStatus {
-  ACTIVE
-  INACTIVE
-}
-
-enum MembershipStatus {
-  ACTIVE
-  INACTIVE
-}
-
-enum OrganizationRoleKey {
-  ADMIN
-  MANAGER
-  OPERATOR
-  VIEWER
-}
-
-model Organization {
-  id              String             @id @default(uuid())
-  name            String
-  slug            String             @unique
-  status          OrganizationStatus @default(ACTIVE)
-  createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
-  memberships     Membership[]
-  roles           OrganizationRole[]
-  activities      UserActivity[]
-  departments     Department[]
-  locations       Location[]
-  shiftTemplates  ShiftTemplate[]
-  shiftInstances  ShiftInstance[]
-  attendances     ShiftAttendance[]
-  timeOffRequests TimeOffRequest[]
-
-  @@index([status])
-}
-
-model Membership {
-  id             String           @id @default(uuid())
-  organizationId String
-  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  userId         String
-  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  status         MembershipStatus @default(ACTIVE)
-  joinedAt       DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
-  roleAssignment RoleAssignment?
-  departmentId   String?
-  department     Department?      @relation("MembershipDepartment", fields: [departmentId], references: [id], onDelete: SetNull)
-  locationId     String?
-  location       Location?        @relation("MembershipLocation", fields: [locationId], references: [id], onDelete: SetNull)
-
-  @@unique([organizationId, userId])
-  @@index([userId, status])
-  @@index([organizationId, status])
-  @@index([organizationId, departmentId])
-  @@index([organizationId, locationId])
-}
-
-model OrganizationRole {
-  id             String              @id @default(uuid())
-  organizationId String
-  organization   Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  key            OrganizationRoleKey
-  name           String
-  permissions    String[]
-  isActive       Boolean             @default(true)
-  createdAt      DateTime            @default(now())
-  updatedAt      DateTime            @updatedAt
-  deletedAt      DateTime?
-  assignments    RoleAssignment[]
-
-  @@unique([organizationId, key])
-  @@index([organizationId, isActive])
-}
-
-model RoleAssignment {
-  id           String           @id @default(uuid())
-  membershipId String           @unique
-  membership   Membership       @relation(fields: [membershipId], references: [id], onDelete: Cascade)
-  roleId       String
-  role         OrganizationRole @relation(fields: [roleId], references: [id], onDelete: Restrict)
-  createdAt    DateTime         @default(now())
-  updatedAt    DateTime         @updatedAt
-  deletedAt    DateTime?
-
-  @@index([roleId, deletedAt])
-}
-
 model User {
-  id                      String               @id @default(uuid())
-  email                   String               @unique
-  firstName               String
-  lastName                String
-  pictureUrl              String?
-  fullName                String
-  password                String
-  sessionVersion          Int                  @default(0)
-  role                    Role                 @default(USER)
-  createdAt               DateTime             @default(now())
-  updatedAt               DateTime             @updatedAt
-  deletedAt               DateTime?
-  isActive                Boolean              @default(true)
-  isVerified              Boolean              @default(false)
-  verifiedAt              DateTime?
-  verifiedBy              String?
-  activities              UserActivity[]
-  passwordResetTokens     PasswordResetToken[]
-  memberships             Membership[]
-  managedLocations        Location[]           @relation("LocationManager")
-  shiftTemplates          ShiftTemplate[]      @relation("ShiftTemplateAssignee")
-  shiftInstances          ShiftInstance[]      @relation("ShiftInstanceAssignee")
-  attendances             ShiftAttendance[]
-  timeOffRequests         TimeOffRequest[]     @relation("TimeOffRequester")
-  reviewedTimeOffRequests TimeOffRequest[]     @relation("TimeOffReviewer")
-}
-
-model PasswordResetToken {
-  id        String    @id @default(uuid())
-  userId    String
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  tokenHash String    @unique
-  expiresAt DateTime
-  usedAt    DateTime?
-  createdAt DateTime  @default(now())
-
-  @@index([userId, expiresAt])
+  id                                 String            @id @default(uuid())
+  email                              String            @unique
+  firstName                          String
+  lastName                           String
+  pictureUrl                         String?
+  fullName                           String
+  password                           String
+  role                               Role              @default(USER)
+  createdAt                          DateTime          @default(now())
+  updatedAt                          DateTime          @updatedAt
+  deletedAt                          DateTime?
+  isActive                           Boolean           @default(true)
+  isVerified                         Boolean           @default(false)
+  verifiedAt                         DateTime?
+  verifiedBy                         String?
+  departmentId                       String?
+  locationId                         String?
+  managedLocations                   Location[]        @relation("LocationManager")
+  attendances                        ShiftAttendance[]
+  shiftInstances                     ShiftInstance[]   @relation("ShiftInstanceAssignee")
+  shiftTemplates                     ShiftTemplate[]   @relation("ShiftTemplateAssignee")
+  reviewedTimeOffRequests            TimeOffRequest[]  @relation("TimeOffReviewer")
+  timeOffRequests                    TimeOffRequest[]  @relation("TimeOffRequester")
+  Department                         Department?       @relation(fields: [departmentId], references: [id])
+  Location_User_locationIdToLocation Location?         @relation("User_locationIdToLocation", fields: [locationId], references: [id])
+  activities                         UserActivity[]
 }
 
 model UserActivity {
-  id             String       @id @default(uuid())
-  organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
-  userId         String
-  user           User         @relation(fields: [userId], references: [id])
-  timestamp      DateTime     @default(now())
-  activity       Activity
-  activityData   Json?
+  id           String   @id @default(uuid())
+  userId       String
+  timestamp    DateTime @default(now())
+  activity     Activity
+  activityData Json?
+  user         User     @relation(fields: [userId], references: [id])
 
   @@index([userId])
-  @@index([organizationId, timestamp])
+  @@index([timestamp])
 }
 
 model Department {
-  id             String       @id @default(uuid())
-  organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
-  name           String
-  description    String?
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-  deletedAt      DateTime?
-  isActive       Boolean      @default(true)
-  memberships    Membership[] @relation("MembershipDepartment")
-
-  @@index([organizationId, name])
+  id          String    @id @default(uuid())
+  name        String
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  isActive    Boolean   @default(true)
+  User        User[]
 }
 
 model Location {
-  id             String            @id @default(uuid())
-  organizationId String
-  organization   Organization      @relation(fields: [organizationId], references: [id], onDelete: Restrict)
-  name           String
-  description    String?
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
-  deletedAt      DateTime?
-  isActive       Boolean           @default(true)
-  minimumStaff   Int               @default(0)
-  manager        User?             @relation("LocationManager", fields: [managerId], references: [id])
-  managerId      String?
-  memberships    Membership[]      @relation("MembershipLocation")
-  shiftTemplates ShiftTemplate[]
-  shiftInstances ShiftInstance[]
-  attendances    ShiftAttendance[]
+  id                             String            @id @default(uuid())
+  name                           String
+  description                    String?
+  createdAt                      DateTime          @default(now())
+  updatedAt                      DateTime          @updatedAt
+  deletedAt                      DateTime?
+  isActive                       Boolean           @default(true)
+  managerId                      String?
+  minimumStaff                   Int               @default(0)
+  manager                        User?             @relation("LocationManager", fields: [managerId], references: [id])
+  attendances                    ShiftAttendance[]
+  shiftInstances                 ShiftInstance[]
+  shiftTemplates                 ShiftTemplate[]
+  User_User_locationIdToLocation User[]            @relation("User_locationIdToLocation")
+}
 
-  @@index([organizationId, name])
+model ShiftTemplate {
+  id         String          @id @default(uuid())
+  locationId String
+  userId     String
+  type       ShiftType
+  startTime  String
+  endTime    String
+  weekdays   Int[]
+  notes      String?
+  isActive   Boolean         @default(true)
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+  deletedAt  DateTime?
+  instances  ShiftInstance[]
+  location   Location        @relation(fields: [locationId], references: [id])
+  user       User            @relation("ShiftTemplateAssignee", fields: [userId], references: [id])
+
+  @@index([locationId])
+  @@index([userId])
+}
+
+model ShiftInstance {
+  id          String            @id @default(uuid())
+  templateId  String?
+  locationId  String
+  userId      String
+  date        DateTime
+  type        ShiftType
+  startTime   String
+  endTime     String
+  status      ShiftStatus       @default(SCHEDULED)
+  notes       String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  deletedAt   DateTime?
+  attendances ShiftAttendance[]
+  location    Location          @relation(fields: [locationId], references: [id])
+  template    ShiftTemplate?    @relation(fields: [templateId], references: [id])
+  user        User              @relation("ShiftInstanceAssignee", fields: [userId], references: [id])
+
+  @@index([templateId])
+  @@index([locationId, date])
+  @@index([userId, date])
+}
+
+model ShiftAttendance {
+  id                 String         @id @default(uuid())
+  userId             String
+  shiftInstanceId    String?
+  locationId         String?
+  checkInAt          DateTime
+  checkOutAt         DateTime?
+  /// *
+  ///    * Minutes on the clock; set when checking out.
+  durationMinutes    Int?
+  checkInActivityId  String?
+  checkOutActivityId String?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  location           Location?      @relation(fields: [locationId], references: [id])
+  shiftInstance      ShiftInstance? @relation(fields: [shiftInstanceId], references: [id])
+  user               User           @relation(fields: [userId], references: [id])
+
+  @@index([shiftInstanceId])
+  @@index([locationId, checkInAt])
+  @@index([userId, checkInAt])
+}
+
+model TimeOffRequest {
+  id           String        @id @default(uuid())
+  userId       String
+  type         TimeOffType
+  status       TimeOffStatus @default(PENDING)
+  startDate    DateTime
+  endDate      DateTime
+  note         String?
+  reviewedById String?
+  reviewedAt   DateTime?
+  reviewNote   String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  deletedAt    DateTime?
+  reviewedBy   User?         @relation("TimeOffReviewer", fields: [reviewedById], references: [id])
+  user         User          @relation("TimeOffRequester", fields: [userId], references: [id])
+
+  @@index([status, startDate])
+  @@index([userId, status])
+}
+
+enum Role {
+  ADMIN
+  USER
 }
 
 enum ShiftType {
@@ -204,81 +183,6 @@ enum ShiftStatus {
   CANCELLED
 }
 
-model ShiftTemplate {
-  id             String          @id @default(uuid())
-  organizationId String
-  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Restrict)
-  locationId     String
-  location       Location        @relation(fields: [locationId], references: [id])
-  userId         String
-  user           User            @relation("ShiftTemplateAssignee", fields: [userId], references: [id])
-  type           ShiftType
-  startTime      String
-  endTime        String
-  weekdays       Int[]
-  notes          String?
-  isActive       Boolean         @default(true)
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-  deletedAt      DateTime?
-  instances      ShiftInstance[]
-
-  @@index([organizationId, locationId])
-  @@index([organizationId, userId])
-}
-
-model ShiftInstance {
-  id             String            @id @default(uuid())
-  organizationId String
-  organization   Organization      @relation(fields: [organizationId], references: [id], onDelete: Restrict)
-  templateId     String?
-  template       ShiftTemplate?    @relation(fields: [templateId], references: [id])
-  locationId     String
-  location       Location          @relation(fields: [locationId], references: [id])
-  userId         String
-  user           User              @relation("ShiftInstanceAssignee", fields: [userId], references: [id])
-  date           DateTime
-  type           ShiftType
-  startTime      String
-  endTime        String
-  status         ShiftStatus       @default(SCHEDULED)
-  notes          String?
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
-  deletedAt      DateTime?
-  attendances    ShiftAttendance[]
-
-  @@index([organizationId, locationId, date])
-  @@index([organizationId, userId, date])
-  @@index([templateId])
-}
-
-model ShiftAttendance {
-  id                 String         @id @default(uuid())
-  organizationId     String
-  organization       Organization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)
-  userId             String
-  user               User           @relation(fields: [userId], references: [id])
-  shiftInstanceId    String?
-  shiftInstance      ShiftInstance? @relation(fields: [shiftInstanceId], references: [id])
-  locationId         String?
-  location           Location?      @relation(fields: [locationId], references: [id])
-  checkInAt          DateTime
-  checkOutAt         DateTime?
-  /**
-   * Minutes on the clock; set when checking out.
-   */
-  durationMinutes    Int?
-  checkInActivityId  String?
-  checkOutActivityId String?
-  createdAt          DateTime       @default(now())
-  updatedAt          DateTime       @updatedAt
-
-  @@index([organizationId, userId, checkInAt])
-  @@index([organizationId, locationId, checkInAt])
-  @@index([shiftInstanceId])
-}
-
 enum TimeOffType {
   TIME_OFF
   SICK
@@ -291,38 +195,12 @@ enum TimeOffStatus {
   CANCELLED
 }
 
-model TimeOffRequest {
-  id             String        @id @default(uuid())
-  organizationId String
-  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Restrict)
-  userId         String
-  user           User          @relation("TimeOffRequester", fields: [userId], references: [id])
-  type           TimeOffType
-  status         TimeOffStatus @default(PENDING)
-  startDate      DateTime
-  endDate        DateTime
-  note           String?
-  reviewedById   String?
-  reviewedBy     User?         @relation("TimeOffReviewer", fields: [reviewedById], references: [id])
-  reviewedAt     DateTime?
-  reviewNote     String?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-  deletedAt      DateTime?
-
-  @@index([organizationId, userId, status])
-  @@index([organizationId, status, startDate])
-}
-
 enum Activity {
   LOGIN
   LOGOUT
   REGISTER
   VERIFY
   UNVERIFY
-  PASSWORD_CHANGE
-  PASSWORD_RESET
-  SESSION_REVOKED
   SHIFT_TEMPLATE_CREATE
   SHIFT_TEMPLATE_UPDATE
   SHIFT_TEMPLATE_DELETE

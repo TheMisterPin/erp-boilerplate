@@ -55,7 +55,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 className="data-[slot=sidebar-menu-button]:p-2"
                 tooltip={publicAppConfig.product.name}
               >
-                <Link href="/">
+                <Link href="/home">
                   <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-accent-muted text-primary">
                     <ProductIcon className="size-4" />
                   </div>
