@@ -15,13 +15,14 @@ export type ModuleId = (typeof MODULE_IDS)[number]
 export type PublicAppConfig = {
   product: { name: string; shortName: string; description: string }
   branding: {
-    logo: "hexagon" | "boxes" | "building"
+    logo: "modules" | "hexagon" | "boxes" | "building"
     accent: string
     accentHover: string
     accentMuted: string
     focusRing: string
   }
   support: { documentationUrl: string; issuesUrl: string }
+  siteUrl: string
   enabledModules: readonly ModuleId[]
 }
 
@@ -38,6 +39,7 @@ type PublicEnvironment = Partial<
     | "NEXT_PUBLIC_APP_FOCUS_RING"
     | "NEXT_PUBLIC_APP_DOCUMENTATION_URL"
     | "NEXT_PUBLIC_APP_ISSUES_URL"
+    | "NEXT_PUBLIC_SITE_URL"
     | "NEXT_PUBLIC_ENABLED_MODULES"
   >
 >
@@ -51,7 +53,7 @@ const defaults: PublicAppConfig = {
     description: "ERP UI boilerplate",
   },
   branding: {
-    logo: "hexagon",
+    logo: "modules",
     accent: "#5a9fd4",
     accentHover: "#72afe0",
     accentMuted: "#1c3a50",
@@ -61,6 +63,7 @@ const defaults: PublicAppConfig = {
     documentationUrl: "https://github.com/TheMisterPin/erp-boilerplate#readme",
     issuesUrl: "https://github.com/TheMisterPin/erp-boilerplate/issues",
   },
+  siteUrl: "https://erp-boilerplate.vercel.app",
   enabledModules: DEFAULT_MODULES,
 }
 
@@ -82,10 +85,17 @@ function cssColor(value: string | undefined, name: string, fallback: string) {
 
 function logo(value: string | undefined): PublicAppConfig["branding"]["logo"] {
   const resolved = value?.trim() || defaults.branding.logo
-  if (resolved === "hexagon" || resolved === "boxes" || resolved === "building") {
+  if (
+    resolved === "modules" ||
+    resolved === "hexagon" ||
+    resolved === "boxes" ||
+    resolved === "building"
+  ) {
     return resolved
   }
-  throw new Error("NEXT_PUBLIC_APP_LOGO must be one of: hexagon, boxes, building.")
+  throw new Error(
+    "NEXT_PUBLIC_APP_LOGO must be one of: modules, hexagon, boxes, building.",
+  )
 }
 
 function absoluteUrl(value: string | undefined, name: string, fallback: string) {
@@ -176,6 +186,11 @@ export function createPublicAppConfig(
         defaults.support.issuesUrl,
       ),
     }),
+    siteUrl: absoluteUrl(
+      environment.NEXT_PUBLIC_SITE_URL,
+      "NEXT_PUBLIC_SITE_URL",
+      defaults.siteUrl,
+    ),
     enabledModules: Object.freeze(enabledModules(environment.NEXT_PUBLIC_ENABLED_MODULES)),
   })
 }

@@ -1,0 +1,11 @@
+# ERP Boilerplate
+
+ERP Boilerplate is an open-source, production-minded foundation for internal operations software.
+It uses Next.js, TypeScript, PostgreSQL, Prisma, cookie sessions, server-side RBAC, reusable CRUD systems, and operational demos.
+
+- Website: https://erp-boilerplate.vercel.app
+- Source: https://github.com/TheMisterPin/erp-boilerplate
+- Licence: MIT
+- Intended use: start domain-specific ERP, WMS, operations, scheduling, or internal-tool work without rebuilding authentication, role-based authorization, table CRUD, forms, and layout foundations.
+
+It is a foundation, not a finished ERP. Inventory, purchasing, accounting, CRM, production tenancy, backups, email delivery, MFA, and durable session revocation are not included.
