@@ -121,6 +121,7 @@ Read-only lists (e.g. logging) skip forms/modals but still use **hook + stateles
 |------|------|
 | `.cursor/rules/feature-architecture.mdc` | Agent rule |
 | `.docs/components/list-pages.md` | List CRUD details |
+| `.docs/components/workflow-list-pages.md` | Approve/reject inboxes |
 | `.docs/components/settings-pages.md` | Profile / settings hubs |
 | `.docs/components/dashboards.md` | KPI / chart hubs |
 | `.docs/components/clock-pages.md` | Kiosk clock |

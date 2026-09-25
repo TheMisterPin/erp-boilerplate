@@ -32,6 +32,7 @@ ERP UI boilerplate. Prefer existing shared systems over one-off patterns. Human 
 | Tenancy / orgs | session `activeOrganizationId` + `organizationId` on models; memberships admin | `docs/organization-ownership.md`, `docs/organization-roles.md`, `.docs/components/testing.md` | `auth-rbac.mdc` |
 | DynamicTable | `@/components/shared/table` (`DynamicTable`, `DataTableFrame`, `TablePageViewport`, `TableSkeleton`) | `.docs/components/tables.md` | `dynamic-table.mdc` |
 | List-page CRUD | feature hook + `*list-page` view | `.docs/components/list-pages.md` | `list-page-crud.mdc` |
+| Workflow lists | inbox approve/reject (status transitions) | `.docs/components/workflow-list-pages.md` | `workflow-list-pages.mdc` |
 | Feature architecture | `src/features/<f>/` layout | `.docs/components/architecture.md` | `feature-architecture.mdc` |
 | Logging / audit | `@/features/logging/server` → `logActivity` | `.docs/components/logging.md` | `logging.mdc` |
 | Settings pages | profile (+ future settings hubs) | `.docs/components/settings-pages.md` | `settings-pages.mdc` |
@@ -98,7 +99,7 @@ if (data) toast.success("Saved")
 | `/team/shift-templates` | Shift templates CRUD + generate instances (Admin / location manager) |
 | `/team/my-shifts` | Calendar pattern — own shifts (users) / managed locations (managers) |
 | `/profile` | Settings pattern — edit profile, upcoming shifts, request time off / sick |
-| `/team/time-off` | Leave requests inbox — admin / location manager approve; cancels overlapping shifts |
+| `/team/time-off` | Workflow list — leave inbox; admin / location manager approve; cancels overlapping shifts |
 | `/organization/departments` | Org vertical + list CRUD |
 | `/organization/locations` | Org vertical + manager select + list CRUD |
 | `/organization/memberships` | Membership admin — add/activate/deactivate/remove + role assign (tenant-scoped) |

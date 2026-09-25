@@ -9,7 +9,9 @@ Canonical reference: `src/features/users/`
 
 Architecture overview: [Architecture](./architecture.md).
 
-Also under `src/features/*/`: departments, locations, shift-templates, time-off (workflow list), memberships (admin naming), logging (read-only).
+Also under `src/features/*/`: departments, locations, shift-templates, time-off (**[workflow list](./workflow-list-pages.md)**), memberships (admin naming), logging (read-only).
+
+For approve/reject inboxes (status lifecycle, split submit/review surfaces), read [Workflow list pages](./workflow-list-pages.md) — do not force full entity CRUD onto those hooks.
 
 ---
 
@@ -141,7 +143,7 @@ if (result) {
 | Membership status | User stays; org membership ends or pauses | `deleteUser` → membership `INACTIVE`; membership admin activate/deactivate/remove |
 | Workflow status | Request/lifecycle records | time-off `CANCELLED` / approve / reject |
 
-List queries for soft-deletable models filter `deletedAt: null`. Do not invent a hard delete for those models.
+List queries for soft-deletable models filter `deletedAt: null`. Do not invent a hard delete for those models. Workflow inboxes: see [Workflow list pages](./workflow-list-pages.md).
 
 ---
 
@@ -181,7 +183,9 @@ if (!loaded) {
 | Doc / rule | Role |
 |------------|------|
 | `.docs/components/architecture.md` | Feature folder + hook/view split |
+| `.docs/components/workflow-list-pages.md` | Approve/reject inbox lists |
 | `.cursor/rules/list-page-crud.mdc` | Agent rule |
+| `.cursor/rules/workflow-list-pages.mdc` | Workflow inbox agent rule |
 | `.cursor/rules/feature-architecture.mdc` | Architecture agent rule |
 | `.docs/components/tables.md` | DynamicTable API |
 | `.docs/components/modals.md` | Form / confirm APIs |

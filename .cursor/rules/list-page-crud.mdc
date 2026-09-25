@@ -45,4 +45,5 @@ Never import `@/features/auth/session` or `@/features/errors/server` from hooks/
 
 Client page under `src/app/(app)/…/page.tsx` that wires hook → view (full-bleed table-shell wrapper as in team/members).
 
-See `.docs/components/list-pages.md` and `.docs/components/architecture.md`.
+See `.docs/components/list-pages.md` and `.docs/components/architecture.md`.  
+Workflow / approve-reject inboxes: `.docs/components/workflow-list-pages.md` + `workflow-list-pages.mdc` (same table shell; different mutations).
