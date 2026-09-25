@@ -1,0 +1,19 @@
+---
+description: Clock kiosk — public (auth) route, on-page login, punch actions
+globs: src/features/attendance/**/*,src/app/(auth)/clock/**/*
+alwaysApply: false
+---
+
+# Clock (kiosk)
+
+Public time clock under `(auth)`. Mirror **`src/features/attendance/`** + `/clock`. Do not wrap with AppShell or list-table shells.
+
+## Rules
+
+- Keep `/clock` middleware-public; punches still need session from on-page login
+- Hook → stateless `ClockPage`; hand-rolled login form is an allowed kiosk exception (still `run()` + auth actions)
+- `confirm` / `notify` for punch edge cases; `logActivity` on check-in/out
+- No `TablePageViewport`, no forcing `DynamicForm` for kiosk login
+- Clear local state on logout for the next employee
+
+See `.docs/components/clock-pages.md`.

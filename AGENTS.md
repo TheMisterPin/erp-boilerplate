@@ -34,6 +34,10 @@ ERP UI boilerplate. Prefer existing shared systems over one-off patterns. Human 
 | List-page CRUD | feature hook + `*list-page` view | `.docs/components/list-pages.md` | `list-page-crud.mdc` |
 | Feature architecture | `src/features/<f>/` layout | `.docs/components/architecture.md` | `feature-architecture.mdc` |
 | Logging / audit | `@/features/logging/server` → `logActivity` | `.docs/components/logging.md` | `logging.mdc` |
+| Settings pages | profile (+ future settings hubs) | `.docs/components/settings-pages.md` | `settings-pages.mdc` |
+| Dashboards | Command Center / KPI + chart hubs | `.docs/components/dashboards.md` | `dashboards.mdc` |
+| Clock (kiosk) | `(auth)/clock` + attendance | `.docs/components/clock-pages.md` | `clock-pages.mdc` |
+| Calendar pages | schedule grids (e.g. my-shifts) | `.docs/components/calendar-pages.md` | `calendar-pages.mdc` |
 
 ## Hard conventions
 
@@ -45,7 +49,7 @@ ERP UI boilerplate. Prefer existing shared systems over one-off patterns. Human 
 - **Forms**: FieldDef arrays + thin `*Form` wrappers around `DynamicForm`. `onSubmit(values, form)`. Shared validators from `src/lib/schemas/`.
 - **Modals**: `confirm` / `notify` / `openModal({ type: "form" })`. Transient feedback → toast, not `notify`. Modal package must not import form types.
 - **Tables**: `DynamicTable` + `toXTableRow` + `toolbarActions` / `rowActions` (not action cells in `format`). Sticky toolbar / scrollable body via `DataTableFrame` + `TablePageViewport` on list routes — do not invent page-level scroll that moves the search bar. Loading: `TableSkeleton` (toolbar visible, Create/search disabled) — never bare “Loading…” text. Client-side search/filter/sort/pagination only — do not invent server `page`/`cursor` list APIs unless building that system deliberately.
-- **List UI only**: verticals are list + modal CRUD. Do not add `[id]` detail routes unless the task asks for them.
+- **List UI only** (CRUD verticals): list + modal. Do not add `[id]` detail routes unless the task asks for them. Non-list surfaces use their own patterns — settings, dashboards, clock, calendar (see Systems table); do not force `TablePageViewport` onto those.
 - **Removal semantics**: prefer the matching pattern for the domain — org entities soft-delete (`deletedAt`, often with `isActive: false`); member removal deactivates membership (`INACTIVE`) without deleting the user; workflow records (e.g. time-off) use status transitions. Lists filter out soft-deleted rows (`deletedAt: null`).
 - **Layout**: Error Boundary wraps content only inside `AppShell` — leave sidebar/header outside. Providers in `AppProviders` (`ThemeProvider` → Modal → Auth → Error → ModalRoot).
 - **Import hygiene**: client may import `@/features/errors` (barrel). Never import `@/features/errors/server` from client code. Same for `@/features/logging` vs `@/features/logging/server`.
@@ -84,14 +88,14 @@ if (data) toast.success("Saved")
 
 | Route | What it proves |
 |-------|----------------|
-| `/` | Command Center — role-scoped ops dashboard (KPIs, coverage, approvals, activity) |
+| `/` | Command Center — dashboard pattern (KPIs, coverage, approvals, activity) |
 | `/login` | Auth gate entry + `SESSION_EXPIRED` acknowledge target |
-| `/clock` | Kiosk time clock — on-page login, check-in/out, attendance ↔ `UserActivity` |
+| `/clock` | Clock kiosk pattern — on-page login, check-in/out, attendance ↔ `UserActivity` |
 | `/team/members` | List-page CRUD (forms + modals + `run()`) |
 | `/team/activity` | Audit trail list (`logActivity` + ADMIN `logging:read`) |
 | `/team/shift-templates` | Shift templates CRUD + generate instances (Admin / location manager) |
-| `/team/my-shifts` | Schedule calendar — own shifts (users) / managed locations (managers) |
-| `/profile` | Self-service hub — edit profile, upcoming shifts, request time off / sick |
+| `/team/my-shifts` | Calendar pattern — own shifts (users) / managed locations (managers) |
+| `/profile` | Settings pattern — edit profile, upcoming shifts, request time off / sick |
 | `/team/time-off` | Leave requests inbox — admin / location manager approve; cancels overlapping shifts |
 | `/organization/departments` | Org vertical + list CRUD |
 | `/organization/locations` | Org vertical + manager select + list CRUD |

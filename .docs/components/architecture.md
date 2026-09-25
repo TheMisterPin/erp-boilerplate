@@ -2,7 +2,7 @@
 
 How feature verticals are structured and how route pages stay thin. Canonical reference: **`src/features/users/`**.
 
-Related: [List pages](./list-pages.md), [Forms](./forms.md), [Auth](./auth.md), [Logging](./logging.md).
+Related: [List pages](./list-pages.md), [Forms](./forms.md), [Auth](./auth.md), [Logging](./logging.md), [Settings pages](./settings-pages.md), [Dashboards](./dashboards.md), [Clock](./clock-pages.md), [Calendar pages](./calendar-pages.md).
 
 ---
 
@@ -109,7 +109,7 @@ Read-only lists (e.g. logging) skip forms/modals but still use **hook + stateles
 - Named exports; no `any` on public APIs.
 - Route pages must not import `@/features/*/actions` directly for orchestration — go through the feature hook (views stay free of actions too).
 - Never import `@/features/errors/server` or `@/features/logging/server` from client hooks/views.
-- Self-service profile edits (`features/profile`, session-scoped actions) do not require `users:write`; admin member CRUD stays on `features/users`.
+- Self-service profile edits (`features/profile`, session-scoped actions) do not require `users:write`; admin member CRUD stays on `features/users`. Settings / dashboard / clock / calendar surfaces follow their own docs — do not force list-page shells onto them.
 - Do not invent a second layout, state library, or tenancy context for feature pages — use the signed session’s `activeOrganizationId`.
 - Tenant ownership details: [organization ownership](../../docs/organization-ownership.md).
 
@@ -121,6 +121,10 @@ Read-only lists (e.g. logging) skip forms/modals but still use **hook + stateles
 |------|------|
 | `.cursor/rules/feature-architecture.mdc` | Agent rule |
 | `.docs/components/list-pages.md` | List CRUD details |
+| `.docs/components/settings-pages.md` | Profile / settings hubs |
+| `.docs/components/dashboards.md` | KPI / chart hubs |
+| `.docs/components/clock-pages.md` | Kiosk clock |
+| `.docs/components/calendar-pages.md` | Schedule calendars |
 | `.docs/components/testing.md` | Tenant-isolation matrix |
 | `docs/organization-ownership.md` | Tenant boundary |
 | `src/features/users/` | Canonical vertical |

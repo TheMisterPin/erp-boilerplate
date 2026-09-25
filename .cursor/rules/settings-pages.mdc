@@ -1,0 +1,19 @@
+---
+description: Settings hubs (profile / future config) — hook→view, page scroll, not list CRUD
+globs: src/features/profile/**/*,src/app/(app)/profile/**/*,src/features/**/settings/**/*,src/app/(app)/settings/**/*
+alwaysApply: false
+---
+
+# Settings pages
+
+Self-service and configuration hubs. Mirror **`src/features/profile/`**. Do not use `TablePageViewport` / list-page CRUD for these surfaces.
+
+## Rules
+
+- Hook → stateless page → thin route with **page scroll** (`overflow-y-auto`)
+- Inline `DynamicForm` for primary edits; modals for secondary workflows
+- Feature skeleton while `!loaded` — not `TableSkeleton`
+- Profile / personal settings stay session-scoped; do not require `users:write`
+- Future org/app settings get their own feature folder — do not dump into `users` or invent `[id]` detail routes
+
+See `.docs/components/settings-pages.md`.
