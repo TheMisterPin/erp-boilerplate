@@ -8,6 +8,8 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ERP UI boilerplate. Prefer existing shared systems over one-off patterns. Human docs: `.docs/components/`. Glob-scoped Cursor rules: `.cursor/rules/`.
 
+**Doc precedence:** [AGENTS.md](AGENTS.md) + `.cursor/rules/` + `.docs/components/` define **architecture and behavior**. [DESIGN.md](DESIGN.md) defines **visual style** (theme, typography, spacing, surfaces) within those patterns. If DESIGN suggests a layout or interaction that AGENTS forbids (detail routes, global search, list-detail shells, drawers as CRUD), follow AGENTS.
+
 ## Before you write code
 
 1. Read the relevant guide under `.docs/components/` (and the matching `.cursor/rules/*.mdc` when editing those globs).
@@ -35,15 +37,16 @@ ERP UI boilerplate. Prefer existing shared systems over one-off patterns. Human 
 
 - **Server actions** always return `ActionResult<T>` via `withErrorBoundary`. Never throw across the wire. Known failures: `throw new AppError({ kind, code, message })`.
 - **Client actions** use only `useError().run()` — no try/catch UI in feature components. Form submits: `run(action, { form })` (maps Zod field errors via `applyServerErrors`).
-- **RBAC**: server `await authorize(Actions.<feature>.read|write)`; client `can(me.role, Actions.<feature>.write)`. Matrix + catalog in `permissions.ts`. Never import `session.ts` from client.
+- **RBAC**: server `await authorize(Actions.<feature>.read|write)`; client `can(me.role, Actions.<feature>.write)`. Org-role matrix + catalog in `permissions.ts` (`OrganizationRoleKey`: ADMIN / MANAGER / OPERATOR / VIEWER). Never import `session.ts` from client.
 - **Auth**: jose cookie sessions + `loginAction` / `logoutAction` / `getMeAction` only. Do not add REST `/api/auth/*` or axios session clients.
 - **Forms**: FieldDef arrays + thin `*Form` wrappers around `DynamicForm`. `onSubmit(values, form)`. Shared validators from `src/lib/schemas/`.
 - **Modals**: `confirm` / `notify` / `openModal({ type: "form" })`. Transient feedback → toast, not `notify`. Modal package must not import form types.
 - **Tables**: `DynamicTable` + `toXTableRow` + `toolbarActions` / `rowActions` (not action cells in `format`). Sticky toolbar / scrollable body via `DataTableFrame` + `TablePageViewport` on list routes — do not invent page-level scroll that moves the search bar. Loading: `TableSkeleton` (toolbar visible, Create/search disabled) — never bare “Loading…” text. Client-side search/filter/sort/pagination only — do not invent server `page`/`cursor` list APIs unless building that system deliberately.
 - **List UI only**: verticals are list + modal CRUD. Do not add `[id]` detail routes unless the task asks for them.
-- **Layout**: Error Boundary wraps content only inside `AppShell` — leave sidebar/header outside. Providers in `AppProviders` (Modal → Auth → Error → ModalRoot).
+- **Removal semantics**: prefer the matching pattern for the domain — org entities soft-delete (`deletedAt`, often with `isActive: false`); member removal deactivates membership (`INACTIVE`) without deleting the user; workflow records (e.g. time-off) use status transitions. Lists filter out soft-deleted rows (`deletedAt: null`).
+- **Layout**: Error Boundary wraps content only inside `AppShell` — leave sidebar/header outside. Providers in `AppProviders` (`ThemeProvider` → Modal → Auth → Error → ModalRoot).
 - **Import hygiene**: client may import `@/features/errors` (barrel). Never import `@/features/errors/server` from client code. Same for `@/features/logging` vs `@/features/logging/server`.
-- **Audit trail**: server `logActivity({ userId, activity, activityData? })` — never raw `prisma.userActivity.create`.
+- **Audit trail**: server `logActivity({ userId, organizationId, activity, activityData? })` — never raw `prisma.userActivity.create`.
 - **Feature layout**: `types` → `actions` → `hooks` (state) → `components/{forms,tables,pages}` (stateless views). Route `page.tsx` = `useXListPage()` + `<XListPage {...page} />`. See `.docs/components/architecture.md`.
 - Named exports; strict TypeScript; no `any` on public APIs.
 
@@ -52,7 +55,7 @@ ERP UI boilerplate. Prefer existing shared systems over one-off patterns. Human 
 - Parallel form / modal / error / auth stacks
 - Detail/show pages or orphan `getX(id)` actions without a route that uses them
 - Server-paginated list endpoints “for scale” by default
-- Global sidebar search or theme providers unless productizing them
+- Global sidebar search, alternate theme systems, or duplicate providers — extend the existing `ThemeProvider` / shell instead
 - REST auth routes alongside server actions
 
 ## Canonical snippets
@@ -88,6 +91,7 @@ if (data) toast.success("Saved")
 | `/team/time-off` | Leave requests inbox — admin / location manager approve; cancels overlapping shifts |
 | `/organization/departments` | Org vertical + list CRUD |
 | `/organization/locations` | Org vertical + manager select + list CRUD |
+| `/organization/memberships` | Membership admin — add/activate/deactivate/remove + role assign (tenant-scoped) |
 
 ## Adding a feature vertical
 
@@ -95,13 +99,13 @@ if (data) toast.success("Saved")
 2. `types/` — model types
 3. `src/lib/schemas/<model>.ts` — shared zod
 4. Extend RBAC: `Permission`, `ROLE_PERMISSIONS`, `Actions.<feature>` in `permissions.ts`
-5. `actions/*-actions.ts` — `"use server"` + `withErrorBoundary` + `authorize` + soft-delete (`deletedAt`)
+5. `actions/*-actions.ts` — `"use server"` + `withErrorBoundary` + `authorize` + the correct removal pattern for the domain (soft-delete, membership status, or workflow status)
 6. `components/forms/*-form-fields.ts` + thin `*Form`
 7. `components/tables/*-table-columns.tsx` + `toXTableRow`
 8. `hooks/use-*-list-page.tsx` — page state, modals, `run()`
 9. `components/pages/*-list-page.tsx` — **stateless** view + props type; `!loaded` → `TableSkeleton` (toolbar visible, actions disabled)
-10. Route `src/app/(app)/…/page.tsx` — `const page = useX…(); return <XListPage {...page} />` + nav entry
-11. Call `logActivity` from privileged mutations when warranted (extend `Activity` enum first if needed)
+10. Route `src/app/(app)/…/page.tsx` — `const page = useX…(); return <TablePageViewport><XListPage {...page} /></TablePageViewport>` + nav entry
+11. Call `logActivity` from privileged mutations when warranted (extend `Activity` enum first if needed; always pass `organizationId`)
 12. Update `.docs` / rules only when conventions change
 
 Auth uses jose cookie sessions (`src/features/auth/utils.ts`) + Prisma users. Guards live in `src/features/auth/session.ts` and throw `AppError` with stable kinds/codes so the client channel table stays stable.

@@ -41,7 +41,7 @@ src/lib/schemas/<model>.ts   Shared zod used by FieldDefs + server parse
 src/components/shared/forms/lib/apply-server-errors.ts
 ```
 
-Mounted in `AppProviders`: `ModalProvider` → `AuthProvider` → `ErrorProvider` → `{children}` + `ModalRoot` + Sonner. `AppShell` keeps a content-only `ErrorBoundary` so page crashes leave the sidebar usable.
+Mounted in `AppProviders`: `ThemeProvider` → `ModalProvider` → `AuthProvider` → `ErrorProvider` → `{children}` + `ModalRoot` + Sonner. `AppShell` keeps a content-only `ErrorBoundary` so page crashes leave the sidebar usable.
 
 ---
 
@@ -255,4 +255,4 @@ Keep throwing `AppError` with the same kinds/codes so the client channel table s
 | `.docs/components/modals.md` | `notify` for blocking errors |
 | `.docs/components/list-pages.md` | List CRUD |
 | `src/features/users/actions/user-actions.ts` | Reference server actions |
-| `src/features/users/components/pages/userlist-page-component.tsx` | List-page CRUD |
+| `src/features/users/components/pages/user-list-page.tsx` | List-page CRUD |

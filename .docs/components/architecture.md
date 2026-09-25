@@ -20,15 +20,16 @@ Related: [List pages](./list-pages.md), [Forms](./forms.md), [Auth](./auth.md), 
 // ✅ route page — inject state
 "use client"
 
+import { TablePageViewport } from "@/components/shared/table"
 import { UserListPage } from "@/features/users/components/pages/user-list-page"
 import { useUserListPage } from "@/features/users/hooks/use-user-list-page"
 
 export default function TeamMembersPage() {
   const page = useUserListPage()
   return (
-    <div className="/* table shell wrapper */">
+    <TablePageViewport>
       <UserListPage {...page} />
-    </div>
+    </TablePageViewport>
   )
 }
 ```
@@ -74,7 +75,7 @@ src/features/users/
 | Subfolder / file | What goes here |
 |------------------|----------------|
 | `types/` | Model types, form value types. No React. |
-| `actions/` | Server actions returning `ActionResult<T>`. `withErrorBoundary` + `authorize`. Soft-delete. Call `logActivity` when auditing. |
+| `actions/` | Server actions returning `ActionResult<T>`. `withErrorBoundary` + `authorize`. Removal: soft-delete, membership status, or workflow status as appropriate. Call `logActivity({ userId, organizationId, … })` when auditing. |
 | `hooks/` | Client hooks that own page/feature state. Name: `use-<thing>-page.ts(x)`. Return the view’s props object. Use `.tsx` if the hook opens modal trees with JSX. |
 | `components/forms/` | `*-form-fields.ts` (FieldDefs) + thin `*Form` around `DynamicForm`. |
 | `components/tables/` | `*TableColumns` + `toXTableRow`. No actions in `format`. |
@@ -90,12 +91,12 @@ Shared zod lives in `src/lib/schemas/<model>.ts` (FieldDefs + server parse), not
 1. Copy the folder shape from `src/features/users/` (types → actions → hooks → components).
 2. Add shared zod in `src/lib/schemas/<model>.ts`.
 3. Extend RBAC in `permissions.ts` (`Permission`, `ROLE_PERMISSIONS`, `Actions.<feature>`).
-4. Implement `actions/*-actions.ts`.
+4. Implement `actions/*-actions.ts` (removal: soft-delete, membership status, or workflow status as appropriate).
 5. Implement form fields + `*Form`, table columns + `toXTableRow`.
 6. Implement `hooks/use-<feature>-list-page.tsx` (logic) and `components/pages/<feature>-list-page.tsx` (view).
-7. Add route: `src/app/(app)/…/page.tsx` that calls the hook and renders `<XListPage {...page} />`.
+7. Add route: `src/app/(app)/…/page.tsx` that wraps `<TablePageViewport><XListPage {...page} /></TablePageViewport>`.
 8. Register nav in `src/lib/navigation.ts`.
-9. Audit events: `logActivity` + extend `Activity` enum when needed.
+9. Audit events: `logActivity({ userId, organizationId, … })` + extend `Activity` enum when needed.
 10. Update `.docs` / rules only when the convention itself changes.
 
 Read-only lists (e.g. logging) skip forms/modals but still use **hook + stateless page**.

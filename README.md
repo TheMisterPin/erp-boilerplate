@@ -80,14 +80,15 @@ not safe credentials and must never be used in a public deployment.
 |---|---|---|
 | Cookie sessions, server-side guards, RBAC, current-account checks | Implemented | [`auth` guide](.docs/components/auth.md) |
 | Abuse-safe sign-in throttling | Implemented | [`auth` guide](.docs/components/auth.md) |
-| Users, departments, locations, forms, modals, table CRUD | Implemented | `/team/members`, `/organization/*` |
+| Users, departments, locations, memberships, forms, modals, table CRUD | Implemented | `/team/members`, `/organization/*` |
+| Org tenancy (active org, memberships, tenant-scoped data) | Implemented | [`organization ownership`](docs/organization-ownership.md), `/organization/memberships` |
 | Shift templates, schedule calendar, clock in/out | Implemented | `/team/shift-templates`, `/team/my-shifts`, `/clock` |
 | Profile and time-off workflow | Implemented | `/profile`, `/team/time-off` |
 | Audit trail | Implemented | `/team/activity` |
 | Security headers, dependency review and CodeQL | Implemented | [`operations`](docs/operations.md) |
 | Health/readiness and structured operational logs | Implemented | [`operations`](docs/operations.md) |
 | Feature-folder architecture and typed server-action errors | Implemented | [`architecture`](.docs/components/architecture.md), [`errors`](.docs/components/error-handling.md) |
-| Inventory, purchasing, accounting, CRM, multi-tenancy | Not included | Build as domain verticals |
+| Inventory, purchasing, accounting, CRM | Not included | Build as domain verticals |
 | Password reset, MFA, durable session revocation | Planned | Security roadmap |
 | Distributed rate limiting, email delivery | Planned | Replace the local adapters |
 | GitHub Actions quality gate | Implemented | [Quality workflow](.github/workflows/quality.yml) |
@@ -208,14 +209,17 @@ protection rules before requiring pull requests to merge.
   see the [operations guide](docs/operations.md) for logging, CSP, and supply-chain defaults.
 - Authorization is server-side and reloads the current database account state;
   client-side visibility is not a security boundary.
-- This is not yet a complete business product. It does not include tenancy,
-  backups, email delivery, accounting controls, or a production operations
-  runbook out of the box.
+- This is not yet a complete business product. It does not include
+  backups, email delivery, accounting controls, or a full production operations
+  runbook out of the box. Org-scoped tenancy is implemented; see
+  [organization ownership](docs/organization-ownership.md).
 
 ## Documentation
 
 | Guide | Use it for |
 |---|---|
+| [Organization ownership](docs/organization-ownership.md) | tenant boundary and memberships |
+| [Organization roles](docs/organization-roles.md) | system vs org roles |
 | [Auth and RBAC](.docs/components/auth.md) | sessions, roles, limits, protected actions |
 | [Feature architecture](.docs/components/architecture.md) | new verticals and thin routes |
 | [Forms](.docs/components/forms.md) | FieldDefs and DynamicForm |

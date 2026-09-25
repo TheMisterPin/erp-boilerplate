@@ -45,16 +45,18 @@ email addresses, client sources, passwords, or credential input.
 
 ## Provider order
 
-`ModalProvider` → `AuthProvider` → `ErrorProvider` → `{children}` + `ModalRoot` + `Toaster`.
+`ThemeProvider` → `ModalProvider` → `AuthProvider` → `ErrorProvider` → `{children}` + `ModalRoot` + `Toaster`.
 
-`ErrorProvider` must wrap `ModalRoot` so form modals can call `useError().run()`.
+`ErrorProvider` must wrap `ModalRoot` so form modals can call `useError().run()`. Extend the existing `ThemeProvider`; do not add a second theme stack.
 
 ## RBAC
 
-**Source of truth:** `ROLE_PERMISSIONS` in `permissions.ts`.
+**Source of truth for org business data:** `ROLE_PERMISSIONS` in `permissions.ts` keyed by `OrganizationRoleKey` (`ADMIN` / `MANAGER` / `OPERATOR` / `VIEWER`).
+
+**System role** `User.role` (`ADMIN` / `USER`) only gates platform ops via `SYSTEM_ROLE_PERMISSIONS` (e.g. `system:organizations:write`). Never authorize org business data from `User.role` alone.
 
 `requireSession()` must resolve the signed user ID against the database. The current
-database role and active/deleted state are authoritative; never authorize from the JWT role
+membership role and active/deleted state are authoritative; never authorize from the JWT role
 claim alone.
 
 ```ts
@@ -81,7 +83,7 @@ can(me.role, Actions.users.write)
 
 - **Never** import `@/features/auth/session` from client components (pulls server `AppError`).
 - Prefer `authorize(Actions.*)` over deprecated `requirePermission("…")`.
-- Do not hardcode `role === "ADMIN"` for feature gates — use `can` / `authorize`.
+- Do not hardcode `role === "ADMIN"` (org or system) for feature gates — use `can` / `authorize`.
 
 ## Errors
 

@@ -9,7 +9,7 @@ Canonical reference: `src/features/users/`
 
 Architecture overview: [Architecture](./architecture.md).
 
-Also: departments, locations, logging (read-only) under `src/features/*/`.
+Also under `src/features/*/`: departments, locations, shift-templates, time-off (workflow list), memberships (admin naming), logging (read-only).
 
 ---
 
@@ -133,7 +133,15 @@ if (result) {
 }
 ```
 
-Soft-delete is the server convention (`deletedAt` + `isActive: false`).
+**Removal semantics** (pick the pattern that matches the domain):
+
+| Pattern | When | Examples |
+|---------|------|----------|
+| Soft-delete | Org-owned entities with `deletedAt` | departments, locations, shift templates (`deletedAt` + often `isActive: false`) |
+| Membership status | User stays; org membership ends or pauses | `deleteUser` → membership `INACTIVE`; membership admin activate/deactivate/remove |
+| Workflow status | Request/lifecycle records | time-off `CANCELLED` / approve / reject |
+
+List queries for soft-deletable models filter `deletedAt: null`. Do not invent a hard delete for those models.
 
 ---
 

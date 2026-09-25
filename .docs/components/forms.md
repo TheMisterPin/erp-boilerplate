@@ -297,5 +297,5 @@ That is the full extension path — no changes to `DynamicForm` required.
 | `src/components/shared/forms/lib/dynamic-resolver.ts` | Value-aware zod resolver |
 | `src/components/shared/forms/lib/apply-server-errors.ts` | Map server `fieldErrors` → RHF |
 | `src/features/users/components/forms/user-form.tsx` | Reference wrapper |
-| `src/features/users/components/pages/userlist-page-component.tsx` | List-page form modals |
+| `src/features/users/components/pages/user-list-page.tsx` | List-page form modals |
 | [error-handling.md](./error-handling.md) | `run()` + `ActionResult` pipeline |
