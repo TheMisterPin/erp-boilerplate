@@ -3,7 +3,7 @@
 import type * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { ChevronRight, Hexagon } from "lucide-react"
+import { Boxes, Building2, ChevronRight, Hexagon } from "lucide-react"
 
 import { SidebarEdgeToggle } from "./sidebar-edge-toggle"
 import { SidebarOrganizationSwitcher } from "./sidebar-organization-switcher"
@@ -25,7 +25,8 @@ import {
   SidebarRail,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { isNavItemActive, navigationItems } from "@/lib/navigation"
+import { publicAppConfig } from "@/lib/app-config"
+import { getEnabledNavigationItems, isNavItemActive } from "@/lib/navigation"
 import { Actions, can } from "@/features/auth/permissions"
 import { useAuth } from "@/features/auth/hooks/use-auth"
 
@@ -36,6 +37,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const canReadMemberships = me
     ? can(me.role, Actions.memberships.read)
     : false
+  const ProductIcon = {
+    hexagon: Hexagon,
+    boxes: Boxes,
+    building: Building2,
+  }[publicAppConfig.branding.logo]
 
   return (
     <Sidebar collapsible="icon" className="overflow-visible" {...props}>
@@ -47,16 +53,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 size="lg"
                 asChild
                 className="data-[slot=sidebar-menu-button]:p-2"
-                tooltip="ERP Boilerplate"
+                tooltip={publicAppConfig.product.name}
               >
                 <Link href="/">
                   <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-accent-muted text-primary">
-                    <Hexagon className="size-4" />
+                    <ProductIcon className="size-4" />
                   </div>
                   <div className="grid min-w-0 flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
-                    <span className="truncate font-semibold">ERP Boilerplate</span>
+                    <span className="truncate font-semibold">{publicAppConfig.product.name}</span>
                     <span className="truncate text-xs text-muted-foreground">
-                      ERP UI
+                      {publicAppConfig.product.shortName}
                     </span>
                   </div>
                 </Link>
@@ -69,7 +75,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <SidebarGroup>
           <SidebarMenu>
-            {navigationItems.map((item) => {
+            {getEnabledNavigationItems().map((item) => {
               const visibleSubItems = item.items?.filter(
                 (subItem) =>
                   subItem.url !== "/organization/memberships" ||

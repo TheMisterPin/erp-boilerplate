@@ -138,6 +138,14 @@ learn the shape before building a large workflow.
 That sounds structured because it is. The point is that the second feature
 should feel repetitive, not like a fresh architectural debate.
 
+## Product configuration
+
+The supported customization surface is [`src/lib/app-config.ts`](src/lib/app-config.ts). It supplies product copy, logo choice, support links, accent tokens, and the enabled-module registry. Defaults preserve the demo identity; use the documented `NEXT_PUBLIC_*` variables in `.env` to customize a generated project.
+
+Configuration is **compile-time**: restart development or rebuild the deploy after changing it. It is intentionally not organization-specific runtime branding. Only `publicAppConfig` is available to Client Components, so never add secrets or server-only settings to this file or a `NEXT_PUBLIC_*` variable.
+
+`NEXT_PUBLIC_ENABLED_MODULES` accepts a comma-separated subset of the IDs in `.env.example`. Disabled modules are removed from navigation, but this is product composition—not an authorization boundary. Keep server-side RBAC checks on every route action.
+
 ## Common commands
 
 | Task | Command |
