@@ -196,6 +196,11 @@ build.
 Configure `Quality / quality` as a required status check in the `main` branch
 protection rules before requiring pull requests to merge.
 
+The `Scaffolding / verify-generated-workflows` check also creates disposable
+copies of the repository, runs the guided setup flow, and generates both CRUD
+and read-only feature fixtures. Update its expected setup values only when the
+documented prompts or configuration contract intentionally change.
+
 ## Production caveats
 
 - The supplied Docker Compose secrets and demo credentials are for local use

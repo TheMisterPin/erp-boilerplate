@@ -1,0 +1,42 @@
+name: Scaffolding
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  verify-generated-workflows:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.12.4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Create and configure a disposable project copy
+        run: |
+          fixture_dir="$(mktemp -d)"
+          rsync -a --exclude .git --exclude node_modules --exclude .next ./ "$fixture_dir/"
+          cd "$fixture_dir"
+          printf 'Northstar Operations\nNorthstar\nadmin@northstar.test\n#5a9fd4\nhexagon\nlocal\nn\ny\n' | pnpm setup -- --force
+          test -f .env
+          grep -q 'NEXT_PUBLIC_APP_NAME="Northstar Operations"' .env
+      - name: Generate and validate both feature modes in isolated copies
+        run: |
+          for mode in crud read-only; do
+            fixture_dir="$(mktemp -d)"
+            rsync -a --exclude .git --exclude node_modules --exclude .next ./ "$fixture_dir/"
+            cd "$fixture_dir"
+            if [ "$mode" = read-only ]; then pnpm generate:feature cost-centers -- --read-only; else pnpm generate:feature cost-centers; fi
+            pnpm db:generate
+            pnpm lint
+            pnpm typecheck
+            pnpm test:legacy
+          done
+      - name: Confirm source checkout stayed clean
+        run: git diff --exit-code
