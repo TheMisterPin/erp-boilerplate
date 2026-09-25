@@ -8,6 +8,7 @@ describe("public application configuration", () => {
     const config = createPublicAppConfig({})
     expect(config.product.name).toBe("ERP Boilerplate")
     expect(config.siteUrl).toBe("https://erp-boilerplate.vercel.app/")
+    expect(config.theme.preset).toBe("midnight")
     expect(config.enabledModules).toContain("memberships")
   })
 
@@ -15,10 +16,12 @@ describe("public application configuration", () => {
     const config = createPublicAppConfig({
       NEXT_PUBLIC_APP_NAME: "Northstar Operations",
       NEXT_PUBLIC_APP_LOGO: "boxes",
+      NEXT_PUBLIC_THEME_PRESET: "slate",
       NEXT_PUBLIC_ENABLED_MODULES: "dashboard, members, departments",
     })
     expect(config.product.name).toBe("Northstar Operations")
     expect(config.branding.logo).toBe("boxes")
+    expect(config.theme.preset).toBe("slate")
     expect(config.enabledModules).toEqual(["dashboard", "members", "departments"])
   })
 
@@ -32,6 +35,9 @@ describe("public application configuration", () => {
     expect(() =>
       createPublicAppConfig({ NEXT_PUBLIC_APP_LOGO: "circle" }),
     ).toThrow(/NEXT_PUBLIC_APP_LOGO must be one of/)
+    expect(() =>
+      createPublicAppConfig({ NEXT_PUBLIC_THEME_PRESET: "rainbow" }),
+    ).toThrow(/NEXT_PUBLIC_THEME_PRESET must be one of/)
   })
 
   it("removes disabled modules from navigation entry points", () => {

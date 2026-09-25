@@ -14,6 +14,7 @@ export type ModuleId = (typeof MODULE_IDS)[number]
 
 export type PublicAppConfig = {
   product: { name: string; shortName: string; description: string }
+  theme: { preset: "midnight" | "slate" }
   branding: {
     logo: "modules" | "hexagon" | "boxes" | "building"
     accent: string
@@ -32,6 +33,7 @@ type PublicEnvironment = Partial<
     | "NEXT_PUBLIC_APP_NAME"
     | "NEXT_PUBLIC_APP_SHORT_NAME"
     | "NEXT_PUBLIC_APP_DESCRIPTION"
+    | "NEXT_PUBLIC_THEME_PRESET"
     | "NEXT_PUBLIC_APP_LOGO"
     | "NEXT_PUBLIC_APP_ACCENT"
     | "NEXT_PUBLIC_APP_ACCENT_HOVER"
@@ -51,6 +53,9 @@ const defaults: PublicAppConfig = {
     name: "ERP Boilerplate",
     shortName: "ERP UI",
     description: "ERP UI boilerplate",
+  },
+  theme: {
+    preset: "midnight",
   },
   branding: {
     logo: "modules",
@@ -96,6 +101,12 @@ function logo(value: string | undefined): PublicAppConfig["branding"]["logo"] {
   throw new Error(
     "NEXT_PUBLIC_APP_LOGO must be one of: modules, hexagon, boxes, building.",
   )
+}
+
+function themePreset(value: string | undefined): PublicAppConfig["theme"]["preset"] {
+  const resolved = value?.trim() || defaults.theme.preset
+  if (resolved === "midnight" || resolved === "slate") return resolved
+  throw new Error("NEXT_PUBLIC_THEME_PRESET must be one of: midnight, slate.")
 }
 
 function absoluteUrl(value: string | undefined, name: string, fallback: string) {
@@ -150,6 +161,9 @@ export function createPublicAppConfig(
         "NEXT_PUBLIC_APP_DESCRIPTION",
         defaults.product.description,
       ),
+    }),
+    theme: Object.freeze({
+      preset: themePreset(environment.NEXT_PUBLIC_THEME_PRESET),
     }),
     branding: Object.freeze({
       logo: logo(environment.NEXT_PUBLIC_APP_LOGO),
