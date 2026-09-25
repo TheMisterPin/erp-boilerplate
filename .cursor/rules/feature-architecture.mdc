@@ -12,7 +12,7 @@ Mirror **`src/features/users/`**. Route pages inject hook state into a **statele
 
 | Layer | Path | Job |
 |-------|------|-----|
-| Route | `src/app/(app)/…/page.tsx` | Shell + `const page = useXListPage(); return <XListPage {...page} />` |
+| Route | `src/app/(app)/…/page.tsx` | Shell + `const page = useXListPage(); return <TablePageViewport><XListPage {...page} /></TablePageViewport>` |
 | Hook | `features/<f>/hooks/use-*-list-page.ts(x)` | State, `run()`, modals, RBAC |
 | View | `features/<f>/components/pages/*-list-page.tsx` | Props → UI only (`TableSkeleton` while `!loaded`) |
 | Actions | `features/<f>/actions/` | Server `ActionResult` + `authorize` |
@@ -22,9 +22,15 @@ Mirror **`src/features/users/`**. Route pages inject hook state into a **statele
 ```tsx
 // ✅ route
 "use client"
+import { TablePageViewport } from "@/components/shared/table"
+
 export default function Page() {
   const page = useUserListPage()
-  return <UserListPage {...page} />
+  return (
+    <TablePageViewport>
+      <UserListPage {...page} />
+    </TablePageViewport>
+  )
 }
 ```
 
@@ -36,9 +42,12 @@ export default function Page() {
 
 1. `types/` → `actions/` → `hooks/` → `components/{forms,tables,pages}/`
 2. Shared zod → `src/lib/schemas/`
-3. RBAC → `permissions.ts`
-4. Route wires hook → view; nav entry in `navigation.ts`
-5. Optional: `logActivity` on privileged writes
+3. RBAC → `permissions.ts` (org-role matrix)
+4. Tenant scope → `session.activeOrganizationId` on all tenant-owned reads/writes; reject cross-org relation IDs
+5. Route wires hook → view inside `TablePageViewport`; nav entry in `navigation.ts`
+6. Removal: soft-delete (`deletedAt`) for org entities; membership status for members; workflow status when that is the domain model
+7. Optional: `logActivity({ userId, organizationId, activity, … })` on privileged writes
+8. Extend tenant-isolation matrix (`.docs/components/testing.md`) when the vertical is tenant-owned
 
 ## Import hygiene
 

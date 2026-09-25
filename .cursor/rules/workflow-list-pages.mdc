@@ -1,0 +1,20 @@
+---
+description: Workflow / inbox lists — status review (approve/reject), not entity CRUD
+globs: src/features/time-off/**/*,src/app/(app)/team/time-off/**/*,src/features/**/components/forms/*-review-form.*
+alwaysApply: false
+---
+
+# Workflow list pages
+
+Inbox lists for status workflows. Mirror **`src/features/time-off/`** (`/team/time-off`). Keep the list-page table shell; do not treat review as soft-delete CRUD.
+
+## Rules
+
+- Same shell: `useXListPage` + `XListPage` + `TablePageViewport` / `DynamicTable` / `TableSkeleton`
+- Split surfaces: create/cancel on requester (e.g. profile); approve/reject on the inbox
+- Gate row actions with **status + server-computed** flag (e.g. `canReview`) — not only `Actions.*.write`
+- Thin `*ReviewForm` modals; status transitions (`PENDING` → …); side effects stay in server actions
+- Toolbar often has no Create; empty copy may point requesters elsewhere
+- `logActivity` + `organizationId` on transitions
+
+See `.docs/components/workflow-list-pages.md`. Plain CRUD: `.docs/components/list-pages.md`.

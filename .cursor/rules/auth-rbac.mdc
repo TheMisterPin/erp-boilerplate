@@ -27,8 +27,8 @@ Use jose cookie sessions + the permission-matrix action catalog. Do not invent N
 ## Middleware
 
 - Unauthenticated non-public routes → redirect `/login?next=…`
-- Public: `/login`, `/clock`
-- Authenticated `/login` → `/`
+- Public: `/`, `/login`, `/clock` (landing + auth + clock)
+- Authenticated `/login` or `/` → `/home`
 - With session → refresh the idle expiry via `updateSession`, capped at the original absolute expiry
 - Production cookies are Secure; all session cookies are HTTP-only, SameSite=Lax, and path `/`
 - JWT verification pins the configured issuer, audience, and HS256 algorithm
@@ -45,16 +45,18 @@ email addresses, client sources, passwords, or credential input.
 
 ## Provider order
 
-`ModalProvider` → `AuthProvider` → `ErrorProvider` → `{children}` + `ModalRoot` + `Toaster`.
+`ThemeProvider` → `ModalProvider` → `AuthProvider` → `ErrorProvider` → `{children}` + `ModalRoot` + `Toaster`.
 
-`ErrorProvider` must wrap `ModalRoot` so form modals can call `useError().run()`.
+`ErrorProvider` must wrap `ModalRoot` so form modals can call `useError().run()`. Extend the existing `ThemeProvider`; do not add a second theme stack.
 
 ## RBAC
 
-**Source of truth:** `ROLE_PERMISSIONS` in `permissions.ts`.
+**Source of truth for org business data:** `ROLE_PERMISSIONS` in `permissions.ts` keyed by `OrganizationRoleKey` (`ADMIN` / `MANAGER` / `OPERATOR` / `VIEWER`).
+
+**System role** `User.role` (`ADMIN` / `USER`) only gates platform ops via `SYSTEM_ROLE_PERMISSIONS` (e.g. `system:organizations:write`). Never authorize org business data from `User.role` alone.
 
 `requireSession()` must resolve the signed user ID against the database. The current
-database role and active/deleted state are authoritative; never authorize from the JWT role
+membership role and active/deleted state are authoritative; never authorize from the JWT role
 claim alone.
 
 ```ts
@@ -71,6 +73,18 @@ can(me.role, Actions.users.write)
 2. Grant them on roles in `ROLE_PERMISSIONS`
 3. Add `Actions.foo.read` / `Actions.foo.write`
 4. `await authorize(Actions.foo.*)` in server actions; `can(me.role, Actions.foo.write)` in list UI
+5. Scope tenant-owned actions by `session.activeOrganizationId`; extend the tenant-isolation matrix (`.docs/components/testing.md`)
+
+## Tenancy
+
+Organizations are the tenant boundary. Session carries `activeOrganizationId`; business models carry `organizationId`.
+
+- Derive org scope from the session on creates; include it in every list/lookup/update/relation check.
+- Treat cross-organization identifiers as not-found — never attach them to the active org.
+- Memberships admin: `/organization/memberships` (`memberships:read` / `memberships:write`).
+- Do not invent a parallel “current org” store outside the signed session.
+
+See `docs/organization-ownership.md` and `docs/organization-roles.md`.
 
 ## Import hygiene
 
@@ -81,7 +95,7 @@ can(me.role, Actions.users.write)
 
 - **Never** import `@/features/auth/session` from client components (pulls server `AppError`).
 - Prefer `authorize(Actions.*)` over deprecated `requirePermission("…")`.
-- Do not hardcode `role === "ADMIN"` for feature gates — use `can` / `authorize`.
+- Do not hardcode `role === "ADMIN"` (org or system) for feature gates — use `can` / `authorize`.
 
 ## Errors
 

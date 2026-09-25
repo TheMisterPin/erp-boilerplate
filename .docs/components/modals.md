@@ -143,7 +143,7 @@ formId = openModal({
 })
 ```
 
-Reference implementations: `src/features/users|departments|locations/components/pages/*list-page-component.tsx`.
+Reference implementations: `src/features/users|departments|locations/components/pages/*-list-page.tsx`.
 
 ---
 
@@ -259,5 +259,5 @@ They meet at the call site (feature page or thin wrapper), not inside `src/compo
 | `src/components/shared/modals/modal-context.tsx` | Provider + reducer |
 | `src/components/shared/modals/modal-root.tsx` | Renderers + dirty guard |
 | `src/components/shared/layout/app-providers.tsx` | `ModalProvider` mount |
-| `src/features/users/components/pages/userlist-page-component.tsx` | List-page create/edit/delete |
+| `src/features/users/components/pages/user-list-page.tsx` | List-page create/edit/delete |
 | [error-handling.md](./error-handling.md) | Routes `auth` / `permission` DTOs into `notify` |

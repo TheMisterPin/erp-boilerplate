@@ -1,0 +1,19 @@
+---
+description: Calendar / schedule pages — page scroll grids, not DynamicTable list CRUD
+globs: src/features/shifts/components/shift-calendar/**/*,src/features/shifts/hooks/use-shift-schedule-page.*,src/features/shifts/components/pages/shift-schedule-page.*,src/app/(app)/team/my-shifts/**/*
+alwaysApply: false
+---
+
+# Calendar pages
+
+Schedule grids (month/week). Mirror **`/team/my-shifts`** (`useShiftSchedulePage` + `shift-calendar`). Template CRUD stays on the list route.
+
+## Rules
+
+- Hook → stateless schedule page → route with **page scroll** (no `TablePageViewport`)
+- Calendar primitives may own local month/week navigation only
+- Assign/delete via shared form modals / confirm; honor shift location write checks
+- Feature schedule skeleton — not `TableSkeleton`
+- Keep list CRUD (`shift-templates`) and calendar (`my-shifts`) as separate pages
+
+See `.docs/components/calendar-pages.md`.

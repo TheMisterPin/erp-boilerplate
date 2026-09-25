@@ -2,7 +2,7 @@
 
 How feature verticals are structured and how route pages stay thin. Canonical reference: **`src/features/users/`**.
 
-Related: [List pages](./list-pages.md), [Forms](./forms.md), [Auth](./auth.md), [Logging](./logging.md).
+Related: [List pages](./list-pages.md), [Forms](./forms.md), [Auth](./auth.md), [Logging](./logging.md), [Settings pages](./settings-pages.md), [Dashboards](./dashboards.md), [Clock](./clock-pages.md), [Calendar pages](./calendar-pages.md).
 
 ---
 
@@ -20,15 +20,16 @@ Related: [List pages](./list-pages.md), [Forms](./forms.md), [Auth](./auth.md), 
 // ✅ route page — inject state
 "use client"
 
+import { TablePageViewport } from "@/components/shared/table"
 import { UserListPage } from "@/features/users/components/pages/user-list-page"
 import { useUserListPage } from "@/features/users/hooks/use-user-list-page"
 
 export default function TeamMembersPage() {
   const page = useUserListPage()
   return (
-    <div className="/* table shell wrapper */">
+    <TablePageViewport>
       <UserListPage {...page} />
-    </div>
+    </TablePageViewport>
   )
 }
 ```
@@ -74,7 +75,7 @@ src/features/users/
 | Subfolder / file | What goes here |
 |------------------|----------------|
 | `types/` | Model types, form value types. No React. |
-| `actions/` | Server actions returning `ActionResult<T>`. `withErrorBoundary` + `authorize`. Soft-delete. Call `logActivity` when auditing. |
+| `actions/` | Server actions returning `ActionResult<T>`. `withErrorBoundary` + `authorize`. Removal: soft-delete, membership status, or workflow status as appropriate. Call `logActivity({ userId, organizationId, … })` when auditing. |
 | `hooks/` | Client hooks that own page/feature state. Name: `use-<thing>-page.ts(x)`. Return the view’s props object. Use `.tsx` if the hook opens modal trees with JSX. |
 | `components/forms/` | `*-form-fields.ts` (FieldDefs) + thin `*Form` around `DynamicForm`. |
 | `components/tables/` | `*TableColumns` + `toXTableRow`. No actions in `format`. |
@@ -88,15 +89,16 @@ Shared zod lives in `src/lib/schemas/<model>.ts` (FieldDefs + server parse), not
 ## Adding a new vertical (reproduce `users`)
 
 1. Copy the folder shape from `src/features/users/` (types → actions → hooks → components).
-2. Add shared zod in `src/lib/schemas/<model>.ts`.
+2. Add shared zod in `src/lib/schemas/<model>.ts`. Include `organizationId` on tenant-owned models.
 3. Extend RBAC in `permissions.ts` (`Permission`, `ROLE_PERMISSIONS`, `Actions.<feature>`).
-4. Implement `actions/*-actions.ts`.
+4. Implement `actions/*-actions.ts`: scope by `session.activeOrganizationId`; removal soft-delete / membership status / workflow status as appropriate.
 5. Implement form fields + `*Form`, table columns + `toXTableRow`.
 6. Implement `hooks/use-<feature>-list-page.tsx` (logic) and `components/pages/<feature>-list-page.tsx` (view).
-7. Add route: `src/app/(app)/…/page.tsx` that calls the hook and renders `<XListPage {...page} />`.
+7. Add route: `src/app/(app)/…/page.tsx` that wraps `<TablePageViewport><XListPage {...page} /></TablePageViewport>`.
 8. Register nav in `src/lib/navigation.ts`.
-9. Audit events: `logActivity` + extend `Activity` enum when needed.
-10. Update `.docs` / rules only when the convention itself changes.
+9. Audit events: `logActivity({ userId, organizationId, … })` + extend `Activity` enum when needed.
+10. Extend `tests/integration/tenant-isolation.integration.test.ts` for the new vertical (see [Testing](./testing.md)).
+11. Update `.docs` / rules only when the convention itself changes.
 
 Read-only lists (e.g. logging) skip forms/modals but still use **hook + stateless page**.
 
@@ -107,8 +109,9 @@ Read-only lists (e.g. logging) skip forms/modals but still use **hook + stateles
 - Named exports; no `any` on public APIs.
 - Route pages must not import `@/features/*/actions` directly for orchestration — go through the feature hook (views stay free of actions too).
 - Never import `@/features/errors/server` or `@/features/logging/server` from client hooks/views.
-- Self-service profile edits (`features/profile`, session-scoped actions) do not require `users:write`; admin member CRUD stays on `features/users`.
-- Do not invent a second layout or state library for feature pages.
+- Self-service profile edits (`features/profile`, session-scoped actions) do not require `users:write`; admin member CRUD stays on `features/users`. Settings / dashboard / clock / calendar surfaces follow their own docs — do not force list-page shells onto them.
+- Do not invent a second layout, state library, or tenancy context for feature pages — use the signed session’s `activeOrganizationId`.
+- Tenant ownership details: [organization ownership](../../docs/organization-ownership.md).
 
 ---
 
@@ -118,4 +121,11 @@ Read-only lists (e.g. logging) skip forms/modals but still use **hook + stateles
 |------|------|
 | `.cursor/rules/feature-architecture.mdc` | Agent rule |
 | `.docs/components/list-pages.md` | List CRUD details |
+| `.docs/components/workflow-list-pages.md` | Approve/reject inboxes |
+| `.docs/components/settings-pages.md` | Profile / settings hubs |
+| `.docs/components/dashboards.md` | KPI / chart hubs |
+| `.docs/components/clock-pages.md` | Kiosk clock |
+| `.docs/components/calendar-pages.md` | Schedule calendars |
+| `.docs/components/testing.md` | Tenant-isolation matrix |
+| `docs/organization-ownership.md` | Tenant boundary |
 | `src/features/users/` | Canonical vertical |

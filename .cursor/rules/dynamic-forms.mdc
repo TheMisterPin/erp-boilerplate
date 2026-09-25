@@ -1,6 +1,6 @@
 ---
 description: Conventions for schema-driven DynamicForm (FieldDef, layouts, validation)
-globs: src/components/shared/forms/**/*,src/features/**/forms/**/*,src/features/**/actions/**/*
+globs: src/components/shared/forms/**/*,src/features/**/components/forms/**/*,src/features/**/actions/**/*
 alwaysApply: false
 ---
 

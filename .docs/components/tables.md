@@ -137,7 +137,7 @@ const rows = useMemo(() => users.map(toUserTableRow), [users])
 - Toolbar secondary controls (Filters, Group by, Clear all filters) render inside the toolbar `RowActionsMenu` (`⋯`); `toolbarActions` (Create) stays visible on the same row as search
 - Prefer `toolbarActions` / `rowActions` over action columns in `format`
 - Keep domain entities in React state; table rows are a projection
-- Soft-deleted rows should not appear (`listX` filters `deletedAt: null`)
+- Soft-deleted rows should not appear (`listX` filters `deletedAt: null` when the model uses soft-delete)
 - Named exports; no `any` on public column helpers
 - Always preserve sticky toolbar / scrollable body (see above)
 

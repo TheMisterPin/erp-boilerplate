@@ -1,6 +1,6 @@
 ---
 description: Conventions for the stack-based modal system (useModal, confirm, notify, form dirty guard)
-globs: src/components/shared/modals/**/*
+globs: src/components/shared/modals/**/*,src/features/**/hooks/**/*,src/features/**/components/pages/**/*
 alwaysApply: false
 ---
 

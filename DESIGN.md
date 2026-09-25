@@ -1,5 +1,7 @@
 # ERP UI Design Specification
 
+**Scope:** This file is the **visual style** source of truth (theme, typography, color, spacing, motion). **Architecture and interaction patterns** (list + modal CRUD, no inventing detail routes / global search / parallel shells) are defined by [AGENTS.md](AGENTS.md), `.cursor/rules/`, and `.docs/components/`. When this document describes a layout or workflow that conflicts with AGENTS, follow AGENTS and apply Midnight Enterprise styling inside the allowed pattern.
+
 ## 1. Visual Direction
 
 The interface should feel like a modern enterprise application influenced by **SAP Fiori**, but without copying its default visual style.
@@ -38,9 +40,11 @@ Equivalent entities and workflows should use the same visual patterns throughout
 For example:
 
 - Lists should share the same toolbar and table structure
-- Detail pages should share the same header and section rhythm
+- Modal and page forms should share field rhythm and action placement
 - Statuses should use the same badge treatment
 - Primary and secondary actions should remain in consistent positions
+
+Do not introduce detail/object pages, list-detail split panes, or global search unless AGENTS / product work explicitly productizes them.
 
 ### 2.4 Quiet confidence
 
@@ -288,26 +292,19 @@ Navigation groups should have generous vertical separation. Avoid displaying too
 
 Recommended height: 64px.
 
-The top bar should contain only globally relevant controls:
-
-- Breadcrumbs or current context
-- Global search
-- Quick create action
-- Notifications
-- User profile
+The top bar should contain only globally relevant controls that already exist in the shell (for example current context and user/profile controls). Do not add global search, quick-create, or notification centers unless AGENTS / product work productizes them.
 
 The top bar should not become a second navigation menu.
 
 ### 8.3 Main content area
 
-The main content area should have a maximum readable width for forms and detail pages, while tables and operational dashboards may use the full available width.
+The main content area should give tables and operational dashboards the full available width. Forms (including modal forms) should stay readable.
 
 Recommended behavior:
 
 - Tables: full width
 - Dashboards: full width with grid alignment
-- Forms: 960px to 1200px content width
-- Long-form detail pages: 1200px maximum
+- Forms: 960px to 1200px content width when not in a modal
 
 ---
 
@@ -317,12 +314,13 @@ Each major page should begin with a consistent header.
 
 ### 9.1 Structure
 
-1. Breadcrumbs
-2. Page title
-3. Short description or metadata
-4. Status badge when relevant
-5. Primary and secondary actions
-6. Optional tabs or segmented navigation
+1. Page title
+2. Short description or metadata when useful
+3. Status badge when relevant
+4. Primary and secondary actions
+5. Optional tabs or segmented navigation
+
+Keep breadcrumbs out of new screens unless a nested route already exists and AGENTS has allowed it.
 
 ### 9.2 Action hierarchy
 
@@ -420,12 +418,9 @@ The toolbar should support:
 - Search
 - Filters
 - Sort
-- Column visibility
-- Export
-- Saved views
-- Bulk actions when rows are selected
+- Bulk actions when rows are selected (when the vertical needs them)
 
-The toolbar should remain visually calm. Secondary controls should not compete with the primary task.
+Column visibility, export, and saved views are **not** current product surfaces — do not invent them while styling tables. Keep the toolbar visually calm; secondary controls should not compete with the primary task.
 
 ---
 
@@ -475,47 +470,20 @@ Use explicit labels such as **Save customer**, **Create order**, or **Post invoi
 
 ---
 
-## 13. Detail Pages and Object Pages
+## 13. Hubs and non-list pages
 
-Complex business entities should use an object-page pattern inspired by SAP Fiori.
+Architecture stays **list + modal CRUD** by default (see AGENTS). Non-list demos (Command Center, profile, clock, shift calendar) are hubs or specialized operational surfaces — not object/detail pages.
 
-### 13.1 Header area
+### 13.1 Visual guidance for hubs
 
-The entity header should contain:
+- Clear page title and one primary job per section
+- Shared header rhythm with list pages where practical
+- Cards only for interactive or KPI modules (see Cards and Panels)
+- Prefer the existing scroll patterns used by those routes; do not invent list-detail or `[id]` object pages for styling
 
-- Entity type
-- Primary identifier
-- Human-readable name
-- Status
-- Key metadata
-- Main actions
+### 13.2 Summary / side content
 
-### 13.2 Content structure
-
-Use clearly separated sections such as:
-
-- Overview
-- General information
-- Lines or items
-- Financial information
-- Related documents
-- Activity
-- Audit history
-
-Sections should use consistent headings and spacing. Avoid placing every section inside a separate card unless the card adds meaningful grouping.
-
-### 13.3 Summary rail
-
-For complex pages, a right-side summary rail may display:
-
-- Totals
-- Current status
-- Assigned owner
-- Dates
-- Alerts
-- Related entities
-
-The summary rail should remain narrower and visually quieter than the main content.
+When a hub needs secondary context (totals, status, alerts), keep it narrower and quieter than the main content. Do not treat this as a general-purpose object-page pattern for CRUD verticals.
 
 ---
 
@@ -612,16 +580,9 @@ Do not use different visual treatments for equivalent states across modules.
 
 ## 17. Navigation Patterns
 
-### 17.1 List-detail pattern
+### 17.1 List + modal (current architecture)
 
-Use a list-detail layout when users frequently move between records.
-
-Recommended structure:
-
-- Searchable list on the left
-- Active detail on the right
-- Clear selected state
-- Independent scrolling where useful
+CRUD verticals use a full-width list with create/edit/delete in the shared modal system. Do not introduce a list-detail split pane as a styling default.
 
 ### 17.2 Tabs
 
@@ -634,9 +595,7 @@ Tabs should organize peer sections, not replace navigation.
 
 ### 17.3 Breadcrumbs
 
-Breadcrumbs should appear on deeply nested screens and object pages.
-
-They should remain visually secondary to the page title.
+Breadcrumbs are not a default chrome element under the current architecture. If a future nested route is explicitly added, keep breadcrumbs visually secondary to the page title.
 
 ---
 
@@ -644,18 +603,9 @@ They should remain visually secondary to the page title.
 
 ### 18.1 Drawers
 
-Use drawers for:
+Drawers are **not** a first-class CRUD shell in this codebase. Prefer the shared modal system (`confirm` / `notify` / form modals) for creates, edits, and confirms.
 
-- Quick record previews
-- Filters
-- Secondary editing
-- Contextual details
-
-Recommended width:
-
-- Small: 400px
-- Standard: 520px
-- Large: 720px
+If a future productized drawer appears, keep widths restrained (about 400–720px) and use the same surface/border language as modals.
 
 ### 18.2 Modals
 
@@ -753,8 +703,7 @@ The primary target is desktop operational use.
 
 - Persistent sidebar
 - Full tables
-- Multi-column layouts
-- Right-side summary rails
+- Multi-column layouts where the page pattern already uses them
 
 ### Tablet
 
@@ -765,7 +714,7 @@ The primary target is desktop operational use.
 
 ### Mobile
 
-- Drawer navigation
+- Collapsible / sheet navigation consistent with the existing shell
 - Stacked forms
 - Cards or condensed lists instead of wide tables
 - Sticky primary actions when useful

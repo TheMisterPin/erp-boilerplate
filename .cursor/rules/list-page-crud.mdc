@@ -13,7 +13,7 @@ Canonical pattern: **`useXListPage` + `XListPage`**. Mirror `src/features/users/
 1. Hook: load via `useError().run(listX())`; keep `load()` for post-mutation refresh
 2. Hook: gate with `can(me.role, Actions.<feature>.write)` (or `.read` for read-only lists)
 3. Hook: Create/Edit → `openModal({ type: "form", … })` + dirty bridge + `run` + `applyServerErrors` + toast + `closeModal` + `load()`
-4. Hook: Delete → `confirm({ variant: "destructive" })` → `run(deleteX(id))` → toast + `load()`
+4. Hook: Delete / remove → `confirm({ variant: "destructive" })` → `run(deleteX(id))` → toast + `load()` (server uses soft-delete, membership status, or workflow status — see list-pages docs)
 5. View: render `DynamicTable` / empty / loading from props; build toolbar/row UI from `canWrite` + callbacks
 6. Route: `const page = useXListPage(); return <TablePageViewport><XListPage {...page} /></TablePageViewport>`
 7. Loading (`!loaded`): use `TableSkeleton` — keep toolbar / page chrome visible; disable Create/search until loaded. Never bare “Loading…” text. Tabbed pages keep header + tab shells.
@@ -45,4 +45,5 @@ Never import `@/features/auth/session` or `@/features/errors/server` from hooks/
 
 Client page under `src/app/(app)/…/page.tsx` that wires hook → view (full-bleed table-shell wrapper as in team/members).
 
-See `.docs/components/list-pages.md` and `.docs/components/architecture.md`.
+See `.docs/components/list-pages.md` and `.docs/components/architecture.md`.  
+Workflow / approve-reject inboxes: `.docs/components/workflow-list-pages.md` + `workflow-list-pages.mdc` (same table shell; different mutations).

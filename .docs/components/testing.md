@@ -50,3 +50,13 @@ When adding a tenant-owned vertical, extend this matrix in the same pull
 request. Cover the vertical's list/enumeration action, one foreign record
 mutation, and every form or action identifier that references another tenant's
 record. Include audit or operational data when the vertical creates it.
+
+---
+
+## Related
+
+| File | Role |
+|------|------|
+| `.cursor/rules/testing.mdc` | Agent rule (tests + feature actions) |
+| `docs/organization-ownership.md` | Tenant boundary |
+| `AGENTS.md` | Systems catalog + vertical checklist |

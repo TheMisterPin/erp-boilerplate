@@ -104,21 +104,25 @@ const canWrite = me ? can(me.role, Actions.departments.write) : false
 
 ## Permission matrix
 
-Defined in `ROLE_PERMISSIONS`:
+Business authorization uses **organization roles** (`OrganizationRoleKey`) from the active membership. Defined in `ROLE_PERMISSIONS`:
 
-| Role | Permissions |
-|------|-------------|
+| Org role | Permissions |
+|----------|-------------|
 | `ADMIN` | `*:read` + `*:write` for users, departments, locations, shifts, time off, and memberships; plus `logging:read` |
-| `USER` | `*:read` for users, departments, locations, shifts (no logging / no `shifts:write`) |
+| `MANAGER` | read on users/departments/locations; `shifts` read+write; `timeOff` read+write (no logging / memberships write) |
+| `OPERATOR` | read on users/departments/locations/shifts; `timeOff` read+write |
+| `VIEWER` | read on users/departments/locations/shifts/timeOff |
 
-Location managers (users with `Location.managerId`) get shift **write** via resource checks in shift actions — not a separate Role.
+Separately, system account role `User.role` (`ADMIN` / `USER`) only gates platform ops via `SYSTEM_ROLE_PERMISSIONS` (today: `system:organizations:write` for system `ADMIN`). Never use `User.role` for org business data.
 
-`Actions` catalog entries point at those strings (e.g. `Actions.users.write.permission === "users:write"`).
+Location managers (users with `Location.managerId`) may get extra **resource-scoped** shift write checks inside shift actions — that is additive to the org-role matrix, not a fifth org role.
+
+`Actions` catalog entries point at permission strings (e.g. `Actions.users.write.permission === "users:write"`). Full dual-scope model: [organization roles](../../docs/organization-roles.md).
 
 ### Adding a vertical
 
 1. Extend `Permission` union
-2. Update `ROLE_PERMISSIONS` for each role
+2. Update `ROLE_PERMISSIONS` for each **org** role
 3. Add `Actions.<feature>.read` / `.write`
 4. Call `authorize` / `can` with those actions
 
@@ -136,15 +140,23 @@ deleting the underlying user account. Every mutation is tenant-scoped and
 audited. The server prevents the last active administrator from being demoted,
 deactivated, or removed; the rule is checked inside a serializable transaction.
 
+Tenant-owned Prisma models must carry `organizationId`. Server actions derive
+that value from the session for creates and include it in every list, lookup,
+update guard, and relationship validation. Foreign-org identifiers are
+not-found. Full rules: [organization ownership](../../docs/organization-ownership.md).
+When adding a tenant-owned vertical, extend the
+[tenant-isolation matrix](./testing.md) in the same PR.
+
 ---
 
 ## Providers
 
 Root mount (`AppProviders`):
 
-1. `ModalProvider`
-2. `AuthProvider`
-3. `ErrorProvider` → children + **`ModalRoot`** + Sonner
+1. `ThemeProvider` (existing `next-themes` wrapper — extend it; do not add a second theme stack)
+2. `ModalProvider`
+3. `AuthProvider`
+4. `ErrorProvider` → children + **`ModalRoot`** + Sonner
 
 `ErrorProvider` wraps modals so list-page form submits can use `useError().run()`.
 
@@ -199,7 +211,7 @@ them. Identifier limiting remains active when no source is available.
 - Named exports; strict TypeScript
 - Client imports `permissions` + hooks only — never `session.ts`
 - Prefer `authorize(Actions.*)` over deprecated `requirePermission`
-- Do not gate features with bare `role === "ADMIN"`
+- Do not gate features with bare `role === "ADMIN"` (org or system) — use `can` / `authorize`
 - Stable `AppError` kinds/codes for auth/permission failures
 
 ---
@@ -211,4 +223,7 @@ them. Identifier limiting remains active when no source is available.
 | `.cursor/rules/auth-rbac.mdc` | Agent rule |
 | `.docs/components/error-handling.md` | Channels for auth/permission errors |
 | `.docs/components/list-pages.md` | List CRUD write gating |
+| `.docs/components/testing.md` | Tenant-isolation matrix for new verticals |
+| `docs/organization-ownership.md` | Tenant boundary + `organizationId` scoping |
+| `docs/organization-roles.md` | System vs org roles |
 | `src/features/users/actions/user-actions.ts` | Reference `authorize` usage |

@@ -1,0 +1,34 @@
+---
+description: Vitest + tenant-isolation matrix — where tests live and what new verticals must cover
+globs: tests/**/*,scripts/**/*.test.ts,src/features/**/actions/**/*
+alwaysApply: false
+---
+
+# Testing
+
+Use the project’s Vitest suites under `tests/` (plus legacy `scripts/*.test.ts`). Do not invent a parallel test harness or hit the application `DATABASE_URL` from integration tests.
+
+## Layout
+
+| Concern | Path |
+|---------|------|
+| Unit | `tests/unit/` |
+| Components (jsdom) | `tests/components/` |
+| Integration (Prisma) | `tests/integration/` |
+| Helpers / factories | `tests/support/test-database.ts`, `tests/support/tenant-isolation.ts` |
+| Tenant matrix | `tests/integration/tenant-isolation.integration.test.ts` |
+| Legacy node:test | `scripts/*.test.ts` (`pnpm test:legacy`) |
+
+## Rules
+
+- New domain/utility behavior → `tests/unit/`; React UI → `tests/components/`; auth/scope/DB behavior → `tests/integration/`.
+- Integration tests: use `tests/support` client + factories + `resetTestDatabase`. **Never** import `src/lib/db.ts`.
+- Mock only framework boundaries (e.g. cookies). Call `authorize` / server actions and assert stable `ActionResult` / error DTOs.
+- **Tenant-owned verticals:** in the same PR, extend `tenant-isolation.integration.test.ts` for:
+  1. list / enumeration (other org must not appear)
+  2. one foreign-record mutation (stable not-found)
+  3. every form/action id that can reference another tenant’s record
+  4. audit/ops data the vertical writes, when applicable
+- Prefer `pnpm test` (migrates `DATABASE_URL_TEST`, then unit + integration).
+
+See `.docs/components/testing.md` for the full human guide.

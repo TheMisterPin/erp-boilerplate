@@ -1,6 +1,6 @@
 ---
 description: Audit trail via logActivity + ADMIN activity list; never raw userActivity.create
-globs: src/features/logging/**/*,src/features/auth/actions/**/*,src/features/users/actions/**/*
+globs: src/features/logging/**/*,src/features/auth/actions/**/*,src/features/users/actions/**/*,src/features/shifts/actions/**/*,src/features/attendance/actions/**/*,src/features/profile/actions/**/*,src/features/time-off/actions/**/*,src/features/organizations/actions/**/*
 alwaysApply: false
 ---
 
@@ -25,6 +25,7 @@ import { logActivity } from "@/features/logging/server"
 
 await logActivity({
   userId,
+  organizationId, // required — active or target org
   activity: "LOGIN", // Activity enum
   activityData: { /* optional JSON */ },
 })
@@ -32,13 +33,13 @@ await logActivity({
 
 - Call from server actions / route handlers only.
 - No `authorize` inside `logActivity` — callers already enforce RBAC/auth.
-- Existing events: LOGIN / LOGOUT (auth), REGISTER (`createUser`).
-- New event types → extend Prisma `enum Activity` + migrate + generate, then pass the new value.
+- Event families already in use: auth (`LOGIN`/`LOGOUT`/`PASSWORD_*`/`SESSION_REVOKED`), `REGISTER`, shifts, attendance check-in/out, profile, time-off, organization switch, memberships.
+- New event types → extend Prisma `enum Activity` + migrate + generate, then pass the new value with `organizationId`.
 
 ## Reading
 
 ```ts
-await authorize(Actions.logging.read) // ADMIN only
+await authorize(Actions.logging.read) // org ADMIN in default matrix
 can(me.role, Actions.logging.read)    // client gate
 ```
 
