@@ -303,6 +303,167 @@
   --elevation-shadow: 0 12px 32px rgba(0, 0, 0, 0.24);
 }
 
+/* ================================================================== */
+/*  Slate — neutral operations workspace                               */
+/*  The data attribute is set on <html> before hydration, while the    */
+/*  .dark class remains owned by next-themes.                          */
+/* ================================================================== */
+:root[data-theme="slate"] {
+  --surface-1: #f8fafc;
+  --surface-2: #ffffff;
+  --surface-3: #f1f5f9;
+  --surface-selected: #e0e7ff;
+  --border-subtle: #dbe3ed;
+  --border-strong: #bac7d5;
+  --text-primary: #172033;
+  --text-secondary: #526176;
+  --text-muted: #718096;
+
+  --background: #f1f5f9;
+  --foreground: #172033;
+  --card: #ffffff;
+  --card-foreground: #172033;
+  --popover: #ffffff;
+  --popover-foreground: #172033;
+  --primary: var(--app-accent, #3d7eac);
+  --primary-foreground: #ffffff;
+  --secondary: #e8eef5;
+  --secondary-foreground: #172033;
+  --muted: #e8eef5;
+  --muted-foreground: #718096;
+  --accent: #e0e7ff;
+  --accent-foreground: #172033;
+  --destructive: #c85151;
+  --destructive-foreground: #ffffff;
+  --border: #dbe3ed;
+  --input: #dbe3ed;
+  --ring: var(--app-focus-ring, #5a9fd4);
+
+  --info: #3f6fc4;
+  --info-foreground: #315caa;
+  --info-surface: #e7efff;
+  --info-border: #c9d8f5;
+  --success: #25815a;
+  --success-foreground: #1f704e;
+  --success-surface: #e5f5ed;
+  --success-border: #c7e6d4;
+  --warning: #9a6915;
+  --warning-foreground: #835910;
+  --warning-surface: #fff4dc;
+  --warning-border: #f0dbab;
+  --error: #c85151;
+  --error-foreground: #a63f3f;
+  --error-surface: #fce8e8;
+  --error-border: #efc5c5;
+
+  --chart-1: #4f46e5;
+  --chart-2: #3f6fc4;
+  --chart-3: #25815a;
+  --chart-4: #526176;
+  --chart-5: #b7791f;
+
+  --sidebar: #f8fafc;
+  --sidebar-foreground: #172033;
+  --sidebar-primary: var(--app-accent, #3d7eac);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e0e7ff;
+  --sidebar-accent-foreground: #172033;
+  --sidebar-border: #dbe3ed;
+  --sidebar-ring: var(--app-focus-ring, #5a9fd4);
+
+  --table-toolbar: #ffffff;
+  --table-toolbar-foreground: #172033;
+  --table-toolbar-border: #dbe3ed;
+  --table-header: #f1f5f9;
+  --table-header-foreground: #526176;
+  --table-header-border: #dbe3ed;
+  --table-row: #ffffff;
+  --table-row-alt: #f8fafc;
+  --table-row-hover: #eef2ff;
+  --table-cell-foreground: #172033;
+  --table-border: #dbe3ed;
+  --table-surface: #ffffff;
+  --elevation-shadow: 0 12px 32px rgba(23, 32, 51, 0.08);
+}
+
+:root[data-theme="slate"].dark {
+  --surface-1: #151b26;
+  --surface-2: #1c2533;
+  --surface-3: #263244;
+  --surface-selected: #293a58;
+  --border-subtle: #344257;
+  --border-strong: #4a5a70;
+  --text-primary: #f1f5f9;
+  --text-secondary: #bac7d5;
+  --text-muted: #8e9caf;
+
+  --background: #10151e;
+  --foreground: #f1f5f9;
+  --card: #1c2533;
+  --card-foreground: #f1f5f9;
+  --popover: #263244;
+  --popover-foreground: #f1f5f9;
+  --primary: var(--app-accent, #5a9fd4);
+  --primary-foreground: #10151e;
+  --secondary: #263244;
+  --secondary-foreground: #f1f5f9;
+  --muted: #263244;
+  --muted-foreground: #8e9caf;
+  --accent: #293a58;
+  --accent-foreground: #f1f5f9;
+  --destructive: #f08080;
+  --destructive-foreground: #10151e;
+  --border: #344257;
+  --input: #344257;
+  --ring: var(--app-focus-ring, #6bade0);
+
+  --info: #92b5ff;
+  --info-foreground: #92b5ff;
+  --info-surface: #1e365f;
+  --info-border: #3d5680;
+  --success: #7bd5a4;
+  --success-foreground: #7bd5a4;
+  --success-surface: #173c2c;
+  --success-border: #315e49;
+  --warning: #f2c46c;
+  --warning-foreground: #f2c46c;
+  --warning-surface: #453316;
+  --warning-border: #70542a;
+  --error: #f08080;
+  --error-foreground: #f08080;
+  --error-surface: #4a252b;
+  --error-border: #753d45;
+
+  --chart-1: #9ca3ff;
+  --chart-2: #92b5ff;
+  --chart-3: #7bd5a4;
+  --chart-4: #bac7d5;
+  --chart-5: #f2c46c;
+
+  --sidebar: #151b26;
+  --sidebar-foreground: #f1f5f9;
+  --sidebar-primary: var(--app-accent, #5a9fd4);
+  --sidebar-primary-foreground: #10151e;
+  --sidebar-accent: #293a58;
+  --sidebar-accent-foreground: #f1f5f9;
+  --sidebar-border: #344257;
+  --sidebar-ring: var(--app-focus-ring, #6bade0);
+
+  --table-toolbar: #1c2533;
+  --table-toolbar-foreground: #f1f5f9;
+  --table-toolbar-border: #344257;
+  --table-header: #263244;
+  --table-header-foreground: #bac7d5;
+  --table-header-border: #344257;
+  --table-row: #1c2533;
+  --table-row-alt: #1c2533;
+  --table-row-hover: #263244;
+  --table-cell-foreground: #f1f5f9;
+  --table-border: #344257;
+  --table-surface: #1c2533;
+  --elevation-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

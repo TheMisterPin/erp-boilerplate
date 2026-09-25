@@ -50,6 +50,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      data-theme={publicAppConfig.theme.preset}
       suppressHydrationWarning
       className={cn(
         "dark h-full antialiased",
