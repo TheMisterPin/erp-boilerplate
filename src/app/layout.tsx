@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
+import { headers } from "next/headers"
+import { connection } from "next/server"
 
 import { AppProviders } from "@/components/shared/layout/app-providers"
 import { publicAppConfig } from "@/lib/app-config"
@@ -42,11 +44,16 @@ export const metadata: Metadata = {
 }
 export const viewport: Viewport = { themeColor: publicAppConfig.branding.accent }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  // Nonce CSP is applied during the request render. A static shell has no
+  // nonce, and `strict-dynamic` then blocks Next's scripts in production.
+  await connection()
+  const nonce = (await headers()).get("x-nonce") ?? undefined
+
   return (
     <html
       lang="en"
@@ -69,6 +76,7 @@ export default function RootLayout({
     >
       <body className="h-svh overflow-hidden">
         <script
+          nonce={nonce}
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
@@ -84,7 +92,7 @@ export default function RootLayout({
             }),
           }}
         />
-        <AppProviders>{children}</AppProviders>
+        <AppProviders nonce={nonce}>{children}</AppProviders>
       </body>
     </html>
   )

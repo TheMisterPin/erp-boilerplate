@@ -16,12 +16,17 @@ Every response receives `X-Content-Type-Options: nosniff`, `X-Frame-Options:
 DENY`, a strict referrer policy, a restrictive permissions policy, and a
 same-origin opener policy. The middleware also issues a per-request CSP nonce,
 sets `Content-Security-Policy`, and returns `X-Request-ID` for correlation.
+The root layout calls `connection()` so each page renders on the request and
+Next.js can stamp that nonce onto its scripts. A statically prerendered shell
+has no nonce; with `strict-dynamic`, browsers then ignore `'self'` and block
+those scripts.
 
 The CSP blocks plug-ins, framing, cross-origin form submission, arbitrary script
 execution, and unapproved connections. It permits HTTPS images because profile
 avatars are user-configured URLs. It retains `style-src 'unsafe-inline'` only
 because Next.js runtime and component libraries can emit inline style tags; it
-does **not** permit unsafe inline scripts or eval in production.
+does **not** permit unsafe inline scripts or eval in production. Development
+adds `'unsafe-eval'` so React Refresh can run under `next dev`.
 
 ## Operational logging and error reporting
 

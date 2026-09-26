@@ -11,9 +11,15 @@ import { ErrorProvider } from "@/features/errors"
  * ErrorProvider wraps ModalRoot so form modals can call useError().run().
  * ErrorBoundary stays content-scoped in AppShell / auth layout.
  */
-export function AppProviders({ children }: { children: React.ReactNode }) {
+export function AppProviders({
+  children,
+  nonce,
+}: {
+  children: React.ReactNode
+  nonce?: string
+}) {
   return (
-    <ThemeProvider>
+    <ThemeProvider nonce={nonce}>
       <ModalProvider>
         <AuthProvider>
           <ErrorProvider>

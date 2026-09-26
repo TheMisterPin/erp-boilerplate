@@ -8,6 +8,7 @@ import {
 import { logServerEvent } from "./lib/observability/log"
 
 const PUBLIC_PATHS = new Set([
+  "/",
   "/login",
   "/clock",
   "/api/health/live",
@@ -31,7 +32,9 @@ function withSecurityHeaders(
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const requestId = crypto.randomUUID().replaceAll("-", "")
-  const contentSecurityPolicy = createContentSecurityPolicy(requestId)
+  const contentSecurityPolicy = createContentSecurityPolicy(requestId, {
+    dev: process.env.NODE_ENV === "development",
+  })
   const requestHeaders = new Headers(request.headers)
   requestHeaders.set("x-request-id", requestId)
   requestHeaders.set("x-nonce", requestId)

@@ -22,4 +22,23 @@ describe("security middleware", () => {
     expect(info).toHaveBeenCalledOnce()
     info.mockRestore()
   })
+
+  it("serves the landing page to anonymous visitors", async () => {
+    vi.spyOn(console, "info").mockImplementation(() => undefined)
+    const response = await middleware(new NextRequest("https://erp.example.test/"))
+
+    expect(response.status).not.toBe(307)
+    expect(response.headers.get("location")).toBeNull()
+  })
+
+  it("sends anonymous visitors from a private route to login", async () => {
+    vi.spyOn(console, "info").mockImplementation(() => undefined)
+    const response = await middleware(
+      new NextRequest("https://erp.example.test/home"),
+    )
+
+    expect(response.headers.get("location")).toBe(
+      "https://erp.example.test/login?next=%2Fhome",
+    )
+  })
 })
