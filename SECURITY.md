@@ -24,7 +24,7 @@ Include:
 
 ## Automated safeguards
 
-The repository uses Dependabot, pull-request dependency review, and CodeQL.
+The repository uses pull-request dependency review and CodeQL.
 These reduce the chance of introducing known dependency or source-code issues,
 but they do not replace private vulnerability reporting or a deployment-specific
 security review. See [operations documentation](docs/operations.md) for the
