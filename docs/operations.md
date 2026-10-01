@@ -46,7 +46,8 @@ code must continue to use `reportServerError` rather than a vendor SDK.
 
 ## Supply-chain checks
 
-- Dependabot opens weekly dependency and GitHub Actions update pull requests.
+- Dependency and GitHub Actions updates are maintained manually through reviewed
+  pull requests; scheduled Dependabot version updates are disabled.
 - Dependency Review blocks a pull request that introduces a high or critical
   vulnerability when GitHub's **Dependency graph** is enabled in repository
   settings. The workflow remains non-blocking until that one-time setting is
