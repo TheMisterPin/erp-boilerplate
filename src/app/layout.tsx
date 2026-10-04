@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import { headers } from "next/headers"
 import { connection } from "next/server"
-
+import { Analytics } from "@vercel/analytics/react"
 import { AppProviders } from "@/components/shared/layout/app-providers"
 import { publicAppConfig } from "@/lib/app-config"
 import { cn } from "@/lib/utils"
@@ -92,6 +92,7 @@ export default async function RootLayout({
             }),
           }}
         />
+        <Analytics />
         <AppProviders nonce={nonce}>{children}</AppProviders>
       </body>
     </html>
