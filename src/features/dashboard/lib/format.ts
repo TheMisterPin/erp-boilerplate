@@ -20,6 +20,7 @@ export function formatRelativeTime(iso: string): string {
 const shortDate = new Intl.DateTimeFormat(undefined, {
   month: "short",
   day: "numeric",
+  timeZone: "UTC",
 })
 
 /** "Oct 17 – Oct 19", or "Oct 17" when both ends match. */

@@ -20,6 +20,7 @@ import {
   getSession,
 } from "@/features/auth/utils"
 import { toMe, type Me } from "@/features/auth/types"
+import { ensureDemoData } from "@/features/demo/ensure-demo-data"
 import { logActivity } from "@/features/logging/server"
 import { findActiveOrganization } from "@/features/organizations/context"
 import { logServerEvent } from "@/lib/observability/server"
@@ -99,6 +100,16 @@ export async function loginAction(
         kind: "auth",
         code: "NO_ACTIVE_ORGANIZATION",
         message: "Your account does not have access to an active organization.",
+      })
+    }
+    try {
+      await ensureDemoData(prisma, {
+        organizationId: organization.id,
+        userId: user.id,
+      })
+    } catch (error) {
+      logServerEvent("error", "demo.ensure_failed", {
+        message: error instanceof Error ? error.message : "ensure failed",
       })
     }
     await createSession({

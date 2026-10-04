@@ -4,8 +4,10 @@ import type { ActionResult } from "@/features/errors/dto"
 import { AppError, withErrorBoundary } from "@/features/errors/server"
 import { createSession } from "@/features/auth/utils"
 import { requireSession } from "@/features/auth/session"
+import { ensureDemoData } from "@/features/demo/ensure-demo-data"
 import { logActivity } from "@/features/logging/server"
 import { findActiveOrganization } from "@/features/organizations/context"
+import { logServerEvent } from "@/lib/observability/server"
 import type { OrganizationOption } from "@/features/organizations/types/organization-types"
 import { prisma } from "@/lib/db"
 
@@ -57,6 +59,17 @@ export async function switchOrganization(
         kind: "not_found",
         code: "ORGANIZATION_NOT_FOUND",
         message: "That organization is not available to your account.",
+      })
+    }
+
+    try {
+      await ensureDemoData(prisma, {
+        organizationId: target.id,
+        userId: session.userId,
+      })
+    } catch (error) {
+      logServerEvent("error", "demo.ensure_failed", {
+        message: error instanceof Error ? error.message : "ensure failed",
       })
     }
 

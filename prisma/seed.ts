@@ -3,6 +3,7 @@ import { faker } from "@faker-js/faker"
 import { PrismaPg } from "@prisma/adapter-pg"
 import bcrypt from "bcryptjs"
 
+import { ensureDemoData } from "../src/features/demo/ensure-demo-data"
 import { Prisma, PrismaClient } from "../src/generated/prisma/client"
 
 /** Stable seed so re-runs keep the same fake names/emails. */
@@ -894,6 +895,20 @@ async function main() {
   const shifts = await seedShiftsFromLocations()
   const attendance = await seedAttendanceLog()
   const activities = await seedActivityLog()
+
+  const anchorUserId = admin?.id ?? manager?.id ?? users[0]?.id
+  if (anchorUserId) {
+    await ensureDemoData(prisma, {
+      organizationId: primaryOrganization.id,
+      userId: anchorUserId,
+      force: true,
+    })
+    await ensureDemoData(prisma, {
+      organizationId: secondaryOrganization.id,
+      userId: anchorUserId,
+      force: true,
+    })
+  }
 
   console.log("Seed complete")
   console.log(`  users: ${users.length}`)

@@ -7,6 +7,11 @@ import { getCheckInTiming } from "@/features/attendance/lib/check-in-timing"
 import { listTimeOffRequests } from "@/features/time-off/actions/time-off-actions"
 import { listActivities } from "@/features/logging/actions/activity-actions"
 import { listManagedLocationIds } from "@/features/shifts/actions/shift-access"
+import {
+  dashboardWindow,
+  localDayKey,
+  shiftDayKey,
+} from "@/features/dashboard/lib/dates"
 import { prisma } from "@/lib/db"
 import type { ActionResult } from "@/features/errors/dto"
 import type {
@@ -17,34 +22,6 @@ import type {
   FeedItem,
   KpiDatum,
 } from "@/features/dashboard/types/dashboard-types"
-
-/* ------------------------------------------------------------------ */
-/* Date helpers (server-local, consistent with the rest of the app)    */
-/* ------------------------------------------------------------------ */
-
-function startOfDay(d: Date): Date {
-  const c = new Date(d)
-  c.setHours(0, 0, 0, 0)
-  return c
-}
-
-function addDays(d: Date, n: number): Date {
-  const c = new Date(d)
-  c.setDate(c.getDate() + n)
-  return c
-}
-
-/** Monday of the week containing `d`. */
-function startOfWeekMonday(d: Date): Date {
-  const c = startOfDay(d)
-  return addDays(c, -((c.getDay() + 6) % 7))
-}
-
-function dayKey(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
-    d.getDate(),
-  ).padStart(2, "0")}`
-}
 
 const WEEKDAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const
 
@@ -118,15 +95,11 @@ export async function getCommandCenterData(): Promise<ActionResult<CommandCenter
           : { organizationId: session.activeOrganizationId, userId: session.userId }
 
     const now = new Date()
-    const today = startOfDay(now)
-    const sevenDaysAgo = addDays(today, -6)
-    const weekStart = startOfWeekMonday(now)
-    const weekEnd = addDays(weekStart, 7)
-    const last7Keys = Array.from({ length: 7 }, (_, i) => dayKey(addDays(today, i - 6)))
+    const window = dashboardWindow(now)
 
     const [recentAttendance, instances, locations, staffCount] = await Promise.all([
       prisma.shiftAttendance.findMany({
-        where: { ...scopedWhere, checkInAt: { gte: sevenDaysAgo } },
+        where: { ...scopedWhere, checkInAt: { gte: window.attendanceSince } },
         select: {
           checkInAt: true,
           checkOutAt: true,
@@ -140,8 +113,8 @@ export async function getCommandCenterData(): Promise<ActionResult<CommandCenter
       prisma.shiftInstance.findMany({
         where: {
           ...instanceWhere,
-          date: { gte: sevenDaysAgo, lt: weekEnd },
-          status: "SCHEDULED",
+          date: { gte: window.instanceFrom, lt: window.instanceTo },
+          status: { in: ["SCHEDULED", "COMPLETED"] },
           deletedAt: null,
         },
         select: { date: true },
@@ -171,31 +144,31 @@ export async function getCommandCenterData(): Promise<ActionResult<CommandCenter
 
     /* ---- KPI: clocked in now ------------------------------------ */
     const clockedInNow = recentAttendance.filter(
-      (a) => a.checkInAt >= today && a.checkOutAt == null,
+      (a) => a.checkInAt >= window.todayLocalStart && a.checkOutAt == null,
     ).length
-    const activeByDay = last7Keys.map(
+    const activeByDay = window.last7LocalKeys.map(
       (key) =>
         new Set(
           recentAttendance
-            .filter((a) => dayKey(a.checkInAt) === key)
+            .filter((a) => localDayKey(a.checkInAt) === key)
             .map((a) => a.userId),
         ).size,
     )
 
     /* ---- KPI: shifts today -------------------------------------- */
-    const shiftsByDay = last7Keys.map(
-      (key) => instances.filter((s) => dayKey(s.date) === key).length,
+    const shiftsByDay = window.last7ShiftKeys.map(
+      (key) => instances.filter((s) => shiftDayKey(s.date) === key).length,
     )
     const shiftsToday = shiftsByDay[6] ?? 0
     const shiftsThisWeek = instances.filter(
-      (s) => s.date >= weekStart && s.date < weekEnd,
+      (s) => s.date >= window.weekStart && s.date < window.weekEnd,
     ).length
 
     /* ---- KPI: late check-ins ------------------------------------ */
-    const lateByDay = last7Keys.map(
+    const lateByDay = window.last7LocalKeys.map(
       (key) =>
         recentAttendance.filter((a) => {
-          if (dayKey(a.checkInAt) !== key) return false
+          if (localDayKey(a.checkInAt) !== key) return false
           const startTime = a.shiftInstance?.startTime
           if (!startTime) return false
           return getCheckInTiming(startTime, a.checkInAt).status === "late"
@@ -215,10 +188,10 @@ export async function getCommandCenterData(): Promise<ActionResult<CommandCenter
     }
     const requests = timeOffResult.data
     const pending = requests.filter((r) => r.status === "PENDING")
-    const newByDay = last7Keys.map(
+    const newByDay = window.last7LocalKeys.map(
       (key) =>
         requests.filter(
-          (r) => r.createdAt >= sevenDaysAgo && dayKey(r.createdAt) === key,
+          (r) => r.createdAt >= window.attendanceSince && localDayKey(r.createdAt) === key,
         ).length,
     )
     const attention: AttentionItem[] = pending
@@ -237,16 +210,12 @@ export async function getCommandCenterData(): Promise<ActionResult<CommandCenter
     /* ---- Coverage chart: scheduled vs minimum, Mon–Sun ------------ */
     const minimumTotal =
       scope === "self" ? null : locations.reduce((sum, l) => sum + l.minimumStaff, 0)
-    const coverage: CoverageDay[] = Array.from({ length: 7 }, (_, i) => {
-      const day = addDays(weekStart, i)
-      const key = dayKey(day)
-      return {
-        day: WEEKDAY_LABELS[i] ?? key,
-        date: key,
-        scheduled: instances.filter((s) => dayKey(s.date) === key).length,
-        minimum: minimumTotal,
-      }
-    })
+    const coverage: CoverageDay[] = window.weekShiftKeys.map((key, i) => ({
+      day: WEEKDAY_LABELS[i] ?? key,
+      date: key,
+      scheduled: instances.filter((s) => shiftDayKey(s.date) === key).length,
+      minimum: minimumTotal,
+    }))
 
     /* ---- Activity feed -------------------------------------------- */
     let activity: FeedItem[]
